@@ -2103,6 +2103,9 @@ class GameResultViewSet(viewsets.ModelViewSet):
                             c = float(u.comm_box_3s_1)
 
                 elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                    if tier_name != "1ST PRIZE":
+                        continue
+
                     # Derived match logic
                     target = ""
                     if len(win_num) >= 3:

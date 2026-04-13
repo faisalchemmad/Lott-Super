@@ -657,20 +657,7 @@ class _BettingScreenState extends State<BettingScreen>
                   onPressed: () => Navigator.pop(context),
                   child: const Text('CANCEL')),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () {
-                  _processPasteText(textController.text, isRemoval: true);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[400], elevation: 0),
-                child: const Text('REMOVE FROM DRAFT',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-              ),
-              const SizedBox(width: 8),
+
               ElevatedButton(
                 onPressed: () {
                   _processPasteText(textController.text, isRemoval: false);
@@ -1007,33 +994,21 @@ class _BettingScreenState extends State<BettingScreen>
           ? const Center(child: CircularProgressIndicator())
           : Container(
               color: Colors.grey[50],
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: _buildInputSection(),
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: Colors.black12)),
                     ),
-                    const SizedBox(height: 16),
-                    _buildDraftContainer(borderRadius: 0),
-                  ],
-                ),
+                    child: _buildInputSection(),
+                  ),
+                  Expanded(
+                    child: _buildDraftContainer(borderRadius: 0),
+                  ),
+                ],
               ),
             ),
       bottomNavigationBar: _buildStickyBottomBar(),
@@ -1180,7 +1155,7 @@ class _BettingScreenState extends State<BettingScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: TextField(
                   controller: _numberController,
                   focusNode: _numberFocusNode,
@@ -1224,23 +1199,29 @@ class _BettingScreenState extends State<BettingScreen>
                 ),
               ],
               if (_tabController.index == 1 || _tabController.index == 2) ...[
-                const SizedBox(width: 8),
-                Column(
+                const SizedBox(width: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Transform.scale(
+                      scale: 0.9,
+                      child: Checkbox(
+                        value: _isRangeEnabled,
+                        activeColor: themeColor,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4)),
+                        onChanged: (val) {
+                          setState(() {
+                            _isRangeEnabled = val ?? false;
+                          });
+                        },
+                      ),
+                    ),
                     const Text('R',
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w900)),
-                    Checkbox(
-                      value: _isRangeEnabled,
-                      activeColor: themeColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4)),
-                      onChanged: (val) {
-                        setState(() {
-                          _isRangeEnabled = val ?? false;
-                        });
-                      },
-                    ),
+                            fontSize: 16, fontWeight: FontWeight.w900)),
                   ],
                 ),
               ],
@@ -1271,7 +1252,7 @@ class _BettingScreenState extends State<BettingScreen>
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          alignment: WrapAlignment.center,
+          alignment: WrapAlignment.start,
           children: _tabsMap[_tabController.index]!
               .map((type) => AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -1340,7 +1321,7 @@ class _BettingScreenState extends State<BettingScreen>
         children: [
           // Premium Colored Table Header
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
             decoration: BoxDecoration(
               color: gameColor,
               boxShadow: [
@@ -1415,10 +1396,10 @@ class _BettingScreenState extends State<BettingScreen>
               ),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _draftBets.length,
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: _draftBets.length,
               itemBuilder: (context, index) {
                 final draft = _draftBets[index];
                 final isEven = index % 2 == 0;
@@ -1431,7 +1412,7 @@ class _BettingScreenState extends State<BettingScreen>
                     ),
                   ),
                   padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
                   child: Row(
                     children: [
                       Expanded(
@@ -1450,7 +1431,7 @@ class _BettingScreenState extends State<BettingScreen>
                         child: Text(
                           draft['number'],
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: Colors.black,
                             fontFamily: 'monospace',
@@ -1463,7 +1444,7 @@ class _BettingScreenState extends State<BettingScreen>
                           draft['count'].toString(),
                           style: TextStyle(
                             color: gameColor,
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -1500,6 +1481,7 @@ class _BettingScreenState extends State<BettingScreen>
                 );
               },
             ),
+          ),
         ],
       ),
     );
@@ -1595,10 +1577,12 @@ class _BettingScreenState extends State<BettingScreen>
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
       ),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       filled: true,
       fillColor: Colors.grey[50],
       labelStyle: TextStyle(
-          color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 13),
+          color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 11),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: themeColor, width: 2),
