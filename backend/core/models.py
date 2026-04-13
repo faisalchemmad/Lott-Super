@@ -22,12 +22,17 @@ class User(AbstractUser):
         """Returns a list of IDs for all descendants (children, grandchildren, etc.) including self."""
         descendants = [self.id]
         to_check = [self.id]
+        visited = {self.id}
         while to_check:
+            # Fetch next level of children
             children = User.objects.filter(parent_id__in=to_check).values_list('id', flat=True)
-            if not children:
+            # Filter out already visited to prevent infinite loops
+            new_children = [c for c in children if c not in visited]
+            if not new_children:
                 break
-            descendants.extend(children)
-            to_check = children
+            descendants.extend(new_children)
+            visited.update(new_children)
+            to_check = new_children
         return descendants
 
     def get_weekly_net_loss(self):
