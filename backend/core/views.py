@@ -188,9 +188,8 @@ class BetViewSet(viewsets.ModelViewSet):
         if user.role == 'SUPER_ADMIN':
             return queryset.order_by('-created_at')[:100]
             
-        # Filter for the user's branch
-        descendants = user.get_descendant_ids()
-        return queryset.filter(user__id__in=descendants).order_by('-created_at')[:100]
+        # For non-superadmins, only show their own bets in the recent list for speed
+        return queryset.filter(user=user).order_by('-created_at')[:100]
 
     def perform_create(self, serializer):
         from rest_framework import serializers as drf_serializers
