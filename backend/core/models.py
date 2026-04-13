@@ -21,8 +21,13 @@ class User(AbstractUser):
     def get_descendant_ids(self):
         """Returns a list of IDs for all descendants (children, grandchildren, etc.) including self."""
         descendants = [self.id]
-        for child in self.subordinates.all():
-            descendants.extend(child.get_descendant_ids())
+        to_check = [self.id]
+        while to_check:
+            children = User.objects.filter(parent_id__in=to_check).values_list('id', flat=True)
+            if not children:
+                break
+            descendants.extend(children)
+            to_check = children
         return descendants
 
     def get_weekly_net_loss(self):
