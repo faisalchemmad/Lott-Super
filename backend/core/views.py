@@ -185,10 +185,11 @@ class BetViewSet(viewsets.ModelViewSet):
         if game_id:
             queryset = queryset.filter(game_id=game_id)
 
-        if user.role == 'SUPER_ADMIN':
-            return queryset.order_by('-created_at')[:100]
+        if user.role in ['SUPER_ADMIN', 'ADMIN']:
+            descendants = user.get_descendant_ids()
+            return queryset.filter(user__id__in=descendants).order_by('-created_at')[:100]
             
-        # For non-superadmins, only show their own bets in the recent list for speed
+        # For lower roles (Agent/Dealer/Sub-dealer), only show their own bets in the recent list for speed
         return queryset.filter(user=user).order_by('-created_at')[:100]
 
     def perform_create(self, serializer):
