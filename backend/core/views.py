@@ -178,10 +178,19 @@ class BetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = Bet.objects.all()
+        
+        # Filter by game if provided
+        game_id = self.request.query_params.get('game')
+        if game_id:
+            queryset = queryset.filter(game_id=game_id)
+
         if user.role == 'SUPER_ADMIN':
-            return Bet.objects.all()
-        # Admin sees their agents' bets, etc. (Simplified)
-        return Bet.objects.filter(user=user)
+            return queryset.order_by('-created_at')[:100]
+            
+        # Filter for the user's branch
+        descendants = user.get_descendant_ids()
+        return queryset.filter(user__id__in=descendants).order_by('-created_at')[:100]
 
     def perform_create(self, serializer):
         from rest_framework import serializers as drf_serializers
@@ -380,12 +389,20 @@ class BetViewSet(viewsets.ModelViewSet):
         failed_bets = []
         
         # Track counts within THIS bulk request per LEVEL (User & Branches)
-        # session_branch_nos = {(manager_id_or_None, number, type, game_id): cumulative_count}
-        # session_branch_types = {(manager_id_or_None, type, game_id): cumulative_count}
         session_branch_nos = {}
         session_branch_types = {}
         
-        # Pre-fetch user hierarchy for other checks
+        # Pre-fetch hierarchy info and descendant IDs once
+        hierarchy_info = []
+        for p in hierarchy:
+            hierarchy_info.append({
+                'user': p,
+                'descendant_ids': p.get_descendant_ids(),
+                'role': p.role,
+                'id': p.id
+            })
+        
+        today = timezone.localtime().date()
         
         for b_data in bets_data:
             try:
@@ -430,7 +447,8 @@ class BetViewSet(viewsets.ModelViewSet):
             start_t = game.start_time
             end_t = game.end_time
             
-            for p in hierarchy:
+            for info in hierarchy_info:
+                p = info['user']
                 timing = UserGameTiming.objects.filter(user=p, game=game).first()
                 if timing:
                     start_t = timing.start_time
@@ -449,7 +467,10 @@ class BetViewSet(viewsets.ModelViewSet):
             # The user at index 0 has specific limit if their own NumberLimit exists
             has_specific_limit = NumberLimit.objects.filter(user=user, game=game, number=number, type=bet_type).exists()
 
-            for p in hierarchy:
+            for info in hierarchy_info:
+                p = info['user']
+                d_ids = info['descendant_ids']
+                
                 # A. Branch-wide/User-specific Number Limits
                 # Check GlobalNumberLimit (set by the admin themselves)
                 gnl_q = Q(admin=p) if p.role != 'SUPER_ADMIN' else Q(admin__isnull=True)
@@ -468,9 +489,8 @@ class BetViewSet(viewsets.ModelViewSet):
                 has_branch_specific = len(relevant_glims) > 0
 
                 for glim in relevant_glims:
-                    d_ids = p.get_descendant_ids()
-                    b_tot = Bet.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, created_at__date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
-                    b_clr = ClearedExposure.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
+                    b_tot = Bet.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
+                    b_clr = ClearedExposure.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
                     
                     # Add counts already processed in this branch hierarchy level in this session
                     current_session_n = session_branch_nos.get((p.id if p.role != 'SUPER_ADMIN' else None, number, bet_type, game.id), 0)
@@ -489,9 +509,8 @@ class BetViewSet(viewsets.ModelViewSet):
 
                     t_limit = getattr(p, f'count_{bet_type.lower()}', 0)
                     if t_limit > 0:
-                        d_ids = p.get_descendant_ids()
-                        type_tot = Bet.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, created_at__date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
-                        type_clr = ClearedExposure.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
+                        type_tot = Bet.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
+                        type_clr = ClearedExposure.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
                         
                         # Add counts already processed in this branch hierarchy level in this session
                         current_session_n = session_branch_nos.get((p.id if p.role != 'SUPER_ADMIN' else None, number, bet_type, game.id), 0)
