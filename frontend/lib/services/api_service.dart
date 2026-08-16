@@ -120,6 +120,7 @@ class ApiService {
               'number': b['number'],
               'type': b['type'],
               'count': b['count'],
+              'state': b['state'] ?? 'KL',
             })
         .toList();
 

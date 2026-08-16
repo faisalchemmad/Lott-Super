@@ -169,6 +169,7 @@ class Bet(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2) # Price per count
     count = models.IntegerField(default=1) 
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    state = models.CharField(max_length=5, default='KL')
     invoice_id = models.CharField(max_length=8, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_winner = models.BooleanField(null=True, blank=True)

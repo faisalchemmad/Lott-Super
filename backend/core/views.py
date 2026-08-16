@@ -414,6 +414,7 @@ class BetViewSet(viewsets.ModelViewSet):
             amount = price_map.get(bet_type, 0)
             count = b_data['count']
             number = b_data.get('number', '')
+            state = b_data.get('state', 'KL')
             
             # Skip if count is invalid
             if not isinstance(count, int) or count <= 0:
@@ -550,6 +551,7 @@ class BetViewSet(viewsets.ModelViewSet):
                 type=bet_type,
                 amount=amount,
                 count=count,
+                state=state,
                 invoice_id=invoice_id
             )
             created_bets_count += 1

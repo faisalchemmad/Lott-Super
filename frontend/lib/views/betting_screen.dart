@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -18,7 +19,7 @@ class BettingScreen extends StatefulWidget {
 }
 
 class _BettingScreenState extends State<BettingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   UserModel? _user;
   String? _selectedType;
@@ -35,6 +36,11 @@ class _BettingScreenState extends State<BettingScreen>
   List<BetModel> _recentBets = [];
   List<Map<String, dynamic>> _draftBets = [];
   bool _isRangeEnabled = false;
+  bool _is100Enabled = false;
+  bool _is111Enabled = false;
+  String _selectedStateCode = 'KL';
+  Timer? _timer;
+  Duration _remainingTime = Duration.zero;
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
   final TextEditingController _stepController =
@@ -60,36 +66,84 @@ class _BettingScreenState extends State<BettingScreen>
     0: ['A', 'B', 'C', 'ALL'],
     1: ['AB', 'BC', 'AC', 'ALL'],
     2: ['SUPER', 'BOX', 'SET', 'BOTH'],
+    3: ['SUPER', 'BOX', 'SET', 'BOTH'],
   };
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: 2);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      // Set default selected type for each tab when switched
-      setState(() {
-        _selectedType = _tabsMap[_tabController.index]![0];
-        _numberController.clear();
-        _numberFocusNode.requestFocus();
-      });
-    });
+    _tabController.addListener(_tabListener);
     _numberController.addListener(_autoJumpToCount);
     _loadData();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    try {
+      final now = DateTime.now();
+      final parts = widget.game.endTime.split(':');
+      if (parts.length >= 2) {
+        int hour = int.parse(parts[0]);
+        int minute = int.parse(parts[1]);
+        int second = parts.length > 2 ? int.parse(parts[2]) : 0;
+        
+        DateTime endDateTime = DateTime(now.year, now.month, now.day, hour, minute, second);
+        
+        if (endDateTime.isBefore(now)) {
+          _remainingTime = Duration.zero;
+        } else {
+          _remainingTime = endDateTime.difference(now);
+          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (mounted) {
+              setState(() {
+                if (_remainingTime.inSeconds > 0) {
+                  _remainingTime -= const Duration(seconds: 1);
+                } else {
+                  _timer?.cancel();
+                }
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+  }
+
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
+    if (d.inHours > 0) {
+      return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    }
+    return "$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  void _tabListener() {
+    if (_tabController.indexIsChanging) return;
+    setState(() {
+      _selectedType = _tabsMap[_tabController.index]![0];
+      _numberController.clear();
+      _numberFocusNode.requestFocus();
+    });
+  }
+
+  int _getRequiredDigits(String? type) {
+    if (type == 'ALL') {
+      return _tabController.index == 0 ? 1 : 2;
+    }
+    if (_tabController.index == 3) {
+      return 4;
+    }
+    return _typeDigitMap[type ?? ''] ?? 3;
   }
 
   void _autoJumpToCount() {
     if (_numberController.text.isNotEmpty) {
-      int requiredDigits = 0;
-      if (_selectedType == 'ALL') {
-        requiredDigits = (_tabController.index == 0
-            ? 1
-            : (_tabController.index == 1 ? 2 : 3));
-      } else if (_selectedType != null) {
-        requiredDigits = _typeDigitMap[_selectedType] ?? 0;
-      }
-
+      int requiredDigits = _getRequiredDigits(_selectedType);
       if (requiredDigits > 0 &&
           _numberController.text.length == requiredDigits) {
         if (!_countFocusNode.hasFocus) {
@@ -101,6 +155,7 @@ class _BettingScreenState extends State<BettingScreen>
 
   @override
   void dispose() {
+    _timer?.cancel();
     _tabController.dispose();
     _numberFocusNode.dispose();
     _countFocusNode.dispose();
@@ -147,29 +202,56 @@ class _BettingScreenState extends State<BettingScreen>
   }
 
   void _triggerAddToDraft(String type) {
-    if (_isRangeEnabled &&
-        (_tabController.index == 1 || _tabController.index == 2)) {
-      if (_startController.text.isEmpty ||
-          _endController.text.isEmpty ||
-          _countController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enter Start, End and Count')));
-        return;
-      }
-      int start = int.tryParse(_startController.text) ?? 0;
-      int end = int.tryParse(_endController.text) ?? 0;
-      int step = int.tryParse(_stepController.text) ?? 1;
-      if (step <= 0) step = 1;
+    bool isSpecialMode = (_isRangeEnabled || _is100Enabled || _is111Enabled) &&
+        (_tabController.index >= 1);
 
+    if (isSpecialMode) {
       List<String> rangeNumbers = [];
-      int padWidth = _tabController.index == 1 ? 2 : 3;
-      for (int i = start; i <= end; i += step) {
-        rangeNumbers.add(i.toString().padLeft(padWidth, '0'));
+
+      if (_is111Enabled) {
+        if (_countController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter Count')));
+          return;
+        }
+        if (_tabController.index >= 2) {
+          rangeNumbers = ['000', '111', '222', '333', '444', '555', '666', '777', '888', '999'];
+        } else if (_tabController.index == 1) {
+          rangeNumbers = ['00', '11', '22', '33', '44', '55', '66', '77', '88', '99'];
+        }
+      } else if (_is100Enabled) {
+        if (_countController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter Count')));
+          return;
+        }
+        if (_tabController.index >= 2) {
+          rangeNumbers = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+        } else if (_tabController.index == 1) {
+          rangeNumbers = ['00', '10', '20', '30', '40', '50', '60', '70', '80', '90'];
+        }
+      } else if (_isRangeEnabled) {
+        if (_startController.text.isEmpty ||
+            _endController.text.isEmpty ||
+            _countController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter Start, End and Count')));
+          return;
+        }
+        int start = int.tryParse(_startController.text) ?? 0;
+        int end = int.tryParse(_endController.text) ?? 0;
+        int step = int.tryParse(_stepController.text) ?? 1;
+        if (step <= 0) step = 1;
+
+        int padWidth = _tabController.index == 1 ? 2 : 3;
+        for (int i = start; i <= end; i += step) {
+          rangeNumbers.add(i.toString().padLeft(padWidth, '0'));
+        }
       }
 
       if (rangeNumbers.isEmpty) return;
 
-      if (type == 'SET' && _tabController.index == 2) {
+      if (type == 'SET' && _tabController.index >= 2) {
         setState(() {
           UserModel? selectedUser;
           try {
@@ -294,9 +376,7 @@ class _BettingScreenState extends State<BettingScreen>
       return;
     }
 
-    int requiredDigits = type == 'ALL'
-        ? (_tabController.index == 0 ? 1 : 2)
-        : _typeDigitMap[type]!;
+    int requiredDigits = _getRequiredDigits(type);
 
     if (_numberController.text.length != requiredDigits) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -880,6 +960,7 @@ class _BettingScreenState extends State<BettingScreen>
       'number': num,
       'count': count,
       'type': type,
+      'state': _selectedStateCode,
       'price': unitPrice * count,
       'net_price': (unitPrice - commRate) * count,
     });
@@ -892,101 +973,33 @@ class _BettingScreenState extends State<BettingScreen>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: gameColor,
-        title: Text(widget.game.name),
-        bottom: TabBar(
-          controller: _tabController,
-          indicator: UnderlineTabIndicator(
-            borderSide: const BorderSide(width: 4, color: Colors.yellowAccent),
-            insets: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-          tabs: const [
-            Tab(text: '1 DIGIT'),
-            Tab(text: '2 DIGITS'),
-            Tab(text: '3 DIGITS'),
+        title: Row(
+          children: [
+            Text(widget.game.name),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                _formatDuration(_remainingTime),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.6),
-          labelStyle: const TextStyle(
-              fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1),
-          unselectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
         actions: [
           if (!_isLoading) ...[
+            _buildStateSelector(),
             IconButton(
               onPressed: _showPasteDialog,
               icon: const Icon(Icons.content_paste_search_rounded,
                   color: Colors.white),
               tooltip: 'Paste Bets',
             ),
-            IconButton(
-              onPressed: () {
-                if (_draftBets.isNotEmpty) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      title: const Text('Clear Draft?'),
-                      content: const Text(
-                          'This will remove all items from your current draft.'),
-                      actions: [
-                        TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('CANCEL')),
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _draftBets.clear());
-                            Navigator.pop(context);
-                          },
-                          child: const Text('CLEAR',
-                              style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              icon: const Icon(Icons.delete_forever_rounded,
-                  color: Colors.white70),
-              tooltip: 'Clear Draft',
-            ),
             const SizedBox(width: 8),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ElevatedButton(
-                onPressed: (_isSubmitting || _draftBets.isEmpty)
-                    ? null
-                    : _submitDraftedBets,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellowAccent,
-                  foregroundColor: Colors.black,
-                  disabledBackgroundColor: Colors.white12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  elevation: 4,
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            color: Colors.black, strokeWidth: 2),
-                      )
-                    : const Text(
-                        'SAVE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
           ],
         ],
       ),
@@ -1096,14 +1109,109 @@ class _BettingScreenState extends State<BettingScreen>
           ],
         ),
         const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildDigitSelector(),
+              if (_tabController.index >= 1)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Transform.scale(
+                  scale: 0.9,
+                  child: Checkbox(
+                    value: _is100Enabled,
+                    activeColor: themeColor,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          _is100Enabled = true;
+                          _is111Enabled = false;
+                          _isRangeEnabled = false;
+                        } else {
+                          _is100Enabled = false;
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const Text('100',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w900)),
+                const SizedBox(width: 12),
+                Transform.scale(
+                  scale: 0.9,
+                  child: Checkbox(
+                    value: _is111Enabled,
+                    activeColor: themeColor,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          _is111Enabled = true;
+                          _is100Enabled = false;
+                          _isRangeEnabled = false;
+                        } else {
+                          _is111Enabled = false;
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const Text('111',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w900)),
+                const SizedBox(width: 12),
+                Transform.scale(
+                  scale: 0.9,
+                  child: Checkbox(
+                    value: _isRangeEnabled,
+                    activeColor: themeColor,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          _isRangeEnabled = true;
+                          _is100Enabled = false;
+                          _is111Enabled = false;
+                        } else {
+                          _isRangeEnabled = false;
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const Text('R',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+            ],
+          ),
+        ),
         if (_isRangeEnabled &&
-            (_tabController.index == 1 || _tabController.index == 2))
+            (_tabController.index >= 1))
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: TextField(
                   controller: _startController,
                   keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(
                       label: 'Start',
                       hint: _tabController.index == 1 ? '00' : '000'),
@@ -1114,6 +1222,8 @@ class _BettingScreenState extends State<BettingScreen>
                 child: TextField(
                   controller: _endController,
                   keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(
                       label: 'End',
                       hint: _tabController.index == 1 ? '99' : '999'),
@@ -1124,6 +1234,8 @@ class _BettingScreenState extends State<BettingScreen>
                 child: TextField(
                   controller: _stepController,
                   keyboardType: TextInputType.number,
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(label: 'Step', hint: '1'),
                 ),
               ),
@@ -1132,17 +1244,23 @@ class _BettingScreenState extends State<BettingScreen>
                 child: TextField(
                   controller: _countController,
                   keyboardType: TextInputType.number,
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: themeColor),
                   decoration: _inputDecoration(label: 'Count', hint: 'Qty'),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w900, fontSize: 18),
                 ),
               ),
-              if (_tabController.index == 2) ...[
+              if (_tabController.index >= 2) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _boxCountController,
                     keyboardType: TextInputType.number,
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue),
                     decoration:
                         _inputDecoration(label: 'Box Count', hint: 'Qty'),
                   ),
@@ -1160,9 +1278,7 @@ class _BettingScreenState extends State<BettingScreen>
                   controller: _numberController,
                   focusNode: _numberFocusNode,
                   keyboardType: TextInputType.number,
-                  maxLength: _selectedType == 'ALL'
-                      ? (_tabController.index == 0 ? 1 : 2)
-                      : _typeDigitMap[_selectedType],
+                  maxLength: _getRequiredDigits(_selectedType),
                   style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -1183,7 +1299,7 @@ class _BettingScreenState extends State<BettingScreen>
                   decoration: _inputDecoration(label: 'Count', hint: 'Qty'),
                 ),
               ),
-              if (_tabController.index == 2) ...[
+              if (_tabController.index >= 2) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -1198,83 +1314,37 @@ class _BettingScreenState extends State<BettingScreen>
                   ),
                 ),
               ],
-              if (_tabController.index == 1 || _tabController.index == 2) ...[
-                const SizedBox(width: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Transform.scale(
-                      scale: 0.9,
-                      child: Checkbox(
-                        value: _isRangeEnabled,
-                        activeColor: themeColor,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4)),
-                        onChanged: (val) {
-                          setState(() {
-                            _isRangeEnabled = val ?? false;
-                          });
-                        },
-                      ),
-                    ),
-                    const Text('R',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-              ],
             ],
           ),
-        if (_isRangeEnabled &&
-            (_tabController.index == 1 || _tabController.index == 2))
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Text('Disable Range (R)'),
-                Switch(
-                  value: _isRangeEnabled,
-                  activeColor: Color(
-                      int.parse(widget.game.color.replaceFirst('#', '0xFF'))),
-                  onChanged: (val) {
-                    setState(() {
-                      _isRangeEnabled = val;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
+
         const SizedBox(height: 20),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          alignment: WrapAlignment.start,
+        Row(
           children: _tabsMap[_tabController.index]!
-              .map((type) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 82,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () => _triggerAddToDraft(type),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeColor,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: themeColor.withOpacity(0.4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              .map((type) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 40,
+                        child: ElevatedButton(
+                          onPressed: () => _triggerAddToDraft(type),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: themeColor,
+                            foregroundColor: Colors.white,
+                            elevation: 4,
+                            shadowColor: themeColor.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: Text(type,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0)),
                         ),
-                        padding: EdgeInsets.zero,
                       ),
-                      child: Text(type,
-                          style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5)),
                     ),
                   ))
               .toList(),
@@ -1412,7 +1482,7 @@ class _BettingScreenState extends State<BettingScreen>
                     ),
                   ),
                   padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                   child: Row(
                     children: [
                       Expanded(
@@ -1464,16 +1534,16 @@ class _BettingScreenState extends State<BettingScreen>
                       ),
                       // Delete Button
                       Container(
-                        width: 48,
+                        width: 40,
                         alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: Icon(Icons.remove_circle_outline_rounded,
-                              color: Colors.red[300], size: 22),
-                          onPressed: () =>
-                              setState(() => _draftBets.removeAt(index)),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          splashRadius: 20,
+                        child: InkWell(
+                          onTap: () => setState(() => _draftBets.removeAt(index)),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(Icons.remove_circle_outline_rounded,
+                                color: Colors.red[300], size: 20),
+                          ),
                         ),
                       ),
                     ],
@@ -1488,9 +1558,7 @@ class _BettingScreenState extends State<BettingScreen>
   }
 
   String _formatTypeName(String type) {
-    if (type == 'SUPER') return 'LSK-SUPER';
-    if (type == 'BOX') return 'BOX';
-    return type;
+    return '${widget.game.name}-$type';
   }
 
   Widget _buildStickyBottomBar() {
@@ -1524,13 +1592,38 @@ class _BettingScreenState extends State<BettingScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w900),
               ),
-              const Text('Grand Total',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
             ],
           ),
+          if (!_isLoading)
+            ElevatedButton(
+              onPressed: (_isSubmitting || _draftBets.isEmpty)
+                  ? null
+                  : _submitDraftedBets,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.yellowAccent,
+                foregroundColor: Colors.black,
+                disabledBackgroundColor: Colors.white12,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 4,
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          color: Colors.black, strokeWidth: 2),
+                    )
+                  : const Text(
+                      'SAVE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+            ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -1556,6 +1649,48 @@ class _BettingScreenState extends State<BettingScreen>
     );
   }
 
+  Widget _buildDigitSelector() {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(_selectedStateCode == 'TN' ? 4 : 3, (i) => i).map((index) {
+              final isSelected = _tabController.index == index;
+              return GestureDetector(
+                onTap: () {
+                  _tabController.animateTo(index);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.yellowAccent : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isSelected ? Colors.black : Colors.grey.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSection(String title) {
     return Text(title,
         style: const TextStyle(
@@ -1572,9 +1707,9 @@ class _BettingScreenState extends State<BettingScreen>
       counterText: "",
       prefixIcon:
           icon != null ? Icon(icon, color: themeColor.withOpacity(0.7)) : null,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      border: const OutlineInputBorder(borderRadius: BorderRadius.zero),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
       ),
       isDense: true,
@@ -1584,8 +1719,57 @@ class _BettingScreenState extends State<BettingScreen>
       labelStyle: TextStyle(
           color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 11),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: themeColor, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildStateSelector() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: ['KL', 'TN'].map((stateCode) {
+          final isSelected = _selectedStateCode == stateCode;
+          return GestureDetector(
+            onTap: () {
+              if (_selectedStateCode == stateCode) return;
+              setState(() {
+                _selectedStateCode = stateCode;
+                int length = stateCode == 'TN' ? 4 : 3;
+                int newIndex = _tabController.index;
+                if (newIndex >= length) newIndex = length - 1;
+                
+                _tabController.removeListener(_tabListener);
+                _tabController.dispose();
+                _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
+                _tabController.addListener(_tabListener);
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.yellowAccent : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  stateCode,
+                  style: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
