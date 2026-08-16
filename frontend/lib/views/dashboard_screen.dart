@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
@@ -45,46 +46,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboard,
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Dashboard'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadDashboard,
+                ),
+              ],
+            ),
+      drawer: isDesktop ? null : _buildDrawer(),
+      body: Row(
+        children: [
+          if (isDesktop) _buildNavigationRail(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _loadDashboard,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_stats?['role'] != 'SUPER_ADMIN') ...[
+                            _buildProfileCard(),
+                            const SizedBox(height: 24),
+                          ] else ...[
+                            _buildSuperAdminStats(),
+                            const SizedBox(height: 24),
+                          ],
+                          const Text(
+                            'Quick Actions',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildGridActions(),
+                        ],
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),
-      drawer: _buildDrawer(),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadDashboard,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_stats?['role'] != 'SUPER_ADMIN') ...[
-                      _buildProfileCard(),
-                      const SizedBox(height: 24),
-                    ] else ...[
-                      _buildSuperAdminStats(),
-                      const SizedBox(height: 24),
-                    ],
-                    const Text(
-                      'Quick Actions',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildGridActions(),
+    );
+  }
 
-                  ],
-                ),
-              ),
-            ),
+  Widget _buildNavigationRail() {
+    return NavigationRail(
+      extended: MediaQuery.of(context).size.width > 900,
+      backgroundColor: AppColors.primary.withOpacity(0.05),
+      unselectedIconTheme: const IconThemeData(color: Colors.grey),
+      selectedIconTheme: const IconThemeData(color: AppColors.primary),
+      destinations: const [
+        NavigationRailDestination(
+          icon: Icon(Icons.dashboard),
+          label: Text('Dashboard'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.settings),
+          label: Text('Settings'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.logout, color: Colors.red),
+          label: Text('Logout'),
+        ),
+      ],
+      selectedIndex: 0,
+      onDestinationSelected: (index) {
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+          );
+        } else if (index == 2) {
+          Navigator.pushReplacementNamed(context, '/');
+        }
+      },
+      leading: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: CircleAvatar(
+          backgroundColor: AppColors.primary,
+          child: Text(
+            _stats?['username']?[0].toUpperCase() ?? 'U',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 
@@ -236,7 +293,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool canManage = isSuperAdmin || isAdmin || isAgent || isDealer;
 
     print("User Role: ${_stats?['role']}");
-    int crossAxisCount = 2;
+    double screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount = screenWidth > 1200 ? 5 : (screenWidth > 800 ? 3 : 2);
 
     return GridView.count(
       crossAxisCount: crossAxisCount,

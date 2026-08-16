@@ -100,6 +100,10 @@ class _MonitorScreenState extends State<MonitorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
     List<dynamic> displayData = List.from(_monitorData);
     if (_hideZeroCount) {
       displayData = displayData.where((e) => e['cnt'] > 0).toList();
@@ -109,12 +113,32 @@ class _MonitorScreenState extends State<MonitorScreen> {
           .sort((a, b) => a['name'].toString().compareTo(b['name'].toString()));
     }
 
+    Widget content = Column(
+      children: [
+        if (!isDesktop) _buildFilters(),
+        _buildSearchAndOptions(isDesktop),
+        _buildTableHeader(isDesktop),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : displayData.isEmpty
+                  ? const Center(child: Text('No monitoring data found'))
+                  : ListView.builder(
+                      itemCount: displayData.length,
+                      itemBuilder: (context, index) {
+                        return _buildDataRow(displayData[index], isDesktop);
+                      },
+                    ),
+        ),
+      ],
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text('Monitor',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-        centerTitle: true,
+        centerTitle: !isDesktop,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -132,132 +156,22 @@ class _MonitorScreenState extends State<MonitorScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildFilters(),
-          _buildSearchAndOptions(),
-          _buildTableHeader(),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : displayData.isEmpty
-                    ? const Center(child: Text('No monitoring data found'))
-                    : ListView.builder(
-                        itemCount: displayData.length,
-                        itemBuilder: (context, index) {
-                          return _buildDataRow(displayData[index]);
-                        },
-                      ),
-          ),
-        ],
-      ),
+      body: isDesktop
+          ? Row(
+              children: [
+                SizedBox(
+                  width: 300,
+                  child: SingleChildScrollView(child: _buildFilters()),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: content),
+              ],
+            )
+          : content,
     );
   }
 
-  Widget _buildFilters() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ['ALL', '1', '2', '3'].map((val) {
-              return Row(
-                children: [
-                  Radio<String>(
-                    value: val,
-                    groupValue: _digits,
-                    onChanged: (v) {
-                      setState(() => _digits = v!);
-                      _fetchData();
-                    },
-                    activeColor: AppColors.primary,
-                  ),
-                  Text(val,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                ],
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: columnField(
-                  label: 'Date',
-                  child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() => _selectedDate = picked);
-                        _fetchData();
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.deepPurple.withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today,
-                              size: 16, color: Colors.deepPurple),
-                          const SizedBox(width: 8),
-                          Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: columnField(
-                  label: 'Select Game',
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border:
-                          Border.all(color: Colors.deepPurple.withOpacity(0.5)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<GameModel>(
-                        value: _selectedGame,
-                        isExpanded: true,
-                        hint: const Text('Select Game'),
-                        items: _games.map((g) {
-                          return DropdownMenuItem(
-                              value: g,
-                              child: Text(g.name,
-                                  overflow: TextOverflow.ellipsis));
-                        }).toList(),
-                        onChanged: (val) {
-                          setState(() => _selectedGame = val);
-                          _fetchData();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchAndOptions() {
+  Widget _buildSearchAndOptions(bool isDesktop) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -265,12 +179,12 @@ class _MonitorScreenState extends State<MonitorScreen> {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: isDesktop ? 4 : 2,
                 child: TextField(
                   controller: _searchController,
                   onChanged: (val) => _fetchData(),
                   decoration: InputDecoration(
-                    hintText: 'Search Nu...',
+                    hintText: 'Search Number...',
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Colors.white,
@@ -282,31 +196,55 @@ class _MonitorScreenState extends State<MonitorScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
+              if (!isDesktop) ...[
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _fetchData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: const Text('Search'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _clearAllFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: const Text('Clear All'),
+                  ),
+                ),
+              ] else ...[
+                ElevatedButton.icon(
                   onPressed: _fetchData,
+                  icon: const Icon(Icons.search),
+                  label: const Text('Search'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   ),
-                  child: const Text('Search'),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
                   onPressed: _clearAllFilters,
+                  icon: const Icon(Icons.clear_all),
+                  label: const Text('Clear All'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   ),
-                  child: const Text('Clear All'),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -317,7 +255,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                 onChanged: (v) => setState(() => _sortCustomer = v!),
               ),
               const Text('Sort Customer'),
-              const Spacer(),
+              const SizedBox(width: 24),
               Checkbox(
                 value: _hideZeroCount,
                 onChanged: (v) => setState(() => _hideZeroCount = v!),
@@ -330,38 +268,34 @@ class _MonitorScreenState extends State<MonitorScreen> {
     );
   }
 
-  Widget _buildTableHeader() {
+  Widget _buildTableHeader(bool isDesktop) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       color: const Color(0xFFFBC02D),
       child: Row(
-        children: const [
+        children: [
           Expanded(
-              flex: 2,
-              child:
-                  Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
+              flex: isDesktop ? 4 : 2,
+              child: const Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
-              flex: 3,
-              child: Text('Ticket',
+              flex: isDesktop ? 6 : 3,
+              child: const Text('Ticket',
                   style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
+          const Expanded(
               flex: 1,
               child: Text('No', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
+          const Expanded(
               flex: 1,
-              child:
-                  Text('Cnt', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
+              child: Text('Cnt', style: TextStyle(fontWeight: FontWeight.bold))),
+          const Expanded(
               flex: 1,
-              child:
-                  Text('Clr', style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
+              child: Text('Clr', style: TextStyle(fontWeight: FontWeight.bold))),
+          const Expanded(
               flex: 1,
-              child:
-                  Text('Lim', style: TextStyle(fontWeight: FontWeight.bold))),
+              child: Text('Lim', style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
-              flex: 2,
-              child: Text('#',
+              flex: isDesktop ? 1 : 2,
+              child: const Text('Action',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold))),
         ],
@@ -369,7 +303,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
     );
   }
 
-  Widget _buildDataRow(dynamic entry) {
+  Widget _buildDataRow(dynamic entry, bool isDesktop) {
     bool overLimit = entry['cnt'] > entry['lim'];
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -380,11 +314,11 @@ class _MonitorScreenState extends State<MonitorScreen> {
       child: Row(
         children: [
           Expanded(
-              flex: 2,
+              flex: isDesktop ? 4 : 2,
               child: Text(entry['name'] ?? '',
                   style: const TextStyle(fontWeight: FontWeight.w600))),
           Expanded(
-              flex: 3,
+              flex: isDesktop ? 6 : 3,
               child: Text(entry['ticket'] ?? '',
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]))),
           Expanded(
@@ -407,11 +341,11 @@ class _MonitorScreenState extends State<MonitorScreen> {
                       fontWeight: FontWeight.bold,
                       color: overLimit ? Colors.red : Colors.green))),
           Expanded(
-            flex: 2,
+            flex: isDesktop ? 1 : 2,
             child: Align(
               alignment: Alignment.center,
               child: SizedBox(
-                height: 30,
+                height: 35,
                 child: ElevatedButton(
                   onPressed: () => _clearEntry(entry),
                   style: ElevatedButton.styleFrom(
@@ -421,7 +355,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4)),
                   ),
-                  child: const Text('CLR', style: TextStyle(fontSize: 10)),
+                  child: const Text('CLR', style: TextStyle(fontSize: 11)),
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
@@ -123,6 +124,10 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+
     // Always use gross sale for SALE column total
     double totalSale = _reportData.fold(0, (sum, item) => sum + ((item['sale'] ?? 0) as num));
     double totalCommission = _reportData.fold(0, (sum, item) => sum + ((item['commission'] ?? 0) as num));
@@ -138,7 +143,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: !isDesktop,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -159,13 +164,21 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: _buildTable(),
+                    child: Center(
+                      child: Container(
+                        padding: isDesktop ? const EdgeInsets.all(20) : EdgeInsets.zero,
+                        constraints: isDesktop 
+                          ? BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.95)
+                          : null,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: _buildTable(isDesktop),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                _buildSummaryFooter(totalSale, totalCommission, totalWinning, totalBalance),
+                _buildSummaryFooter(totalSale, totalCommission, totalWinning, totalBalance, isDesktop),
               ],
             ),
     );
@@ -252,31 +265,33 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
   }
 
-  Widget _buildTable() {
+  Widget _buildTable(bool isDesktop) {
     const headerStyle = TextStyle(
       color: Colors.white,
       fontWeight: FontWeight.bold,
-      fontSize: 10,
+      fontSize: 12,
     );
 
     const cellStyle = TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.bold,
-      fontSize: 11,
+      fontSize: 13,
     );
 
     // Commission column label changes based on mode
     final String commLabel = widget.agentRate ? 'A.COMM' : 'COMM';
 
+    double colWidth = isDesktop ? 150 : 65;
+
     return Table(
-      columnWidths: const {
-        0: FixedColumnWidth(52),  // DATE
-        1: FixedColumnWidth(70),  // USER
-        2: FixedColumnWidth(68),  // GAME
-        3: FixedColumnWidth(62),  // SALE
-        4: FixedColumnWidth(62),  // WINNING
-        5: FixedColumnWidth(58),  // COMM
-        6: FixedColumnWidth(62),  // BALANCE
+      columnWidths: {
+        0: FixedColumnWidth(isDesktop ? 120 : 55),  // DATE
+        1: FixedColumnWidth(isDesktop ? 200 : 70),  // USER
+        2: FixedColumnWidth(isDesktop ? 150 : 68),  // GAME
+        3: FixedColumnWidth(colWidth),  // SALE
+        4: FixedColumnWidth(colWidth),  // WINNING
+        5: FixedColumnWidth(colWidth),  // COMM
+        6: FixedColumnWidth(colWidth + 20),  // BALANCE
       },
       children: [
         // Header Row
@@ -304,33 +319,36 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
           return TableRow(
             decoration: BoxDecoration(
-              color: isEven ? const Color(0xFFD6D6D6) : const Color(0xFFE8E8E8),
+              color: isEven ? const Color(0xFFE8E8E8) : Colors.white,
+              border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
             ),
             children: [
-              _tableCell(item['date'] ?? '-', cellStyle, leftPadding: 8),
-              _tableCell(item['user'] ?? '-', cellStyle),
-              _tableCell(item['game'] ?? '-', cellStyle),
-              _tableCell(sale.toStringAsFixed(0), cellStyle, alignRight: true, rightPadding: 8),
-              _tableCell(winning.toStringAsFixed(0), cellStyle, alignRight: true, rightPadding: 8),
+              _tableCell(item['date'] ?? '-', cellStyle, leftPadding: 8, verticalPadding: isDesktop ? 15 : 9),
+              _tableCell(item['user'] ?? '-', cellStyle, verticalPadding: isDesktop ? 15 : 9),
+              _tableCell(item['game'] ?? '-', cellStyle, verticalPadding: isDesktop ? 15 : 9),
+              _tableCell(sale.toStringAsFixed(0), cellStyle, alignRight: true, rightPadding: 8, verticalPadding: isDesktop ? 15 : 9),
+              _tableCell(winning.toStringAsFixed(0), cellStyle, alignRight: true, rightPadding: 8, verticalPadding: isDesktop ? 15 : 9),
               _tableCell(
                 commission.toStringAsFixed(0),
-                const TextStyle(
-                  color: Color(0xFF8B0000),
+                TextStyle(
+                  color: const Color(0xFF8B0000),
                   fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: isDesktop ? 13 : 11,
                 ),
                 alignRight: true,
                 rightPadding: 6,
+                verticalPadding: isDesktop ? 15 : 9,
               ),
               _tableCell(
                 balance.toStringAsFixed(0),
                 TextStyle(
                   color: balance >= 0 ? Colors.black87 : Colors.red,
                   fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: isDesktop ? 13 : 11,
                 ),
                 alignRight: true,
                 rightPadding: 8,
+                verticalPadding: isDesktop ? 15 : 9,
               ),
             ],
           );
@@ -352,9 +370,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   }
 
   Widget _tableCell(String label, TextStyle style,
-      {bool alignRight = false, double leftPadding = 2, double rightPadding = 2}) {
+      {bool alignRight = false, double leftPadding = 2, double rightPadding = 2, double verticalPadding = 9}) {
     return Padding(
-      padding: EdgeInsets.only(top: 9, bottom: 9, left: leftPadding, right: rightPadding),
+      padding: EdgeInsets.only(top: verticalPadding, bottom: verticalPadding, left: leftPadding, right: rightPadding),
       child: Text(
         label,
         textAlign: alignRight ? TextAlign.right : TextAlign.left,
@@ -366,34 +384,34 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   }
 
   Widget _buildSummaryFooter(
-      double sale, double commission, double winning, double balance) {
+      double sale, double commission, double winning, double balance, bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 12, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+        border: Border(top: BorderSide(color: Colors.grey[300]!, width: 2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _summaryColumn('SALE', sale),
-          _summaryColumn(widget.agentRate ? 'A.COMM' : 'COMM', commission,
+          _summaryColumn('TOTAL SALE', sale, isDesktop),
+          _summaryColumn(widget.agentRate ? 'TOTAL A.COMM' : 'TOTAL COMM', commission, isDesktop,
               valueColor: const Color(0xFF8B0000)),
-          _summaryColumn('WINNING', winning),
-          _summaryColumn('BALANCE', balance, isMain: true),
+          _summaryColumn('TOTAL WINNING', winning, isDesktop),
+          _summaryColumn('NET BALANCE', balance, isDesktop, isMain: true),
         ],
       ),
     );
   }
 
-  Widget _summaryColumn(String label, double value,
+  Widget _summaryColumn(String label, double value, bool isDesktop,
       {bool isMain = false, Color? valueColor}) {
     final Color color = valueColor ??
         (isMain
@@ -404,12 +422,12 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
-                fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+            style: TextStyle(
+                fontSize: isDesktop ? 12 : 9, fontWeight: FontWeight.bold, color: Colors.grey[600])),
         Text(
           value.toStringAsFixed(0),
           style: TextStyle(
-            fontSize: isMain ? 16 : 13,
+            fontSize: isMain ? (isDesktop ? 24 : 18) : (isDesktop ? 20 : 14),
             fontWeight: FontWeight.bold,
             color: color,
           ),
