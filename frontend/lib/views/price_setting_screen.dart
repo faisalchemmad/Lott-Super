@@ -14,10 +14,23 @@ class PriceSettingScreen extends StatefulWidget {
 
 class _PriceSettingScreenState extends State<PriceSettingScreen> {
   final _formKey = GlobalKey<FormState>();
+  // KL Controllers
   late TextEditingController _abcController;
   late TextEditingController _abBcAcController;
   late TextEditingController _superController;
   late TextEditingController _boxController;
+  
+  // TN Controllers
+  late TextEditingController _tnAbcController;
+  late TextEditingController _tnAbBcAcController;
+  late TextEditingController _tn3d10Controller;
+  late TextEditingController _tn3d25Controller;
+  late TextEditingController _tn3d30Controller;
+  late TextEditingController _tn3d60Controller;
+  late TextEditingController _tn4d110Controller;
+  late TextEditingController _tn4d55Controller;
+  late TextEditingController _tn4d20Controller;
+
   bool _isLoading = true;
   UserModel? _user;
 
@@ -31,14 +44,20 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
     if (widget.user != null) {
       setState(() {
         _user = widget.user;
-        _abcController =
-            TextEditingController(text: widget.user!.priceAbc.toString());
-        _abBcAcController =
-            TextEditingController(text: widget.user!.priceAbBcAc.toString());
-        _superController =
-            TextEditingController(text: widget.user!.priceSuper.toString());
-        _boxController =
-            TextEditingController(text: widget.user!.priceBox.toString());
+        _abcController = TextEditingController(text: widget.user!.priceAbc.toString());
+        _abBcAcController = TextEditingController(text: widget.user!.priceAbBcAc.toString());
+        _superController = TextEditingController(text: widget.user!.priceSuper.toString());
+        _boxController = TextEditingController(text: widget.user!.priceBox.toString());
+        
+        _tnAbcController = TextEditingController(text: widget.user!.tnPriceAbc.toString());
+        _tnAbBcAcController = TextEditingController(text: widget.user!.tnPriceAbBcAc.toString());
+        _tn3d10Controller = TextEditingController(text: widget.user!.tnPrice3d10.toString());
+        _tn3d25Controller = TextEditingController(text: widget.user!.tnPrice3d25.toString());
+        _tn3d30Controller = TextEditingController(text: widget.user!.tnPrice3d30.toString());
+        _tn3d60Controller = TextEditingController(text: widget.user!.tnPrice3d60.toString());
+        _tn4d110Controller = TextEditingController(text: widget.user!.tnPrice4d110.toString());
+        _tn4d55Controller = TextEditingController(text: widget.user!.tnPrice4d55.toString());
+        _tn4d20Controller = TextEditingController(text: widget.user!.tnPrice4d20.toString());
         _isLoading = false;
       });
       return;
@@ -50,11 +69,19 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
       setState(() {
         _user = user;
         _abcController = TextEditingController(text: user.priceAbc.toString());
-        _abBcAcController =
-            TextEditingController(text: user.priceAbBcAc.toString());
-        _superController =
-            TextEditingController(text: user.priceSuper.toString());
+        _abBcAcController = TextEditingController(text: user.priceAbBcAc.toString());
+        _superController = TextEditingController(text: user.priceSuper.toString());
         _boxController = TextEditingController(text: user.priceBox.toString());
+        
+        _tnAbcController = TextEditingController(text: user.tnPriceAbc.toString());
+        _tnAbBcAcController = TextEditingController(text: user.tnPriceAbBcAc.toString());
+        _tn3d10Controller = TextEditingController(text: user.tnPrice3d10.toString());
+        _tn3d25Controller = TextEditingController(text: user.tnPrice3d25.toString());
+        _tn3d30Controller = TextEditingController(text: user.tnPrice3d30.toString());
+        _tn3d60Controller = TextEditingController(text: user.tnPrice3d60.toString());
+        _tn4d110Controller = TextEditingController(text: user.tnPrice4d110.toString());
+        _tn4d55Controller = TextEditingController(text: user.tnPrice4d55.toString());
+        _tn4d20Controller = TextEditingController(text: user.tnPrice4d20.toString());
         _isLoading = false;
       });
     }
@@ -70,6 +97,16 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
       'price_ab_bc_ac': double.tryParse(_abBcAcController.text) ?? 10.0,
       'price_super': double.tryParse(_superController.text) ?? 10.0,
       'price_box': double.tryParse(_boxController.text) ?? 10.0,
+      
+      'tn_price_abc': double.tryParse(_tnAbcController.text) ?? 12.0,
+      'tn_price_ab_bc_ac': double.tryParse(_tnAbBcAcController.text) ?? 10.0,
+      'tn_price_3d_10': double.tryParse(_tn3d10Controller.text) ?? 10.0,
+      'tn_price_3d_25': double.tryParse(_tn3d25Controller.text) ?? 25.0,
+      'tn_price_3d_30': double.tryParse(_tn3d30Controller.text) ?? 30.0,
+      'tn_price_3d_60': double.tryParse(_tn3d60Controller.text) ?? 60.0,
+      'tn_price_4d_110': double.tryParse(_tn4d110Controller.text) ?? 110.0,
+      'tn_price_4d_55': double.tryParse(_tn4d55Controller.text) ?? 55.0,
+      'tn_price_4d_20': double.tryParse(_tn4d20Controller.text) ?? 20.0,
     };
 
     final success = await apiService.updateUser(_user!.id, data);
@@ -164,13 +201,25 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
                           ),
                           const SizedBox(height: 32),
                           _buildPriceField(
-                              _abcController, 'ABC GAME PRICE', 'Default: 12'),
-                          _buildPriceField(_abBcAcController, 'AB-BC-AC PRICE',
+                              _abcController, 'KL ABC GAME PRICE', 'Default: 12'),
+                          _buildPriceField(_abBcAcController, 'KL AB-BC-AC PRICE',
                               'Default: 10'),
-                          _buildPriceField(_superController, 'SUPER GAME PRICE',
+                          _buildPriceField(_superController, 'KL SUPER GAME PRICE',
                               'Default: 10'),
                           _buildPriceField(
-                              _boxController, 'BOX GAME PRICE', 'Default: 10'),
+                              _boxController, 'KL BOX GAME PRICE', 'Default: 10'),
+                          const Divider(height: 48, thickness: 1, color: Colors.black12),
+                          _buildPriceField(
+                              _tnAbcController, 'TN ABC GAME PRICE', 'Default: 12'),
+                          _buildPriceField(_tnAbBcAcController, 'TN AB-BC-AC PRICE',
+                              'Default: 10'),
+                          _buildPriceField(_tn3d10Controller, 'TN 3D-10 PRICE', 'Default: 10'),
+                          _buildPriceField(_tn3d25Controller, 'TN 3D-25 PRICE', 'Default: 25'),
+                          _buildPriceField(_tn3d30Controller, 'TN 3D-30 PRICE', 'Default: 30'),
+                          _buildPriceField(_tn3d60Controller, 'TN 3D-60 PRICE', 'Default: 60'),
+                          _buildPriceField(_tn4d110Controller, 'TN 4D-110 PRICE', 'Default: 110'),
+                          _buildPriceField(_tn4d55Controller, 'TN 4D-55 PRICE', 'Default: 55'),
+                          _buildPriceField(_tn4d20Controller, 'TN 4D-20 PRICE', 'Default: 20'),
                         ],
                       ),
                     ),

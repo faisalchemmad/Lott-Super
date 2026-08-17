@@ -50,6 +50,7 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
     TimeOfDay deadlineTime = const TimeOfDay(hour: 23, minute: 59);
     bool canEditDelete = game?.canEditDelete ?? true;
     String selectedColor = game?.color ?? '#2C3E50';
+    String selectedBgColor = game?.optionsBgColor ?? '#FFFFFF';
 
     if (game != null) {
       try {
@@ -181,6 +182,49 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
                           ))
                       .toList(),
                 ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Options Background Color',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  children: [
+                    '#FFFFFF',
+                    '#F5F5F5',
+                    '#E3F2FD',
+                    '#E8F5E9',
+                    '#FFF3E0',
+                    '#FCE4EC',
+                    '#F3E5F5',
+                  ]
+                      .map((c) => GestureDetector(
+                            onTap: () =>
+                                setDialogState(() => selectedBgColor = c),
+                            child: Container(
+                              width: 35,
+                              height: 35,
+                              decoration: BoxDecoration(
+                                color: Color(
+                                    int.parse(c.replaceFirst('#', '0xFF'))),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: selectedBgColor == c
+                                      ? Colors.black
+                                      : Colors.grey.shade400,
+                                  width: 2,
+                                ),
+                              ),
+                              child: selectedBgColor == c
+                                  ? const Icon(Icons.check,
+                                      color: Colors.black, size: 20)
+                                  : null,
+                            ),
+                          ))
+                      .toList(),
+                ),
               ],
             ),
           ),
@@ -212,6 +256,7 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
                       'start_time': formatTime(startTime),
                       'end_time': formatTime(endTime),
                       'color': selectedColor,
+                      'options_bg_color': selectedBgColor,
                       'can_edit_delete': canEditDelete,
                       'edit_delete_limit_time': formatTime(deadlineTime),
                     });

@@ -5,6 +5,7 @@ class GameModel {
   final String startTime;
   final String endTime;
   final String color;
+  final String optionsBgColor;
 
   // Global Count Limits
   final int globalCountA;
@@ -25,6 +26,7 @@ class GameModel {
     this.startTime = '00:00:00',
     this.endTime = '23:59:59',
     this.color = '#2C3E50',
+    this.optionsBgColor = '#FFFFFF',
     this.globalCountA = 0,
     this.globalCountB = 0,
     this.globalCountC = 0,
@@ -45,6 +47,7 @@ class GameModel {
       startTime: json['start_time'] ?? '00:00:00',
       endTime: json['end_time'] ?? '23:59:59',
       color: json['color'] ?? '#2C3E50',
+      optionsBgColor: json['options_bg_color'] ?? '#FFFFFF',
       globalCountA: json['global_count_a'] ?? 0,
       globalCountB: json['global_count_b'] ?? 0,
       globalCountC: json['global_count_c'] ?? 0,

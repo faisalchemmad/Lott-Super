@@ -11,6 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
             'weekly_credit_limit', 'remaining_credit',
             'count_a', 'count_b', 'count_c', 'count_ab', 'count_bc', 'count_ac', 'count_super', 'count_box',
             'price_abc', 'price_ab_bc_ac', 'price_super', 'price_box',
+            'tn_price_abc', 'tn_price_ab_bc_ac', 
+            'tn_price_3d_10', 'tn_price_3d_25', 'tn_price_3d_30', 'tn_price_3d_60',
+            'tn_price_4d_110', 'tn_price_4d_55', 'tn_price_4d_20',
             'prize_super_1', 'comm_super_1', 'prize_super_2', 'comm_super_2',
             'prize_super_3', 'comm_super_3', 'prize_super_4', 'comm_super_4',
             'prize_super_5', 'comm_super_5', 'prize_6th', 'comm_6th',
@@ -19,6 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
             'prize_box_2s_1', 'comm_box_2s_1', 'prize_box_2s_2', 'comm_box_2s_2',
             'prize_box_3s_1', 'comm_box_3s_1',
             'sales_comm_super', 'sales_comm_abc', 'sales_comm_ab_bc_ac', 'sales_comm_box',
+            'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
+            'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
+            'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
             'is_blocked', 'is_default', 'date_joined', 'allowed_games'
         ]
 

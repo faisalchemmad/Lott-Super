@@ -80,6 +80,17 @@ class User(AbstractUser):
     price_super = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
     price_box = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
 
+    # TN Consolidated prices per unit
+    tn_price_abc = models.DecimalField(max_digits=10, decimal_places=2, default=12.00)
+    tn_price_ab_bc_ac = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
+    tn_price_3d_10 = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
+    tn_price_3d_25 = models.DecimalField(max_digits=10, decimal_places=2, default=25.00)
+    tn_price_3d_30 = models.DecimalField(max_digits=10, decimal_places=2, default=30.00)
+    tn_price_3d_60 = models.DecimalField(max_digits=10, decimal_places=2, default=60.00)
+    tn_price_4d_110 = models.DecimalField(max_digits=10, decimal_places=2, default=110.00)
+    tn_price_4d_55 = models.DecimalField(max_digits=10, decimal_places=2, default=55.00)
+    tn_price_4d_20 = models.DecimalField(max_digits=10, decimal_places=2, default=20.00)
+
     # Prize and Commission Settings
     # LSK SUPER
     prize_super_1 = models.DecimalField(max_digits=10, decimal_places=2, default=5000.0)
@@ -125,6 +136,17 @@ class User(AbstractUser):
     sales_comm_ab_bc_ac = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     sales_comm_box = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
+    # TN Sales Commission Settings
+    tn_sales_comm_abc = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_ab_bc_ac = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_3d_10 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_3d_25 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_3d_30 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_3d_60 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_4d_110 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_4d_55 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tn_sales_comm_4d_20 = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     def __str__(self):
         return f"{self.username} ({self.role})"
 
@@ -134,6 +156,7 @@ class Game(models.Model):
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
     color = models.CharField(max_length=20, default='#2C3E50')
+    options_bg_color = models.CharField(max_length=20, default='#FFFFFF')
     is_active = models.BooleanField(default=True)
     can_edit_delete = models.BooleanField(default=True)
     edit_delete_limit_time = models.TimeField(default='23:59:59')

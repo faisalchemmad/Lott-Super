@@ -25,6 +25,17 @@ class UserModel {
   final double priceSuper;
   final double priceBox;
 
+  // TN Price Defaults (per unit)
+  final double tnPriceAbc;
+  final double tnPriceAbBcAc;
+  final double tnPrice3d10;
+  final double tnPrice3d25;
+  final double tnPrice3d30;
+  final double tnPrice3d60;
+  final double tnPrice4d110;
+  final double tnPrice4d55;
+  final double tnPrice4d20;
+
   // Prize and Commission Settings
   final double prizeSuper1;
   final double commSuper1;
@@ -64,6 +75,17 @@ class UserModel {
   final double salesCommAbc;
   final double salesCommAbBcAc;
   final double salesCommBox;
+
+  // TN Sales Commission Settings
+  final double tnSalesCommAbc;
+  final double tnSalesCommAbBcAc;
+  final double tnSalesComm3d10;
+  final double tnSalesComm3d25;
+  final double tnSalesComm3d30;
+  final double tnSalesComm3d60;
+  final double tnSalesComm4d110;
+  final double tnSalesComm4d55;
+  final double tnSalesComm4d20;
   final bool isBlocked;
 
   UserModel({
@@ -85,6 +107,15 @@ class UserModel {
     this.priceAbBcAc = 10.0,
     this.priceSuper = 10.0,
     this.priceBox = 10.0,
+    this.tnPriceAbc = 12.0,
+    this.tnPriceAbBcAc = 10.0,
+    this.tnPrice3d10 = 10.0,
+    this.tnPrice3d25 = 25.0,
+    this.tnPrice3d30 = 30.0,
+    this.tnPrice3d60 = 60.0,
+    this.tnPrice4d110 = 110.0,
+    this.tnPrice4d55 = 55.0,
+    this.tnPrice4d20 = 20.0,
     this.prizeSuper1 = 5000,
     this.commSuper1 = 400,
     this.prizeSuper2 = 500,
@@ -115,6 +146,15 @@ class UserModel {
     this.salesCommAbc = 0.0,
     this.salesCommAbBcAc = 0.0,
     this.salesCommBox = 0.0,
+    this.tnSalesCommAbc = 0.0,
+    this.tnSalesCommAbBcAc = 0.0,
+    this.tnSalesComm3d10 = 0.0,
+    this.tnSalesComm3d25 = 0.0,
+    this.tnSalesComm3d30 = 0.0,
+    this.tnSalesComm3d60 = 0.0,
+    this.tnSalesComm4d110 = 0.0,
+    this.tnSalesComm4d55 = 0.0,
+    this.tnSalesComm4d20 = 0.0,
     this.isBlocked = false,
     this.isDefault = false,
     this.parent,
@@ -143,6 +183,15 @@ class UserModel {
       priceAbBcAc: double.parse(json['price_ab_bc_ac']?.toString() ?? '10.0'),
       priceSuper: double.parse(json['price_super']?.toString() ?? '10.0'),
       priceBox: double.parse(json['price_box']?.toString() ?? '10.0'),
+      tnPriceAbc: double.parse(json['tn_price_abc']?.toString() ?? '12.0'),
+      tnPriceAbBcAc: double.parse(json['tn_price_ab_bc_ac']?.toString() ?? '10.0'),
+      tnPrice3d10: double.parse(json['tn_price_3d_10']?.toString() ?? '10.0'),
+      tnPrice3d25: double.parse(json['tn_price_3d_25']?.toString() ?? '25.0'),
+      tnPrice3d30: double.parse(json['tn_price_3d_30']?.toString() ?? '30.0'),
+      tnPrice3d60: double.parse(json['tn_price_3d_60']?.toString() ?? '60.0'),
+      tnPrice4d110: double.parse(json['tn_price_4d_110']?.toString() ?? '110.0'),
+      tnPrice4d55: double.parse(json['tn_price_4d_55']?.toString() ?? '55.0'),
+      tnPrice4d20: double.parse(json['tn_price_4d_20']?.toString() ?? '20.0'),
       prizeSuper1: double.parse(json['prize_super_1']?.toString() ?? '5000'),
       commSuper1: double.parse(json['comm_super_1']?.toString() ?? '400'),
       prizeSuper2: double.parse(json['prize_super_2']?.toString() ?? '500'),
@@ -175,6 +224,15 @@ class UserModel {
       salesCommAbBcAc:
           double.parse(json['sales_comm_ab_bc_ac']?.toString() ?? '0.0'),
       salesCommBox: double.parse(json['sales_comm_box']?.toString() ?? '0.0'),
+      tnSalesCommAbc: double.parse(json['tn_sales_comm_abc']?.toString() ?? '0.0'),
+      tnSalesCommAbBcAc: double.parse(json['tn_sales_comm_ab_bc_ac']?.toString() ?? '0.0'),
+      tnSalesComm3d10: double.parse(json['tn_sales_comm_3d_10']?.toString() ?? '0.0'),
+      tnSalesComm3d25: double.parse(json['tn_sales_comm_3d_25']?.toString() ?? '0.0'),
+      tnSalesComm3d30: double.parse(json['tn_sales_comm_3d_30']?.toString() ?? '0.0'),
+      tnSalesComm3d60: double.parse(json['tn_sales_comm_3d_60']?.toString() ?? '0.0'),
+      tnSalesComm4d110: double.parse(json['tn_sales_comm_4d_110']?.toString() ?? '0.0'),
+      tnSalesComm4d55: double.parse(json['tn_sales_comm_4d_55']?.toString() ?? '0.0'),
+      tnSalesComm4d20: double.parse(json['tn_sales_comm_4d_20']?.toString() ?? '0.0'),
       isBlocked: json['is_blocked'] ?? false,
       isDefault: json['is_default'] ?? false,
       parent: json['parent'],
@@ -203,6 +261,15 @@ class UserModel {
       'price_ab_bc_ac': priceAbBcAc,
       'price_super': priceSuper,
       'price_box': priceBox,
+      'tn_price_abc': tnPriceAbc,
+      'tn_price_ab_bc_ac': tnPriceAbBcAc,
+      'tn_price_3d_10': tnPrice3d10,
+      'tn_price_3d_25': tnPrice3d25,
+      'tn_price_3d_30': tnPrice3d30,
+      'tn_price_3d_60': tnPrice3d60,
+      'tn_price_4d_110': tnPrice4d110,
+      'tn_price_4d_55': tnPrice4d55,
+      'tn_price_4d_20': tnPrice4d20,
       'prize_super_1': prizeSuper1,
       'comm_super_1': commSuper1,
       'prize_super_2': prizeSuper2,
@@ -233,6 +300,15 @@ class UserModel {
       'sales_comm_abc': salesCommAbc,
       'sales_comm_ab_bc_ac': salesCommAbBcAc,
       'sales_comm_box': salesCommBox,
+      'tn_sales_comm_abc': tnSalesCommAbc,
+      'tn_sales_comm_ab_bc_ac': tnSalesCommAbBcAc,
+      'tn_sales_comm_3d_10': tnSalesComm3d10,
+      'tn_sales_comm_3d_25': tnSalesComm3d25,
+      'tn_sales_comm_3d_30': tnSalesComm3d30,
+      'tn_sales_comm_3d_60': tnSalesComm3d60,
+      'tn_sales_comm_4d_110': tnSalesComm4d110,
+      'tn_sales_comm_4d_55': tnSalesComm4d55,
+      'tn_sales_comm_4d_20': tnSalesComm4d20,
       'is_blocked': isBlocked,
       'is_default': isDefault,
       'allowed_games': allowedGames,
