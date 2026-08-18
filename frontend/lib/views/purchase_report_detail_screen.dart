@@ -78,7 +78,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
             headerDecoration:
                 const pw.BoxDecoration(color: PdfColors.blueGrey700),
             cellAlignment: pw.Alignment.centerLeft,
-            headers: ['GAME', 'NUMBER', 'TYPE', 'QTY', 'PRICE'],
+            headers: ['GAME', 'NUMBER', 'TYPE', 'QTY', 'NET AMOUNT'],
             data: reportData
                 .map((item) => [
                       item['game__name'] ?? 'ALL',
@@ -195,11 +195,6 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87)),
-                            Text('Rate: ₹${item['price_per_count'] ?? '-'}',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey[700])),
                             const SizedBox(height: 2),
                             Text('Net: ₹${item['net_amount'] ?? item['total_price']}',
                                   style: TextStyle(
