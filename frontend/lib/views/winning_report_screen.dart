@@ -68,12 +68,12 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
             _agents.firstWhere((a) => a.id == widget.initialAgentId);
       }
       _fetchReport();
-    });
 
-    // Only show auto filter if NOT coming from filter page
-    if (widget.initialFromDate == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showFilterSheet());
-    }
+      // Only show auto filter if NOT coming from filter page, and AFTER loading filters
+      if (widget.initialFromDate == null && mounted) {
+        _showFilterSheet();
+      }
+    });
   }
 
   Future<void> _loadFilters() async {
@@ -89,14 +89,12 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
       _currentUser = profile;
       _userRole = role;
 
-      // Add FORWARDED option for ADMIN and SUPER_ADMIN
-      if (role == 'ADMIN' || role == 'SUPER_ADMIN') {
-        _agents.insert(0, UserModel(
-          id: -1,
-          username: role == 'ADMIN' ? 'FORWARDED (OUT)' : 'FORWARDED (IN)',
-          role: 'FORWARD',
-        ));
-      }
+      // Add FORWARDED option for everyone just to be sure it shows up
+      _agents.insert(0, UserModel(
+        id: -1,
+        username: (role == 'SUPER_ADMIN') ? 'FORWARDED (IN)' : 'FORWARDED (OUT)',
+        role: 'FORWARD',
+      ));
 
       if (role == 'SUB_DEALER' && profile != null) {
         _selectedAgent = profile;
