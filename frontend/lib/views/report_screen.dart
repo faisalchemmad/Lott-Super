@@ -5,6 +5,7 @@ import 'count_report_screen.dart';
 import 'daily_report_screen.dart';
 import 'number_report_screen.dart';
 import 'winning_report_filter_screen.dart';
+import 'purchase_report_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -143,6 +144,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 _buildReportCard(
                   title: 'Daily Report',
                   subtitle: 'Summary grouped by Date or Game name',
@@ -152,6 +154,18 @@ class _ReportScreenState extends State<ReportScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const DailyReportScreen()),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildReportCard(
+                  title: 'Purchase Report',
+                  subtitle: 'View forwarded numbers and total purchase amount',
+                  icon: Icons.shopping_cart_checkout_rounded,
+                  color: Colors.pinkAccent,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PurchaseReportScreen()),
                   ),
                 ),
                 const SizedBox(height: 50),

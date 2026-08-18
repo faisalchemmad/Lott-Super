@@ -1643,7 +1643,49 @@ class NumberReportView(views.APIView):
                 total_qty=Sum('count')
             ).order_by('-total_qty', 'number')
 
-        return Response(list(results))
+        results_list = list(results)
+        
+        # Attach Forwarded Quantities
+        try:
+            from .models import ForwardedBet
+            fwd_qs = ForwardedBet.objects.all()
+            if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
+            if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
+            if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
+            if search_number: fwd_qs = fwd_qs.filter(number=search_number)
+            if bet_type:
+                if bet_type in ['SUPER+BOX', 'SUPER BOX']:
+                    fwd_qs = fwd_qs.filter(type__in=['SUPER', 'BOX', 'super', 'box'])
+                else:
+                    fwd_qs = fwd_qs.filter(type__iexact=bet_type)
+
+            if user.role == 'SUPER_ADMIN':
+                # Super Admin sees what was forwarded TO them
+                fwd_qs = fwd_qs.filter(forwarded_to=user)
+            elif not agent_id:
+                # Admin sees what they forwarded OUT
+                fwd_qs = fwd_qs.filter(forwarded_by=user)
+            else:
+                fwd_qs = fwd_qs.none() # Agent specific view doesn't show forwarding
+                
+            fwd_grouped = fwd_qs.values('game__name', 'type', 'number').annotate(fwd_qty=Sum('count'))
+            fwd_dict = {(item['game__name'], item['type'], item['number']): item['fwd_qty'] for item in fwd_grouped}
+            
+            for r in results_list:
+                key = (r['game__name'], r['type'], r['number'])
+                r['forwarded_qty'] = fwd_dict.get(key, 0)
+                
+            # If Super Admin, they might have forwarded bets for numbers that have 0 direct bets?
+            # Normally Super Admin has NO direct bets if they don't bet themselves!
+            # So `results_list` might be EMPTY for Super Admin if we only look at `Bet` table under their descendants?
+            # Wait, `Bet.objects.all()` is what Super Admin sees! So it includes ALL bets.
+            # Thus, the number will definitely be in `results_list`.
+                
+        except Exception as e:
+            print("Error attaching forwarded bets:", e)
+            pass
+
+        return Response(results_list)
 
 
 def calculate_bet_win_prize_and_comm(bet, user, specific_prize_type=None):
@@ -2332,6 +2374,27 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if user.role == 'SUPER_ADMIN':
             return ForwardedBet.objects.all().order_by('-created_at')
         return ForwardedBet.objects.filter(Q(forwarded_by=user) | Q(forwarded_to=user)).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def purchase_report(self, request):
+        user = request.user
+        from_date = request.query_params.get('from')
+        to_date = request.query_params.get('to')
+        game_id = request.query_params.get('game')
+        
+        # Admin is checking what THEY forwarded (purchased)
+        qs = ForwardedBet.objects.filter(forwarded_by=user)
+        if from_date: qs = qs.filter(date__gte=from_date)
+        if to_date: qs = qs.filter(date__lte=to_date)
+        if game_id: qs = qs.filter(game_id=game_id)
+        
+        from django.db.models import Sum, F
+        results = qs.values('game__name', 'type', 'number').annotate(
+            total_qty=Sum('count'),
+            total_price=Sum(F('count') * F('price_per_count'))
+        ).order_by('-total_qty', 'number')
+        
+        return Response(list(results))
 
     @action(detail=False, methods=['get'])
     def get_retained_numbers(self, request):

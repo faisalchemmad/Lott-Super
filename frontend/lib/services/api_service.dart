@@ -932,6 +932,24 @@ class ApiService {
     return response.statusCode == 204;
   }
 
+  Future<List<dynamic>> getPurchaseReport({String? fromDate, String? toDate, int? gameId}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    
+    final Map<String, String> queryParams = {};
+    if (fromDate != null) queryParams['from'] = fromDate;
+    if (toDate != null) queryParams['to'] = toDate;
+    if (gameId != null) queryParams['game'] = gameId.toString();
+
+    final uri = Uri.parse('$baseUrl/forwarded_bets/purchase_report/').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: {'Authorization': 'Token $token'});
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
   Future<List<dynamic>> getRetainedNumbers({required int gameId, required String state, String? type}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
