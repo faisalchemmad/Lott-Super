@@ -2384,7 +2384,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if game_id: qs = qs.filter(game_id=game_id)
         
         from django.db.models import Sum, F
-        results = qs.values('game__name', 'type', 'number').annotate(
+        results = qs.values('game__name', 'type', 'number', 'price_per_count').annotate(
             total_qty=Sum('count'),
             total_price=Sum(F('count') * F('price_per_count'))
         ).order_by('-total_qty', 'number')

@@ -187,15 +187,21 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('${item['total_qty']}',
+                            Text('Qty: ${item['total_qty']}',
                                 style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.primary)),
+                                    color: Colors.black87)),
+                            Text('Rate: ₹${item['price_per_count'] ?? '-'}',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700])),
+                            const SizedBox(height: 2),
                             Text('₹${item['total_price']}',
                                   style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
                                       color: Colors.red[700])),
                           ],
                         ),
