@@ -2383,13 +2383,64 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if to_date: qs = qs.filter(date__lte=to_date)
         if game_id: qs = qs.filter(game_id=game_id)
         
-        from django.db.models import Sum, F
-        results = qs.values('game__name', 'type', 'number', 'price_per_count').annotate(
+        from django.db.models import Sum, F, Case, When, Value, CharField
+        from decimal import Decimal
+        
+        qs = qs.annotate(
+            bet_type_category=Case(
+                When(type__iexact='a', then=Value('ABC')),
+                When(type__iexact='b', then=Value('ABC')),
+                When(type__iexact='c', then=Value('ABC')),
+                When(type__iexact='ab', then=Value('AB_BC_AC')),
+                When(type__iexact='bc', then=Value('AB_BC_AC')),
+                When(type__iexact='ac', then=Value('AB_BC_AC')),
+                default=F('type'),
+                output_field=CharField(),
+            )
+        )
+        
+        results = qs.values('game__name', 'type', 'number', 'price_per_count', 'state', 'bet_type_category').annotate(
             total_qty=Sum('count'),
             total_price=Sum(F('count') * F('price_per_count'))
         ).order_by('-total_qty', 'number')
         
-        return Response(list(results))
+        response_data = []
+        for r in results:
+            bcat = r['bet_type_category']
+            state = r['state']
+            comm_rate = Decimal('0.00')
+            
+            if state == 'KL':
+                if bcat == 'ABC': comm_rate = Decimal(str(user.sales_comm_abc))
+                elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.sales_comm_ab_bc_ac))
+                elif bcat == 'SUPER': comm_rate = Decimal(str(user.sales_comm_super))
+                elif bcat == 'BOX': comm_rate = Decimal(str(user.sales_comm_box))
+            elif state == 'TN':
+                if bcat == 'ABC': comm_rate = Decimal(str(user.tn_sales_comm_abc))
+                elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.tn_sales_comm_ab_bc_ac))
+                elif bcat == '3D-10': comm_rate = Decimal(str(user.tn_sales_comm_3d_10))
+                elif bcat == '3D-25': comm_rate = Decimal(str(user.tn_sales_comm_3d_25))
+                elif bcat == '3D-30': comm_rate = Decimal(str(user.tn_sales_comm_3d_30))
+                elif bcat == '3D-60': comm_rate = Decimal(str(user.tn_sales_comm_3d_60))
+                
+            qty = Decimal(str(r['total_qty']))
+            total_price = Decimal(str(r['total_price']))
+            commission = comm_rate * qty
+            net_amount = total_price - commission
+            
+            response_data.append({
+                'game__name': r['game__name'],
+                'type': r['type'],
+                'number': r['number'],
+                'price_per_count': r['price_per_count'],
+                'comm_per_count': comm_rate,
+                'total_qty': r['total_qty'],
+                'total_price': total_price,
+                'total_commission': commission,
+                'net_amount': net_amount,
+            })
+            
+        return Response(response_data)
 
     @action(detail=False, methods=['get'])
     def get_retained_numbers(self, request):
