@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -49,6 +50,10 @@ class _BettingScreenState extends State<BettingScreen>
       TextEditingController(text: '1');
   final FocusNode _numberFocusNode = FocusNode();
   final FocusNode _countFocusNode = FocusNode();
+  final FocusNode _startFocusNode = FocusNode();
+  final FocusNode _endFocusNode = FocusNode();
+  final FocusNode _stepFocusNode = FocusNode();
+  final FocusNode _boxCountFocusNode = FocusNode();
 
   final Map<String, int> _typeDigitMap = {
     'A': 1,
@@ -136,10 +141,7 @@ class _BettingScreenState extends State<BettingScreen>
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
-    if (d.inHours > 0) {
-      return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
-    }
-    return "$twoDigitMinutes:$twoDigitSeconds";
+    return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 
   void _tabListener() {
@@ -172,6 +174,44 @@ class _BettingScreenState extends State<BettingScreen>
           _countFocusNode.requestFocus();
         }
       }
+    }
+  }
+
+  int _getRangeDigits() {
+    return _tabController.index == 1 ? 2 : 3;
+  }
+
+  void _autoJumpStartToEnd() {
+    if (_startController.text.length == _getRangeDigits()) {
+      _endFocusNode.requestFocus();
+    }
+  }
+
+  void _autoJumpEndToStep() {
+    if (_endController.text.length == _getRangeDigits()) {
+      _countFocusNode.requestFocus(); // Skipping step as per usual lotto apps, or wait, user usually skips step. Let's jump to count.
+    }
+  }
+
+  void _autoJumpStepToCount() {
+    if (_stepController.text.length == 1) {
+      _countFocusNode.requestFocus();
+    }
+  }
+
+  void _autoJumpCountToBox() {
+    if (_countController.text.length == 3) {
+      if (_tabController.index >= 2) {
+        _boxCountFocusNode.requestFocus();
+      } else {
+        _countFocusNode.unfocus();
+      }
+    }
+  }
+
+  void _autoJumpBoxToDone() {
+    if (_boxCountController.text.length == 3) {
+      _boxCountFocusNode.unfocus();
     }
   }
 
@@ -1061,6 +1101,7 @@ class _BettingScreenState extends State<BettingScreen>
     final gameColor =
         Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
     return Scaffold(
+      endDrawer: _buildEndDrawer(),
       appBar: AppBar(
         backgroundColor: gameColor,
         title: Row(
@@ -1068,14 +1109,27 @@ class _BettingScreenState extends State<BettingScreen>
             Text(widget.game.name),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.black26,
+                color: const Color(0xFF9EACB0), // Casio LCD pale green/grey background
                 borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.black54, width: 1.5),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    offset: Offset(1, 1),
+                    blurRadius: 1,
+                  ),
+                ],
               ),
               child: Text(
                 _formatDuration(_remainingTime),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: GoogleFonts.shareTechMono(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1A1A1A), // Dark text like LCD
+                  letterSpacing: 1.5,
+                ),
               ),
             ),
           ],
@@ -1127,25 +1181,81 @@ class _BettingScreenState extends State<BettingScreen>
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Container(
-              color: Colors.grey[50],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF'))),
-                      border: const Border(bottom: BorderSide(color: Colors.black12)),
-                    ),
-                    child: _buildInputSection(),
+          : Stack(
+              children: [
+                Container(
+                  color: Colors.grey[50],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF'))),
+                          border: const Border(bottom: BorderSide(color: Colors.black12)),
+                        ),
+                        child: _buildInputSection(),
+                      ),
+                      Expanded(
+                        child: _buildDraftContainer(borderRadius: 0),
+                      ),
+                      _buildStickyBottomBar(),
+                    ],
                   ),
-                  Expanded(
-                    child: _buildDraftContainer(borderRadius: 0),
-                  ),
-                  _buildStickyBottomBar(),
-                ],
-              ),
+                ),
+                Builder(
+                  builder: (context) {
+                    return Positioned(
+                      right: 0,
+                      top: MediaQuery.of(context).size.height / 3.5,
+                      child: GestureDetector(
+                        onTap: () => Scaffold.of(context).openEndDrawer(),
+                        onHorizontalDragUpdate: (details) {
+                          if (details.primaryDelta! < -2) {
+                            Scaffold.of(context).openEndDrawer();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: gameColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              bottomLeft: Radius.circular(8),
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black38,
+                                offset: Offset(-2, 2),
+                                blurRadius: 4,
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 10),
+                              RotatedBox(
+                                quarterTurns: 3,
+                                child: Text(
+                                  _selectedStateCode,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                ),
+              ],
             ),
     );
   }
@@ -1389,8 +1499,10 @@ class _BettingScreenState extends State<BettingScreen>
               Expanded(
                 child: TextField(
                   controller: _startController,
+                  focusNode: _startFocusNode,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: _getRangeDigits(),
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(
@@ -1402,8 +1514,10 @@ class _BettingScreenState extends State<BettingScreen>
               Expanded(
                 child: TextField(
                   controller: _endController,
+                  focusNode: _endFocusNode,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: _getRangeDigits(),
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(
@@ -1415,8 +1529,10 @@ class _BettingScreenState extends State<BettingScreen>
               Expanded(
                 child: TextField(
                   controller: _stepController,
+                  focusNode: _stepFocusNode,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 2,
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w900),
                   decoration: _inputDecoration(label: 'Step', hint: '1'),
@@ -1426,8 +1542,10 @@ class _BettingScreenState extends State<BettingScreen>
               Expanded(
                 child: TextField(
                   controller: _countController,
+                  focusNode: _countFocusNode,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 3,
                   style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -1440,8 +1558,10 @@ class _BettingScreenState extends State<BettingScreen>
                 Expanded(
                   child: TextField(
                     controller: _boxCountController,
+                    focusNode: _boxCountFocusNode,
                     keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 3,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -1479,6 +1599,7 @@ class _BettingScreenState extends State<BettingScreen>
                   focusNode: _countFocusNode,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 3,
                   style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -1491,8 +1612,10 @@ class _BettingScreenState extends State<BettingScreen>
                 Expanded(
                   child: TextField(
                     controller: _boxCountController,
+                    focusNode: _boxCountFocusNode,
                     keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  maxLength: 3,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -1768,8 +1891,6 @@ class _BettingScreenState extends State<BettingScreen>
       ),
       child: Row(
         children: [
-          _buildStateSelector(),
-          const SizedBox(width: 8),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1887,6 +2008,63 @@ class _BettingScreenState extends State<BettingScreen>
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: themeColor, width: 2),
+      ),
+    );
+  }
+
+  void _changeState(String stateCode) {
+    if (_selectedStateCode == stateCode) return;
+    setState(() {
+      _selectedStateCode = stateCode;
+      int length = stateCode == 'TN' ? 4 : 3;
+      int newIndex = _tabController.index;
+      if (newIndex >= length) newIndex = length - 1;
+      
+      _tabController.removeListener(_tabListener);
+      _tabController.dispose();
+      _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
+      _tabController.addListener(_tabListener);
+    });
+  }
+
+  Widget _buildEndDrawer() {
+    final gameColor = Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
+    return Drawer(
+      width: 250,
+      child: Container(
+        color: Colors.white,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: gameColor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: const [
+                  Text('Select State', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            ListTile(
+              title: const Text('KL (Kerala)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              trailing: _selectedStateCode == 'KL' ? const Icon(Icons.check_circle, color: Colors.green) : null,
+              onTap: () {
+                _changeState('KL');
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              title: const Text('TN (Tamil Nadu)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              trailing: _selectedStateCode == 'TN' ? const Icon(Icons.check_circle, color: Colors.green) : null,
+              onTap: () {
+                _changeState('TN');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    ForwardLimitViewSet, ForwardedBetViewSet,
     LoginView, GameViewSet, BetViewSet, ReportView, SalesReportView, 
     CountReportView, DailyReportView, NumberReportView, WinningReportView, DashboardView, UserViewSet, 
     NumberLimitViewSet, GlobalNumberLimitViewSet, GameResultViewSet,
@@ -16,6 +17,8 @@ router.register(r'number-limits', NumberLimitViewSet)
 router.register(r'global-number-limits', GlobalNumberLimitViewSet)
 router.register(r'game-results', GameResultViewSet)
 router.register(r'user-game-timings', UserGameTimingViewSet)
+router.register(r'forward-limits', ForwardLimitViewSet, basename='forward-limits')
+router.register(r'forwarded-bets', ForwardedBetViewSet, basename='forwarded-bets')
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),

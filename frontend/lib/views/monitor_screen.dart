@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -115,7 +116,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
 
     Widget content = Column(
       children: [
-        if (!isDesktop) _buildFilters(),
+        
         _buildSearchAndOptions(isDesktop),
         _buildTableHeader(isDesktop),
         Expanded(
@@ -161,7 +162,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
               children: [
                 SizedBox(
                   width: 300,
-                  child: SingleChildScrollView(child: _buildFilters()),
+                  child: SingleChildScrollView(child: Container()),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(child: content),

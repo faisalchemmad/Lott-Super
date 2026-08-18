@@ -278,3 +278,50 @@ class SystemSettings(models.Model):
     
     def __str__(self):
         return "System Settings"
+
+
+class ForwardLimit(models.Model):
+    # This limit is set BY an admin FOR their branch
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forward_limits')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
+    number = models.CharField(max_length=3, blank=True, null=True, help_text="Optional: If blank, applies to all numbers of this type")
+    max_retained_count = models.IntegerField(default=100) # Amount kept by admin, excess is forwarded
+    state = models.CharField(max_length=5, default='KL')
+    
+    class Meta:
+        unique_together = ('admin', 'game', 'type', 'state', 'number')
+
+    def __str__(self):
+        num_str = f" | Num: {self.number}" if self.number else " | All Nums"
+        return f"{self.admin.username} | {self.game.name} | {self.state} {self.type}{num_str} | Retain: {self.max_retained_count}"
+
+class ForwardedBet(models.Model):
+    # Who is forwarding to whom
+    forwarded_by = models.ForeignKey(User, related_name='forwarded_out', on_delete=models.CASCADE)
+    forwarded_to = models.ForeignKey(User, related_name='forwarded_in', on_delete=models.CASCADE)
+    
+    # Details of the forwarded count
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    state = models.CharField(max_length=5, default='KL')
+    type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
+    number = models.CharField(max_length=3)
+    count = models.IntegerField()
+    
+    # Financials (At what price/commission was it forwarded?)
+    # When Admin forwards to Super Admin, Super Admin "sells" it to Admin at Admin's wholesale price.
+    # Therefore, Admin receives commission on this forwarded bet just like a normal sale to a subordinate.
+    # We store the total sales value (price_per_count * count) and total commission (comm_per_count * count)
+    price_per_count = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    comm_per_count = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(default=timezone.now)
+    is_auto = models.BooleanField(default=False)
+    
+    is_winner = models.BooleanField(null=True, blank=True)
+    winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        auto_str = "AUTO" if self.is_auto else "MANUAL"
+        return f"[{auto_str}] {self.forwarded_by.username} -> {self.forwarded_to.username} | {self.number} ({self.count})"

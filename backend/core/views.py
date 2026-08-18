@@ -1,10 +1,11 @@
-from rest_framework import viewsets, permissions, status, views
+from rest_framework import viewsets, permissions, status, views, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.db.models import Sum, Q, F, Count, Max, When, Case, Value, CharField
 from .models import (
+    ForwardLimit, ForwardedBet,
     User, Game, Bet, GameResult, NumberLimit,
     GlobalNumberLimit, ClearedExposure, UserGameTiming, SystemSettings
 )
@@ -544,7 +545,7 @@ class BetViewSet(viewsets.ModelViewSet):
                         continue
 
             # All checks passed!
-            Bet.objects.create(
+            bet_obj = Bet.objects.create(
                 user=user,
                 game=game,
                 number=number,
@@ -557,6 +558,70 @@ class BetViewSet(viewsets.ModelViewSet):
             created_bets_count += 1
             total_created_amount += amount * count
             
+            # Auto Forward Logic (Cut-out)
+            # Evaluate after each bet creation
+            try:
+                from .models import ForwardLimit, ForwardedBet
+                for info in hierarchy_info:
+                    p = info['user']
+                    if p.role == 'SUPER_ADMIN':
+                        continue # Super admin doesn't forward
+                    
+                    d_ids = info['descendant_ids']
+                    
+                    # 1. Fetch any applicable ForwardLimit (Specific Number or Generic Type)
+                    fwd_limit = ForwardLimit.objects.filter(
+                        admin=p, game=game, state=state, type=bet_type
+                    ).filter(Q(number=number) | Q(number='') | Q(number__isnull=True)).order_by('-number').first()
+                    
+                    if fwd_limit:
+                        # 2. Calculate current total count (inclusive of just created bet)
+                        tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, number=number, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
+                        # 3. Calculate already forwarded count to avoid duplicate forwarding
+                        fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, number=number, date=today).aggregate(t=Sum('count'))['t'] or 0
+                        
+                        retained = tot_db - fwd_out
+                        
+                        if retained > fwd_limit.max_retained_count:
+                            excess = retained - fwd_limit.max_retained_count
+                            
+                            forward_to = p.parent
+                            if forward_to:
+                                p_price_map = {
+                                    'A': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'B': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'C': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'AB': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'BC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'AC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'SUPER': p.price_super,
+                                    'BOX': p.price_box,
+                                }
+                                if state == 'TN':
+                                    if bet_type == '3D-10': p_price_map['3D-10'] = getattr(p, 'tn_price_3d_10', 10.0)
+                                    elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(p, 'tn_price_3d_25', 25.0)
+                                    elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(p, 'tn_price_3d_30', 30.0)
+                                    elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(p, 'tn_price_3d_60', 60.0)
+                                    elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(p, 'tn_price_4d_110', 110.0)
+                                    elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(p, 'tn_price_4d_55', 55.0)
+                                    elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(p, 'tn_price_4d_20', 20.0)
+                                    
+                                p_amount = p_price_map.get(bet_type, 1.0)
+                                
+                                ForwardedBet.objects.create(
+                                    forwarded_by=p,
+                                    forwarded_to=forward_to,
+                                    game=game,
+                                    state=state,
+                                    type=bet_type,
+                                    number=number,
+                                    count=excess,
+                                    price_per_count=p_amount,
+                                    is_auto=True
+                                )
+            except Exception as e:
+                print("Auto Forward Error:", e)
+                
             # Update session tracking for ALL levels in the hierarchy
             for p in hierarchy:
                 key_n = (p.id if p.role != 'SUPER_ADMIN' else None, number, bet_type, game.id)
@@ -985,6 +1050,68 @@ class NetReportView(views.APIView):
                 'win_co': total_winning + total_comm,
                 'balance': sale_net - total_winning
             })
+
+        # --- Inject Forwarding Calculations into Net Report ---
+        if target_user.id == user.id:
+            from .models import ForwardedBet
+            from django.db.models import Sum, F
+            
+            fwd_sales = 0.0
+            fwd_win = 0.0
+            fwd_comm = 0.0
+
+            if user.role != 'SUPER_ADMIN':
+                fwd_out_qs = ForwardedBet.objects.filter(forwarded_by=user)
+                if from_date: fwd_out_qs = fwd_out_qs.filter(date__gte=from_date)
+                if to_date: fwd_out_qs = fwd_out_qs.filter(date__lte=to_date)
+                if game_id: fwd_out_qs = fwd_out_qs.filter(game_id=game_id)
+                
+                for fb in fwd_out_qs:
+                    fwd_sales += float(fb.price_per_count * fb.count)
+                    if fb.is_winner:
+                        fwd_win += float(fb.winning_amount)
+                        
+                if fwd_sales > 0 or fwd_win > 0:
+                    data.append({
+                        'logid': len(data) + 1,
+                        'user': 'FORWARDED (OUT)',
+                        'user_id': -1,
+                        'role': 'FORWARD',
+                        'is_drillable': False,
+                        'rate': "N/A",
+                        'gross_sale': -fwd_sales,
+                        'commission': 0,
+                        'all_sale': -fwd_sales,
+                        'winning': -fwd_win,
+                        'win_co': -fwd_win,
+                        'balance': (-fwd_sales) - (-fwd_win)
+                    })
+            else:
+                fwd_in_qs = ForwardedBet.objects.filter(forwarded_to=user)
+                if from_date: fwd_in_qs = fwd_in_qs.filter(date__gte=from_date)
+                if to_date: fwd_in_qs = fwd_in_qs.filter(date__lte=to_date)
+                if game_id: fwd_in_qs = fwd_in_qs.filter(game_id=game_id)
+                
+                for fb in fwd_in_qs:
+                    fwd_sales += float(fb.price_per_count * fb.count)
+                    if fb.is_winner:
+                        fwd_win += float(fb.winning_amount)
+                
+                if fwd_sales > 0 or fwd_win > 0:
+                    data.append({
+                        'logid': len(data) + 1,
+                        'user': 'FORWARDED (IN)',
+                        'user_id': -1,
+                        'role': 'FORWARD',
+                        'is_drillable': False,
+                        'rate': "N/A",
+                        'gross_sale': fwd_sales,
+                        'commission': 0,
+                        'all_sale': fwd_sales,
+                        'winning': fwd_win,
+                        'win_co': fwd_win,
+                        'balance': fwd_sales - fwd_win
+                    })
 
         return Response({
             'breadcrumb': {
@@ -2168,3 +2295,150 @@ class GameResultViewSet(viewsets.ModelViewSet):
                 b.winning_commission = sum(w[2] for w in wins) * b.count
                 b.winning_prize_type = "|".join(w[0] for w in wins)
                 b.save()
+
+
+class ForwardLimitViewSet(viewsets.ModelViewSet):
+    queryset = ForwardLimit.objects.all()
+    serializer_class = type('ForwardLimitSerializer', (serializers.ModelSerializer,), {
+        'Meta': type('Meta', (), {'model': ForwardLimit, 'fields': '__all__'})
+    })
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'SUPER_ADMIN':
+            return ForwardLimit.objects.all()
+        return ForwardLimit.objects.filter(admin=user)
+
+class ForwardedBetViewSet(viewsets.ModelViewSet):
+    queryset = ForwardedBet.objects.all()
+    serializer_class = type('ForwardedBetSerializer', (serializers.ModelSerializer,), {
+        'Meta': type('Meta', (), {'model': ForwardedBet, 'fields': '__all__'})
+    })
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'SUPER_ADMIN':
+            return ForwardedBet.objects.all().order_by('-created_at')
+        return ForwardedBet.objects.filter(Q(forwarded_by=user) | Q(forwarded_to=user)).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def get_retained_numbers(self, request):
+        user = request.user
+        game_id = request.query_params.get('game')
+        state = request.query_params.get('state', 'KL')
+        bet_type = request.query_params.get('type')
+        
+        if not game_id:
+            return Response({'error': 'game is required'}, status=400)
+            
+        today = timezone.localtime().date()
+        descendants = user.get_descendant_ids()
+        
+        # 1. Total Bets Under Admin Branch
+        bets_qs = Bet.objects.filter(
+            user_id__in=descendants, 
+            game_id=game_id, 
+            state=state, 
+            created_at__date=today
+        )
+        if bet_type:
+            bets_qs = bets_qs.filter(type=bet_type)
+            
+        from django.db.models import Sum, F
+        
+        grouped_bets = bets_qs.values('number', 'type').annotate(total_count=Sum('count'))
+        
+        # 2. Already Forwarded (Out)
+        fwd_out_qs = ForwardedBet.objects.filter(
+            forwarded_by=user, 
+            game_id=game_id, 
+            state=state, 
+            date=today
+        )
+        if bet_type:
+            fwd_out_qs = fwd_out_qs.filter(type=bet_type)
+            
+        fwd_grouped = fwd_out_qs.values('number', 'type').annotate(fwd_count=Sum('count'))
+        
+        fwd_dict = {(item['number'], item['type']): item['fwd_count'] for item in fwd_grouped}
+        
+        results = []
+        for item in grouped_bets:
+            num = item['number']
+            typ = item['type']
+            tot = item['total_count']
+            fwd = fwd_dict.get((num, typ), 0)
+            retained = tot - fwd
+            if retained > 0:
+                results.append({
+                    'number': num,
+                    'type': typ,
+                    'total_count': tot,
+                    'forwarded_count': fwd,
+                    'retained_count': retained
+                })
+                
+        # Sort by retained descending
+        results.sort(key=lambda x: x['retained_count'], reverse=True)
+        return Response(results)
+
+    @action(detail=False, methods=['post'])
+    def manual_forward(self, request):
+        user = request.user
+        if not user.parent:
+            return Response({'error': 'No parent to forward to'}, status=400)
+            
+        game_id = request.data.get('game')
+        state = request.data.get('state', 'KL')
+        items = request.data.get('items', []) # [{'number': '123', 'type': 'SUPER', 'count': 10}]
+        
+        if not game_id or not items:
+            return Response({'error': 'Invalid data'}, status=400)
+            
+        try:
+            game = Game.objects.get(id=game_id)
+        except Game.DoesNotExist:
+            return Response({'error': 'Game not found'}, status=404)
+            
+        forwarded_records = []
+        
+        p_price_map = {
+            'A': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+            'B': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+            'C': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+            'AB': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+            'BC': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+            'AC': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+            'SUPER': user.price_super,
+            'BOX': user.price_box,
+        }
+        
+        for item in items:
+            bet_type = item.get('type')
+            if state == 'TN':
+                if bet_type == '3D-10': p_price_map['3D-10'] = getattr(user, 'tn_price_3d_10', 10.0)
+                elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(user, 'tn_price_3d_25', 25.0)
+                elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(user, 'tn_price_3d_30', 30.0)
+                elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(user, 'tn_price_3d_60', 60.0)
+                elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(user, 'tn_price_4d_110', 110.0)
+                elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(user, 'tn_price_4d_55', 55.0)
+                elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(user, 'tn_price_4d_20', 20.0)
+
+            p_amount = p_price_map.get(bet_type, 1.0)
+            
+            f = ForwardedBet.objects.create(
+                forwarded_by=user,
+                forwarded_to=user.parent,
+                game=game,
+                state=state,
+                type=bet_type,
+                number=item.get('number'),
+                count=item.get('count'),
+                price_per_count=p_amount,
+                is_auto=False
+            )
+            forwarded_records.append(f.id)
+            
+        return Response({'message': 'Forwarded successfully', 'forwarded_ids': forwarded_records})

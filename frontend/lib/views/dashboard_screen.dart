@@ -17,6 +17,9 @@ import '../models/user_model.dart';
 import 'user_options_screen.dart';
 import 'settings_screen.dart';
 import 'system_settings_screen.dart';
+import 'manage_forward_limits_screen.dart';
+import 'manual_forwarding_screen.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -359,6 +362,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => const PriceSettingScreen())),
+          ),
+        if (isAdmin)
+          _buildActionCard(
+            'Auto Forward',
+            Icons.forward_to_inbox,
+            Colors.blueGrey,
+            () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ManageForwardLimitsScreen())),
+          ),
+        if (isAdmin)
+          _buildActionCard(
+            'Manual Forward',
+            Icons.outbox_rounded,
+            Colors.indigoAccent,
+            () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ManualForwardingScreen())),
           ),
         if (isSuperAdmin)
           _buildActionCard(

@@ -894,4 +894,73 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  Future<List<dynamic>> getForwardLimits() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.get(
+      Uri.parse('$baseUrl/forward-limits/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
+  Future<bool> createForwardLimit(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/forward-limits/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 201;
+  }
+
+  Future<bool> deleteForwardLimit(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.delete(
+      Uri.parse('$baseUrl/forward-limits/$id/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+    return response.statusCode == 204;
+  }
+
+  Future<List<dynamic>> getRetainedNumbers({required int gameId, required String state, String? type}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    String url = '$baseUrl/forwarded-bets/get_retained_numbers/?game=$gameId&state=$state';
+    if (type != null && type.isNotEmpty) {
+      url += '&type=$type';
+    }
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': 'Token $token'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
+  Future<bool> submitManualForward(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/forwarded-bets/manual_forward/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 200;
+  }
+
 }
