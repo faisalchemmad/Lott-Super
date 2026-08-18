@@ -89,6 +89,15 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
       _currentUser = profile;
       _userRole = role;
 
+      // Add FORWARDED option for ADMIN and SUPER_ADMIN
+      if (role == 'ADMIN' || role == 'SUPER_ADMIN') {
+        _agents.insert(0, UserModel(
+          id: -1,
+          username: role == 'ADMIN' ? 'FORWARDED (OUT)' : 'FORWARDED (IN)',
+          role: 'FORWARD',
+        ));
+      }
+
       if (role == 'SUB_DEALER' && profile != null) {
         _selectedAgent = profile;
       }
