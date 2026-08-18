@@ -941,7 +941,7 @@ class ApiService {
     if (toDate != null) queryParams['to'] = toDate;
     if (gameId != null) queryParams['game'] = gameId.toString();
 
-    final uri = Uri.parse('$baseUrl/forwarded_bets/purchase_report/').replace(queryParameters: queryParams);
+    final uri = Uri.parse('$baseUrl/forwarded-bets/purchase_report/').replace(queryParameters: queryParams);
     final response = await http.get(uri, headers: {'Authorization': 'Token $token'});
     
     if (response.statusCode == 200) {
