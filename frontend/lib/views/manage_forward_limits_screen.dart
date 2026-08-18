@@ -166,14 +166,6 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
-                    controller: _numberController,
-                    decoration: const InputDecoration(labelText: 'Number (Optional)', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
                     controller: _maxRetainedController,
                     decoration: const InputDecoration(labelText: 'Retained Limit*', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
@@ -198,7 +190,7 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
                       return Card(
                         child: ListTile(
                           title: Text('Type: ${item['type']} | Limit: ${item['max_retained_count']}'),
-                          subtitle: Text('Number: ${item['number']?.isEmpty ?? true ? "ALL" : item['number']}'),
+                          subtitle: const Text('Applies to all numbers of this type'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () => _deleteLimit(item['id']),

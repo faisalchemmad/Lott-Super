@@ -64,7 +64,7 @@ class _ManualForwardingScreenState extends State<ManualForwardingScreen> {
         _numbers = nums;
         _forwardControllers.clear();
         for (var n in nums) {
-          _forwardControllers['${n['number']}_${n['type']}'] = TextEditingController();
+          _forwardControllers['${n['type']}'] = TextEditingController();
         }
       });
     } catch (e) {
@@ -75,7 +75,7 @@ class _ManualForwardingScreenState extends State<ManualForwardingScreen> {
   }
 
   Future<void> _submitForward(dynamic item) async {
-    final ctrl = _forwardControllers['${item['number']}_${item['type']}'];
+    final ctrl = _forwardControllers['${item['type']}'];
     if (ctrl == null || ctrl.text.isEmpty) return;
     
     int count = int.tryParse(ctrl.text) ?? 0;
@@ -92,7 +92,7 @@ class _ManualForwardingScreenState extends State<ManualForwardingScreen> {
         'game': _selectedGameId,
         'state': _selectedState,
         'items': [
-          {'number': item['number'], 'type': item['type'], 'count': count}
+          {'type': item['type'], 'count': count}
         ]
       });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Forwarded Successfully')));
@@ -161,7 +161,7 @@ class _ManualForwardingScreenState extends State<ManualForwardingScreen> {
                       itemCount: _numbers.length,
                       itemBuilder: (context, index) {
                         final item = _numbers[index];
-                        final ctrl = _forwardControllers['${item['number']}_${item['type']}'];
+                        final ctrl = _forwardControllers['${item['type']}'];
                         return Card(
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
@@ -171,9 +171,9 @@ class _ManualForwardingScreenState extends State<ManualForwardingScreen> {
                                   flex: 2,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text('Number: ${item['number']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text('Type: ${item['type']}'),
+                                      Text('Type: ${item['type']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                     ],
                                   ),
                                 ),
