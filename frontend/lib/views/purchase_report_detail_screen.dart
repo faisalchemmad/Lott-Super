@@ -85,7 +85,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                       item['number'].toString(),
                       item['type'].toString().toUpperCase(),
                       item['total_qty'].toString(),
-                      item['total_price'].toString(),
+                      (item['net_amount'] ?? item['total_price']).toString(),
                     ])
                 .toList(),
           ),
@@ -118,7 +118,10 @@ class PurchaseReportDetailScreen extends StatelessWidget {
       ),
       body: reportData.isEmpty
           ? _buildNoData()
-          : ListView.separated(
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: reportData.length,
               separatorBuilder: (context, index) =>
@@ -198,7 +201,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                                     fontWeight: FontWeight.w600,
                                     color: Colors.grey[700])),
                             const SizedBox(height: 2),
-                            Text('₹${item['total_price']}',
+                            Text('Net: ₹${item['net_amount'] ?? item['total_price']}',
                                   style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w900,
@@ -211,6 +214,55 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                 );
               },
             ),
+                ),
+                _buildTotalBar(),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildTotalBar() {
+    double grandTotal = 0;
+    int totalQty = 0;
+    for (var item in reportData) {
+      grandTotal += double.tryParse(item['net_amount']?.toString() ?? item['total_price']?.toString() ?? '0') ?? 0;
+      totalQty += int.tryParse(item['total_qty']?.toString() ?? '0') ?? 0;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Total Quantity', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+              Text('$totalQty', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Total Net Amount', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+              Text('₹${grandTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.primary)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
