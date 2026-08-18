@@ -2342,6 +2342,84 @@ class GameResultViewSet(viewsets.ModelViewSet):
                 b.winning_commission = sum(w[2] for w in wins) * b.count
                 b.winning_prize_type = "|".join(w[0] for w in wins)
                 b.save()
+                
+        # 4. Update ForwardedBets
+        from .models import ForwardedBet
+        all_fwd_bets = ForwardedBet.objects.filter(game=game, date=date)
+        all_fwd_bets.update(is_winner=False, winning_amount=0)
+        
+        potential_fwd_winners = all_fwd_bets.exclude(number="").select_related('forwarded_by')
+        for fb in potential_fwd_winners:
+            u = fb.forwarded_by
+            b_num = fb.number.strip()
+            b_type = fb.type.upper()
+            wins = []
+
+            for tier_name, win_num in prizes:
+                if not win_num: continue
+                match = False
+                p = 0.0
+                
+                if b_type == 'SUPER':
+                    if b_num == win_num:
+                        match = True
+                        if tier_name == "1ST PRIZE": p = u.prize_super_1
+                        elif tier_name == "2ND PRIZE": p = u.prize_super_2
+                        elif tier_name == "3RD PRIZE": p = u.prize_super_3
+                        elif tier_name == "4TH PRIZE": p = u.prize_super_4
+                        elif tier_name == "5TH PRIZE": p = u.prize_super_5
+                        else: p = u.prize_6th
+                elif b_type == 'BOX':
+                    if tier_name != "1ST PRIZE": continue
+                    s_b = get_sorted_num(b_num)
+                    s_w = get_sorted_num(win_num)
+                    if s_b and s_w and s_b == s_w:
+                        match = True
+                        distinct = len(set(b_num))
+                        is_exact = (b_num == win_num)
+                        box_level = 1 if is_exact else 2
+                        if distinct == 3:
+                            p = float(u.prize_box_3d_1) if box_level == 1 else float(u.prize_box_3d_2)
+                        elif distinct == 2:
+                            p = float(u.prize_box_2s_1) if box_level == 1 else float(u.prize_box_2s_2)
+                        else:
+                            p = float(u.prize_box_3s_1)
+                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                    if tier_name != "1ST PRIZE": continue
+                    target = ""
+                    if len(win_num) >= 3:
+                        if b_type == 'AB': target = win_num[0:2]
+                        elif b_type == 'BC': target = win_num[1:3]
+                        elif b_type == 'AC': target = win_num[0] + win_num[2]
+                        elif b_type == 'A': target = win_num[0]
+                        elif b_type == 'B': target = win_num[1]
+                        elif b_type == 'C': target = win_num[2]
+                    elif len(win_num) == 2:
+                        if b_type == 'AB': target = win_num
+                        elif b_type == 'A': target = win_num[0]
+                        elif b_type == 'B': target = win_num[1]
+                    elif len(win_num) == 1:
+                        if b_type == 'A': target = win_num
+                    if target and b_num == target:
+                        match = True
+                        if b_type in ['AB', 'BC', 'AC']: p = u.prize_ab_bc_ac_1
+                        else: p = u.prize_abc_1
+
+                if match:
+                    if b_type == 'SUPER':
+                        display_name = tier_name
+                    elif b_type == 'BOX':
+                        is_exact_match = (b_num == win_num)
+                        display_name = "BOX (1ST PRIZE) EXACT" if is_exact_match else "BOX2 (1ND PRIZE)"
+                    else:
+                        display_name = f"{tier_name} ({b_type})"
+                    wins.append((display_name, p))
+
+            if wins:
+                fb.is_winner = True
+                fb.winning_amount = sum(w[1] for w in wins) * fb.count
+                fb.winning_prize_type = "|".join(w[0] for w in wins)
+                fb.save()
 
 
 class ForwardLimitViewSet(viewsets.ModelViewSet):
@@ -2369,6 +2447,61 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if user.role == 'SUPER_ADMIN':
             return ForwardedBet.objects.all().order_by('-created_at')
         return ForwardedBet.objects.filter(Q(forwarded_by=user) | Q(forwarded_to=user)).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def purchase_winning_report(self, request):
+        user = request.user
+        from_date = request.query_params.get('from')
+        to_date = request.query_params.get('to')
+        game_id = request.query_params.get('game')
+        search_number = request.query_params.get('number')
+        
+        qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
+        if from_date: qs = qs.filter(date__gte=from_date)
+        if to_date: qs = qs.filter(date__lte=to_date)
+        if game_id: qs = qs.filter(game_id=game_id)
+        if search_number: qs = qs.filter(number=search_number)
+        
+        # We group by game, type, number, date to accumulate winnings?
+        # Or just return them directly like winning report?
+        # Winning report returns:
+        # { 'game': b.game.name, 'number': b.number, 'type': b.type, 'count': b.count, 'prize': b.winning_prize_type, 'amount': b.winning_amount, 'date': b.created_at }
+        
+        total_winning_amount = 0.0
+        total_winning_count = qs.count()
+        unfolded_results = []
+        
+        for b in qs:
+            total_winning_amount += float(b.winning_amount)
+            
+            prize_tiers = [t.strip() for t in (b.winning_prize_type or "WINNER").split("|") if t.strip()]
+            
+            # Simple assumption: evenly split amount if multiple tiers (rare)
+            # In practice, we'd need to recompute or just use total
+            pt_amount = float(b.winning_amount) / len(prize_tiers) if prize_tiers else float(b.winning_amount)
+            
+            for pt in prize_tiers:
+                unfolded_results.append({
+                    'id': b.id,
+                    'game': b.game.name,
+                    'type': b.type,
+                    'number': b.number,
+                    'count': b.count,
+                    'winning_prize_type': pt,
+                    'winning_amount': pt_amount,
+                    'winning_commission': 0, # Super Admin doesn't give winning commission to admin
+                    'is_winner': True,
+                    'user_username': 'FORWARDED',
+                    'created_at': b.created_at,
+                })
+                
+        return Response({
+            'total_winning_amount': total_winning_amount,
+            'total_winning_commission': 0,
+            'total_winning_count': total_winning_count,
+            'bets': unfolded_results,
+            'user_summary': [{'username': 'FORWARDED', 'role': 'FORWARD', 'count': total_winning_count, 'winning_amount': total_winning_amount, 'winning_commission': 0}]
+        })
 
     @action(detail=False, methods=['get'])
     def purchase_report(self, request):

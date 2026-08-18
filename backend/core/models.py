@@ -197,6 +197,7 @@ class Bet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_winner = models.BooleanField(null=True, blank=True)
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    winning_prize_type = models.CharField(max_length=50, null=True, blank=True)
     winning_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     winning_prize_type = models.CharField(max_length=200, blank=True, null=True)
 
@@ -321,6 +322,7 @@ class ForwardedBet(models.Model):
     
     is_winner = models.BooleanField(null=True, blank=True)
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    winning_prize_type = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         auto_str = "AUTO" if self.is_auto else "MANUAL"
