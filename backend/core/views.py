@@ -574,18 +574,13 @@ class BetViewSet(viewsets.ModelViewSet):
                         admin=p, game=game, state=state, type=bet_type
                     ).filter(Q(number=number) | Q(number='') | Q(number__isnull=True)).order_by('-number').first()
                     
+                    # 2. Calculate current total count for THIS number
+                    tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, number=number, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
+                    fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, number=number, date=today).aggregate(t=Sum('count'))['t'] or 0
+                    
                     if fwd_limit:
-                        # 2. Calculate current total count (inclusive of just created bet)
-                        if fwd_limit.number:
-                            tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, number=number, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
-                            fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, number=number, date=today).aggregate(t=Sum('count'))['t'] or 0
-                        else:
-                            tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
-                            fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
                         limit_val = fwd_limit.max_retained_count
                     else:
-                        tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
-                        fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
                         limit_val = 0
                         
                     retained = tot_db - fwd_out
