@@ -1902,6 +1902,58 @@ class WinningReportView(views.APIView):
                 'total_comm': round(val['total_comm'], 2),
                 'win_count': val['win_count']
             })
+        # --- INCLUDE FORWARDED BET WINNINGS ---
+        from .models import ForwardedBet
+        
+        # Determine if we are viewing as SUPER_ADMIN or ADMIN
+        if user.role == 'SUPER_ADMIN':
+            fwd_qs = ForwardedBet.objects.filter(forwarded_to=user, is_winner=True)
+            fwd_username = "FORWARDED (IN)"
+        else:
+            fwd_qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
+            fwd_username = "FORWARDED (OUT)"
+            
+        if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
+        if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
+        if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
+        if search_number: fwd_qs = fwd_qs.filter(number=search_number)
+
+        fwd_amount_total = 0.0
+        fwd_count_total = 0
+
+        for b in fwd_qs:
+            fwd_amount_total += float(b.winning_amount)
+            fwd_count_total += b.count
+            
+            prize_tiers = [t.strip() for t in (b.winning_prize_type or "WINNER").split("|") if t.strip()]
+            pt_amount = float(b.winning_amount) / len(prize_tiers) if prize_tiers else float(b.winning_amount)
+            
+            for pt in prize_tiers:
+                results.append({
+                    'id': f"fwd_{b.id}",
+                    'game': b.game.name,
+                    'type': b.type,
+                    'number': b.number,
+                    'count': b.count,
+                    'winning_prize_type': pt,
+                    'winning_amount': pt_amount,
+                    'winning_commission': 0.0,
+                    'is_winner': True,
+                    'user_username': fwd_username,
+                    'created_at': b.created_at.isoformat() if hasattr(b.created_at, 'isoformat') else b.created_at,
+                })
+
+        if fwd_count_total > 0:
+            total_winning_amount += fwd_amount_total
+            total_winning_count += fwd_count_total
+            user_summary.append({
+                'user__username': fwd_username,
+                'user__role': 'FORWARD',
+                'total_prize': round(fwd_amount_total, 2),
+                'total_comm': 0.0,
+                'win_count': fwd_count_total
+            })
+
         user_summary.sort(key=lambda x: x['user__username'])
         
         return Response({
