@@ -582,44 +582,49 @@ class BetViewSet(viewsets.ModelViewSet):
                         else:
                             tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
                             fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
+                        limit_val = fwd_limit.max_retained_count
+                    else:
+                        tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
+                        fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
+                        limit_val = 0
                         
-                        retained = tot_db - fwd_out
+                    retained = tot_db - fwd_out
+                    
+                    if retained > limit_val:
+                        excess = retained - limit_val
+                        forward_count = min(excess, count)
+                        if forward_count > 0:
                         
-                        if retained > fwd_limit.max_retained_count:
-                            excess = retained - fwd_limit.max_retained_count
-                            forward_count = min(excess, count)
-                            if forward_count > 0:
-                            
-                                forward_to = p.parent
-                                if forward_to:
-                                    p_price_map = {
-                                        'A': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                        'B': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                        'C': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                        'AB': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                        'BC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                        'AC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                        'SUPER': p.price_super,
-                                        'BOX': p.price_box,
-                                    }
-                                    if state == 'TN':
-                                        if bet_type == '3D-10': p_price_map['3D-10'] = getattr(p, 'tn_price_3d_10', 10.0)
-                                        elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(p, 'tn_price_3d_25', 25.0)
-                                        elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(p, 'tn_price_3d_30', 30.0)
-                                        elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(p, 'tn_price_3d_60', 60.0)
-                                        elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(p, 'tn_price_4d_110', 110.0)
-                                        elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(p, 'tn_price_4d_55', 55.0)
-                                        elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(p, 'tn_price_4d_20', 20.0)
-                                    
-                                    p_amount = p_price_map.get(bet_type, 1.0)
+                            forward_to = p.parent
+                            if forward_to:
+                                p_price_map = {
+                                    'A': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'B': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'C': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
+                                    'AB': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'BC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'AC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
+                                    'SUPER': p.price_super,
+                                    'BOX': p.price_box,
+                                }
+                                if state == 'TN':
+                                    if bet_type == '3D-10': p_price_map['3D-10'] = getattr(p, 'tn_price_3d_10', 10.0)
+                                    elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(p, 'tn_price_3d_25', 25.0)
+                                    elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(p, 'tn_price_3d_30', 30.0)
+                                    elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(p, 'tn_price_3d_60', 60.0)
+                                    elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(p, 'tn_price_4d_110', 110.0)
+                                    elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(p, 'tn_price_4d_55', 55.0)
+                                    elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(p, 'tn_price_4d_20', 20.0)
                                 
-                                    ForwardedBet.objects.create(
-                                        forwarded_by=p,
-                                        forwarded_to=forward_to,
-                                        game=game,
-                                        state=state,
-                                        type=bet_type,
-                                        number=number,
+                                p_amount = p_price_map.get(bet_type, 1.0)
+                            
+                                ForwardedBet.objects.create(
+                                    forwarded_by=p,
+                                    forwarded_to=forward_to,
+                                    game=game,
+                                    state=state,
+                                    type=bet_type,
+                                    number=number,
                                         count=excess,
                                         price_per_count=p_amount,
                                         is_auto=True
