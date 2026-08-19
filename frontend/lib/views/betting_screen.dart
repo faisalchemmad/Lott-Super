@@ -403,7 +403,6 @@ class _BettingScreenState extends State<BettingScreen>
       setState(() {
         for (String num in rangeNumbers) {
           for (String t in entryTypes) {
-            double unitPrice = 10.0;
             UserModel? selectedUser;
             try {
               selectedUser =
@@ -412,19 +411,9 @@ class _BettingScreenState extends State<BettingScreen>
               selectedUser = _user;
             }
 
-            double commRate = 0;
-            if (selectedUser != null) {
-              if (['AB', 'BC', 'AC'].contains(t)) {
-                unitPrice = selectedUser.priceAbBcAc;
-                commRate = selectedUser.salesCommAbBcAc;
-              } else if (t == 'SUPER') {
-                unitPrice = selectedUser.priceSuper;
-                commRate = selectedUser.salesCommSuper;
-              } else if (t == 'BOX') {
-                unitPrice = selectedUser.priceBox;
-                commRate = selectedUser.salesCommBox;
-              }
-            }
+            final priceData = _getPriceAndComm(selectedUser, t);
+            double unitPrice = priceData['price']!;
+            double commRate = priceData['comm']!;
             int count = int.parse(_countController.text);
             if (t == 'BOX') {
               count = int.tryParse(_boxCountController.text) ?? count;
@@ -565,7 +554,6 @@ class _BettingScreenState extends State<BettingScreen>
     setState(() {
       for (String num in entriesToAdd) {
         for (String t in entryTypes) {
-          double unitPrice = ['A', 'B', 'C'].contains(t) ? 12.0 : 10.0;
           UserModel? selectedUser;
           try {
             selectedUser =
@@ -574,22 +562,9 @@ class _BettingScreenState extends State<BettingScreen>
             selectedUser = _user;
           }
 
-          double commRate = 0;
-          if (selectedUser != null) {
-            if (['A', 'B', 'C'].contains(t)) {
-              unitPrice = selectedUser.priceAbc;
-              commRate = selectedUser.salesCommAbc;
-            } else if (['AB', 'BC', 'AC'].contains(t)) {
-              unitPrice = selectedUser.priceAbBcAc;
-              commRate = selectedUser.salesCommAbBcAc;
-            } else if (t == 'SUPER') {
-              unitPrice = selectedUser.priceSuper;
-              commRate = selectedUser.salesCommSuper;
-            } else if (t == 'BOX') {
-              unitPrice = selectedUser.priceBox;
-              commRate = selectedUser.salesCommBox;
-            }
-          }
+          final priceData = _getPriceAndComm(selectedUser, t);
+          double unitPrice = priceData['price']!;
+          double commRate = priceData['comm']!;
           int count = int.parse(_countController.text);
           if (t == 'BOX') {
             count = int.tryParse(_boxCountController.text) ?? count;
@@ -2026,6 +2001,50 @@ class _BettingScreenState extends State<BettingScreen>
       _tabController.addListener(_tabListener);
     });
   }
+
+
+  Map<String, double> _getPriceAndComm(UserModel? user, String type) {
+    double unitPrice = ['A', 'B', 'C'].contains(type) ? 12.0 : 10.0;
+    double commRate = 0.0;
+    if (user != null) {
+      bool isTN = _selectedStateCode == 'TN';
+      if (isTN) {
+        if (type == '3D-10') { unitPrice = user.tnPrice3d10; commRate = user.tnSalesComm3d10; }
+        else if (type == '3D-25') { unitPrice = user.tnPrice3d25; commRate = user.tnSalesComm3d25; }
+        else if (type == '3D-30') { unitPrice = user.tnPrice3d30; commRate = user.tnSalesComm3d30; }
+        else if (type == '3D-60') { unitPrice = user.tnPrice3d60; commRate = user.tnSalesComm3d60; }
+        else if (type == '4D-110') { unitPrice = user.tnPrice4d110; commRate = user.tnSalesComm4d110; }
+        else if (type == '4D-55') { unitPrice = user.tnPrice4d55; commRate = user.tnSalesComm4d55; }
+        else if (type == '4D-20') { unitPrice = user.tnPrice4d20; commRate = user.tnSalesComm4d20; }
+        else if (['A', 'B', 'C'].contains(type)) {
+          unitPrice = user.tnPriceAbc; commRate = user.tnSalesCommAbc;
+        } else if (['AB', 'BC', 'AC'].contains(type)) {
+          unitPrice = user.tnPriceAbBcAc; commRate = user.tnSalesCommAbBcAc;
+        } else if (type == 'SUPER') {
+          unitPrice = user.priceSuper; commRate = user.salesCommSuper;
+        } else if (type == 'BOX') {
+          unitPrice = user.priceBox; commRate = user.salesCommBox;
+        }
+      } else {
+        if (['A', 'B', 'C'].contains(type)) {
+          unitPrice = user.priceAbc;
+          commRate = user.salesCommAbc;
+        } else if (['AB', 'BC', 'AC'].contains(type)) {
+          unitPrice = user.priceAbBcAc;
+          commRate = user.salesCommAbBcAc;
+        } else if (type == 'SUPER') {
+          unitPrice = user.priceSuper;
+          commRate = user.salesCommSuper;
+        } else if (type == 'BOX') {
+          unitPrice = user.priceBox;
+          commRate = user.salesCommBox;
+        }
+      }
+    }
+    return {'price': unitPrice, 'comm': commRate};
+  }
+
+
 
   Widget _buildEndDrawer() {
     final gameColor = Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
