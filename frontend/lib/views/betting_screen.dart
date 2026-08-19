@@ -235,11 +235,14 @@ class _BettingScreenState extends State<BettingScreen>
     setState(() {
       _user = user;
       _users = users;
+      if (user != null && !_users.any((u) => u.id == user.id)) {
+        _users.add(user);
+      }
       if (user != null) {
         // Find the designated 'Default' sub-dealer first
-        final defaultUser = users.firstWhere((u) => u.isDefault,
-            orElse: () => users.firstWhere((u) => u.role == 'SUB_DEALER',
-                orElse: () => UserModel(id: -1, username: '', role: '')));
+        final defaultUser = _users.firstWhere((u) => u.isDefault,
+            orElse: () => _users.firstWhere((u) => u.id != user.id && u.role == 'SUB_DEALER',
+                orElse: () => user));
         _userController.text = defaultUser.username;
       }
       _recentBets = bets;
@@ -1256,19 +1259,17 @@ class _BettingScreenState extends State<BettingScreen>
             if (_user?.role != 'SUB_DEALER')
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _users
-                          .where((u) =>
-                              u.id != _user?.id && u.role == 'SUB_DEALER')
-                          .any((u) => u.username == _userController.text)
+                  value: _users.any((u) => u.username == _userController.text)
                       ? _userController.text
                       : null,
                   items: _users
-                      .where((u) => u.id != _user?.id && u.role == 'SUB_DEALER')
+                      .where((u) => u.id == _user?.id || u.role == 'SUB_DEALER')
                       .map((u) => DropdownMenuItem(
                             value: u.username,
-                            child: Text(u.username,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
+                            child: Text(u.id == _user?.id ? 'SELF' : u.username,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: u.id == _user?.id ? Colors.blue : null)),
                           ))
                       .toList(),
                   onChanged: (val) {
