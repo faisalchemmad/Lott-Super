@@ -1,3 +1,4 @@
+import 'forward_purchase_report_screen.dart';
 import 'forward_net_report_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'forward_winning_report_screen.dart';
@@ -140,6 +141,19 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
+                  _buildReportCard(
+                    title: 'Forward Purchase Report',
+                    subtitle: 'View and delete forwarded bets',
+                    icon: Icons.list_alt_rounded,
+                    color: Colors.blue.shade700,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const ForwardPurchaseReportScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _buildReportCard(
                     title: 'Forward Winning Report',
                     subtitle: 'Track winners from forwarded bets',

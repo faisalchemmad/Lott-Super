@@ -961,6 +961,41 @@ class ApiService {
     return response.statusCode == 204;
   }
 
+  Future<Map<String, dynamic>> getForwardPurchaseReport({
+    String? fromDate,
+    String? toDate,
+    int? gameId,
+    String? number,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    String url = '$baseUrl/forwarded-bets/report/?';
+    if (fromDate != null) url += 'from=$fromDate&';
+    if (toDate != null) url += 'to=$toDate&';
+    if (gameId != null) url += 'game=$gameId&';
+    if (number != null && number.isNotEmpty) url += 'number=$number&';
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': 'Token $token'},
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load forward purchase report');
+    }
+  }
+
+  Future<bool> deleteForwardedBet(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.delete(
+      Uri.parse('$baseUrl/forwarded-bets/$id/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+    return response.statusCode == 204;
+  }
+
   Future<List<dynamic>> getPurchaseReport({String? fromDate, String? toDate, int? gameId}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');

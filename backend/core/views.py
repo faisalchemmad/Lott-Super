@@ -2511,6 +2511,73 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         return ForwardedBet.objects.filter(Q(forwarded_by=user) | Q(forwarded_to=user)).order_by('-created_at')
 
     @action(detail=False, methods=['get'])
+    def report(self, request):
+        user = request.user
+        from_date = request.query_params.get('from')
+        to_date = request.query_params.get('to')
+        game_id = request.query_params.get('game')
+        search_number = request.query_params.get('number')
+        
+        qs = ForwardedBet.objects.filter(forwarded_by=user)
+        if from_date: qs = qs.filter(date__gte=from_date)
+        if to_date: qs = qs.filter(date__lte=to_date)
+        if game_id: qs = qs.filter(game_id=game_id)
+        if search_number: qs = qs.filter(number=search_number)
+        
+        # Format similar to PurchaseReport (invoices list)
+        from decimal import Decimal
+        total_sales = Decimal('0.00')
+        total_count = 0
+        
+        invoice_map = {}
+        for bet in qs:
+            bet_sale = Decimal(str(bet.price_per_count)) * Decimal(str(bet.count))
+            total_sales += bet_sale
+            total_count += bet.count
+            
+            # Use date string as invoice_id to group them, or we don't even need grouping 
+            # if we just want a flat list. But frontend expects 'invoices' array with 'items'.
+            # Let's create a dummy invoice per bet or group by date/game.
+            # Frontend PurchaseReportDetailScreen expects:
+            # invoices: [ { items: [ { type, number, count, total, id } ] } ]
+            # Let's just group all into one invoice for simplicity, or one per day.
+            inv_key = f"{bet.date}_{bet.game.name}"
+            if inv_key not in invoice_map:
+                invoice_map[inv_key] = {
+                    'invoice_id': inv_key,
+                    'user__username': 'Forwarded',
+                    'game__name': bet.game.name,
+                    'amount': Decimal('0.00'),
+                    'count': 0,
+                    'created_at': bet.created_at,
+                    'items': []
+                }
+            
+            inv = invoice_map[inv_key]
+            inv['amount'] += bet_sale
+            inv['count'] += bet.count
+            
+            inv['items'].append({
+                'id': bet.id,
+                'type': bet.type,
+                'number': bet.number,
+                'count': bet.count,
+                'amount': float(bet.price_per_count),
+                'total': float(bet_sale),
+            })
+
+        sorted_invoices = []
+        for inv in sorted(invoice_map.values(), key=lambda x: x['created_at'], reverse=True):
+            inv['amount'] = float(inv['amount'])
+            sorted_invoices.append(inv)
+        
+        return Response({
+            'sales': float(total_sales),
+            'count': total_count,
+            'invoices': sorted_invoices
+        })
+
+    @action(detail=False, methods=['get'])
     def purchase_winning_report(self, request):
         user = request.user
         from_date = request.query_params.get('from')
