@@ -93,7 +93,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
 
   void _shareAsText(Map<String, dynamic> res) {
     String formattedDate = DateFormat('dd-MM-yyyy').format(_selectedDate);
-    String text = "LOTT SUPER - RESULT REPORT\n";
+    String text = "Mango - RESULT REPORT\n";
     text += "Date: $formattedDate\n";
     text += "Game: ${res['game_name']}\n\n";
     text += "1st Prize : ${res['winning_number']}\n";

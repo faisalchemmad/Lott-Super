@@ -52,7 +52,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
-                    pw.Text('Lott Super',
+                    pw.Text('Mango',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                     pw.Text(

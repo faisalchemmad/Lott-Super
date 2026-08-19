@@ -91,10 +91,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.casino, size: 80, color: AppColors.primary),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset('assets/icon.jpg', width: 80, height: 80),
+                    ),
                     const SizedBox(height: 16),
                     const Text(
-                      'LOTT SUPER',
+                      'Mango',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
