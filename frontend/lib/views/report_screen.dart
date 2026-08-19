@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'forward_winning_report_screen.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import 'sales_report_screen.dart';
@@ -14,7 +16,23 @@ class ReportScreen extends StatefulWidget {
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
+
 class _ReportScreenState extends State<ReportScreen> {
+  String _userRole = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userRole = prefs.getString('role') ?? '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,6 +138,21 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
+                  _buildReportCard(
+                    title: 'Forward Winning Report',
+                    subtitle: 'Track winners from forwarded bets',
+                    icon: Icons.military_tech_rounded,
+                    color: Colors.orange.shade700,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const ForwardWinningReportScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 _buildReportCard(
                   title: 'Number Report',
                   subtitle: 'Check total quantity for specific numbers',
