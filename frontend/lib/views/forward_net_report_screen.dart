@@ -197,58 +197,93 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(AppColors.primary.withOpacity(0.1)),
-          columns: const [
-            DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Purchase', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('FwdWinning+Commi', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Balance', style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-          rows: [
-            ..._reportData.map((row) {
-              final balance = (row['balance'] ?? 0).toDouble();
-              return DataRow(
-                cells: [
-                  DataCell(Text(row['date'].toString())),
-                  DataCell(Text((row['purchase'] ?? 0).toStringAsFixed(2))),
-                  DataCell(Text((row['fwd_winning_commi'] ?? 0).toStringAsFixed(2))),
-                  DataCell(
-                    Text(
-                      balance.toStringAsFixed(2),
+      child: Column(
+        children: [
+          // Header Row
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: const Row(
+              children: [
+                Expanded(flex: 3, child: Text('Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                Expanded(flex: 3, child: Text('Purch.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.right)),
+                Expanded(flex: 4, child: Text('Win+Com', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.right)),
+                Expanded(flex: 3, child: Text('Balance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.right)),
+              ],
+            ),
+          ),
+          // Data Rows
+          ..._reportData.map((row) {
+            final balance = (row['balance'] ?? 0).toDouble();
+            final dateStr = row['date'].toString();
+            // Try to extract DD-MM from YYYY-MM-DD
+            String dateShort = dateStr;
+            if (dateStr.length >= 10) {
+              final parts = dateStr.split('-');
+              if (parts.length == 3) {
+                dateShort = '${parts[2]}-${parts[1]}';
+              }
+            }
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(flex: 3, child: Text(dateShort, style: const TextStyle(fontSize: 11))),
+                  Expanded(flex: 3, child: Text((row['purchase'] ?? 0).toStringAsFixed(1), style: const TextStyle(fontSize: 11), textAlign: TextAlign.right)),
+                  Expanded(flex: 4, child: Text((row['fwd_winning_commi'] ?? 0).toStringAsFixed(1), style: const TextStyle(fontSize: 11), textAlign: TextAlign.right)),
+                  Expanded(
+                    flex: 3, 
+                    child: Text(
+                      balance.toStringAsFixed(1), 
                       style: TextStyle(
+                        fontSize: 11,
                         color: balance < 0 ? Colors.red : Colors.green,
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                      ), 
+                      textAlign: TextAlign.right
+                    )
                   ),
                 ],
-              );
-            }).toList(),
-            DataRow(
-              color: MaterialStateProperty.all(Colors.grey.shade200),
-              cells: [
-                const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(Text(totalPurchase.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(Text(totalFwdWinComm.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(
-                  Text(
-                    totalBalance.toStringAsFixed(2),
+              ),
+            );
+          }).toList(),
+          // Total Row
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            ),
+            child: Row(
+              children: [
+                const Expanded(flex: 3, child: Text('TOT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                Expanded(flex: 3, child: Text(totalPurchase.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.right)),
+                Expanded(flex: 4, child: Text(totalFwdWinComm.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.right)),
+                Expanded(
+                  flex: 3, 
+                  child: Text(
+                    totalBalance.toStringAsFixed(1), 
                     style: TextStyle(
+                      fontSize: 11,
                       color: totalBalance < 0 ? Colors.red : Colors.green,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                    ), 
+                    textAlign: TextAlign.right
+                  )
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
