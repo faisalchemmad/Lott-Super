@@ -1,3 +1,4 @@
+import 'forward_net_report_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'forward_winning_report_screen.dart';
 import 'package:flutter/material.dart';
@@ -149,6 +150,19 @@ class _ReportScreenState extends State<ReportScreen> {
                       MaterialPageRoute(
                           builder: (context) =>
                               const ForwardWinningReportScreen()),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildReportCard(
+                    title: 'Forward Net Report',
+                    subtitle: 'Summary of forwarded bets (Purchase - Win - Commi)',
+                    icon: Icons.account_balance_wallet_rounded,
+                    color: Colors.purple.shade600,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const ForwardNetReportScreen()),
                     ),
                   ),
                   const SizedBox(height: 12),

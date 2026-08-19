@@ -2755,3 +2755,53 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
             forwarded_records.append(f.id)
             
         return Response({'message': 'Forwarded successfully', 'forwarded_ids': forwarded_records})
+
+class ForwardNetReportView(views.APIView):
+    def get(self, request):
+        user = request.user
+        from_date = request.query_params.get('from')
+        to_date = request.query_params.get('to')
+        game_id = request.query_params.get('game')
+        
+        from .models import ForwardedBet
+        from django.db.models import Sum, F
+        
+        # If Admin, they forward out. If Super Admin, they forward in.
+        if user.role == 'SUPER_ADMIN':
+            qs = ForwardedBet.objects.filter(forwarded_to=user)
+        else:
+            qs = ForwardedBet.objects.filter(forwarded_by=user)
+            
+        if from_date:
+            qs = qs.filter(date__gte=from_date)
+        if to_date:
+            qs = qs.filter(date__lte=to_date)
+        if game_id:
+            qs = qs.filter(game_id=game_id)
+            
+        daily_stats = qs.values('date').annotate(
+            total_purchase=Sum(F('price_per_count') * F('count')),
+            total_commission=Sum(F('comm_per_count') * F('count')),
+            total_winning=Sum('winning_amount')
+        ).order_by('-date')
+        
+        data = []
+        for idx, stat in enumerate(daily_stats):
+            purchase = float(stat['total_purchase'] or 0)
+            comm = float(stat['total_commission'] or 0)
+            win = float(stat['total_winning'] or 0)
+            
+            fwd_win_commi = win + comm
+            balance = purchase - fwd_win_commi
+            
+            data.append({
+                'logid': idx + 1,
+                'date': stat['date'].strftime('%Y-%m-%d'),
+                'purchase': purchase,
+                'fwd_winning_commi': fwd_win_commi,
+                'balance': balance,
+                'raw_commission': comm,
+                'raw_winning': win
+            })
+            
+        return Response(data)

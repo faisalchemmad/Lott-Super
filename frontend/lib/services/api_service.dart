@@ -846,6 +846,33 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  Future<List<dynamic>> getForwardNetReport({
+    String? fromDate,
+    String? toDate,
+    int? gameId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      String url = '$baseUrl/report/forward-net/?';
+      if (fromDate != null) url += 'from=$fromDate&';
+      if (toDate != null) url += 'to=$toDate&';
+      if (gameId != null) url += 'game=$gameId&';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Authorization': 'Token $token'},
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load forward net report');
+      }
+    } catch (e) {
+      throw Exception('Error fetching forward net report: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> getNetReport({
     required String fromDate,
     required String toDate,

@@ -5,7 +5,7 @@ from .views import (
     LoginView, GameViewSet, BetViewSet, ReportView, SalesReportView, 
     CountReportView, DailyReportView, NumberReportView, WinningReportView, DashboardView, UserViewSet, 
     NumberLimitViewSet, GlobalNumberLimitViewSet, GameResultViewSet,
-    MonitorView, UserGameTimingViewSet, NetReportView, SystemSettingsViewSet
+    MonitorView, UserGameTimingViewSet, NetReportView, ForwardNetReportView, SystemSettingsViewSet
 )
 
 router = DefaultRouter()
@@ -28,6 +28,7 @@ urlpatterns = [
     path('report/number/', NumberReportView.as_view(), name='number_report'),
     path('report/winning/', WinningReportView.as_view(), name='winning_report'),
     path('report/net/', NetReportView.as_view(), name='net_report'),
+    path('report/forward-net/', ForwardNetReportView.as_view(), name='forward_net_report'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('monitor/', MonitorView.as_view(), name='monitor'),
     path('monitor/clear/', MonitorView.as_view(), name='monitor_clear'),
