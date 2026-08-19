@@ -368,12 +368,7 @@ class BetViewSet(viewsets.ModelViewSet):
         
         from rest_framework import serializers as drf_serializers
         
-        # Use target user's price map
-        price_map = {
-            'A': user.price_abc, 'B': user.price_abc, 'C': user.price_abc,
-            'AB': user.price_ab_bc_ac, 'BC': user.price_ab_bc_ac, 'AC': user.price_ab_bc_ac,
-            'SUPER': user.price_super, 'BOX': user.price_box,
-        }
+
         
         # Calculate starting available credit for ALL hierarchy members
         hierarchy = [user] + user.get_ancestors()
@@ -412,10 +407,30 @@ class BetViewSet(viewsets.ModelViewSet):
                 continue
 
             bet_type = b_data['type']
-            amount = price_map.get(bet_type, 0)
             count = b_data['count']
             number = b_data.get('number', '')
             state = b_data.get('state', 'KL')
+            
+            p_price_map = {
+                'A': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+                'B': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+                'C': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
+                'AB': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+                'BC': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+                'AC': user.price_ab_bc_ac if state == 'KL' else getattr(user, 'tn_price_ab_bc_ac', 10.0),
+                'SUPER': user.price_super,
+                'BOX': user.price_box,
+            }
+            if state == 'TN':
+                if bet_type == '3D-10': p_price_map['3D-10'] = getattr(user, 'tn_price_3d_10', 10.0)
+                elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(user, 'tn_price_3d_25', 25.0)
+                elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(user, 'tn_price_3d_30', 30.0)
+                elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(user, 'tn_price_3d_60', 60.0)
+                elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(user, 'tn_price_4d_110', 110.0)
+                elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(user, 'tn_price_4d_55', 55.0)
+                elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(user, 'tn_price_4d_20', 20.0)
+                
+            amount = p_price_map.get(bet_type, 1.0)
             
             # Skip if count is invalid
             if not isinstance(count, int) or count <= 0:
