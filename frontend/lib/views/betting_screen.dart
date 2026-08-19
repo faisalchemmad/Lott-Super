@@ -100,6 +100,8 @@ class _BettingScreenState extends State<BettingScreen>
     _tabController = TabController(length: 3, vsync: this, initialIndex: 2);
     _tabController.addListener(_tabListener);
     _numberController.addListener(_autoJumpToCount);
+    _startController.addListener(_autoJumpStartToEnd);
+    _endController.addListener(_autoJumpEndToStep);
     _loadData();
     _startTimer();
   }
@@ -178,7 +180,9 @@ class _BettingScreenState extends State<BettingScreen>
   }
 
   int _getRangeDigits() {
-    return _tabController.index == 1 ? 2 : 3;
+    if (_tabController.index == 1) return 2;
+    if (_tabController.index == 3) return 4;
+    return 3;
   }
 
   void _autoJumpStartToEnd() {
@@ -222,6 +226,8 @@ class _BettingScreenState extends State<BettingScreen>
     _numberFocusNode.dispose();
     _countFocusNode.dispose();
     _numberController.removeListener(_autoJumpToCount);
+    _startController.removeListener(_autoJumpStartToEnd);
+    _endController.removeListener(_autoJumpEndToStep);
     super.dispose();
   }
 
