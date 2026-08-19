@@ -827,6 +827,7 @@ class _BettingScreenState extends State<BettingScreen>
       selectedUser = _user;
     }
 
+    String? currentTnType;
     setState(() {
       for (var line in lines) {
         String originalLine = line.trim();
@@ -867,19 +868,44 @@ class _BettingScreenState extends State<BettingScreen>
         // TN PASTE LOGIC
         // ==========================================
         if (_selectedStateCode == 'TN') {
-          // Find all numbers in the tokens
+          // Check for type headers like 'RS 30', '3D 10', '4D 110'
+          if (tokens.contains('RS') || tokens.contains('3D') || tokens.contains('4D')) {
+             String combined = tokens.join('');
+             if (combined.contains('RS10') || combined.contains('3D10')) currentTnType = '3D-10';
+             else if (combined.contains('RS25') || combined.contains('3D25')) currentTnType = '3D-25';
+             else if (combined.contains('RS30') || combined.contains('3D30')) currentTnType = '3D-30';
+             else if (combined.contains('RS60') || combined.contains('3D60')) currentTnType = '3D-60';
+             else if (combined.contains('RS110') || combined.contains('4D110')) currentTnType = '4D-110';
+             else if (combined.contains('RS55') || combined.contains('4D55')) currentTnType = '4D-55';
+             else if (combined.contains('RS20') || combined.contains('4D20')) currentTnType = '4D-20';
+          }
+
           List<String> numTokens = tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
           
-          if (numTokens.length >= 2) {
-             String countStr = numTokens.last;
-             int targetCount = int.tryParse(countStr) ?? 0;
+          if (numTokens.isNotEmpty) {
+             String targetNumber = "";
+             int targetCount = 1;
+             
+             if (numTokens.length >= 2) {
+                 targetCount = int.tryParse(numTokens.last) ?? 1;
+                 targetNumber = numTokens[numTokens.length - 2];
+             } else {
+                 // Only one number token - it's the target number, count defaults to 1
+                 targetNumber = numTokens.first;
+                 // But wait, if this token is actually just the number in 'RS 30' header, skip it.
+                 // We already parsed headers. Let's make sure it's not a standalone '30' from 'RS 30'.
+                 bool isHeaderToken = (tokens.contains('RS') || tokens.contains('3D') || tokens.contains('4D')) && 
+                     ['10', '25', '30', '60', '110', '55', '20'].contains(targetNumber);
+                 if (isHeaderToken) continue;
+                 
+                 targetCount = 1; 
+             }
+             
              if (targetCount == 0) continue;
+             if (targetNumber.isEmpty) continue;
              
-             String targetNumber = numTokens[numTokens.length - 2];
-             String typeToUse = _selectedType ?? 'A';
+             String typeToUse = currentTnType ?? _selectedType ?? 'A';
              
-             // Check if user provided type explicitly like 'A', 'AB', '3D10' etc.
-             // But usually they just paste number and count. We auto-infer type if mismatched.
              if (targetNumber.length == 1) {
                if (!['A','B','C'].contains(typeToUse)) typeToUse = 'A'; // fallback
              } else if (targetNumber.length == 2) {
