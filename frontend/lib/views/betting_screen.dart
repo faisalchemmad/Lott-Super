@@ -863,6 +863,38 @@ class _BettingScreenState extends State<BettingScreen>
           }
         }
 
+        // ==========================================
+        // TN PASTE LOGIC
+        // ==========================================
+        if (_selectedStateCode == 'TN') {
+          // Find all numbers in the tokens
+          List<String> numTokens = tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
+          
+          if (numTokens.length >= 2) {
+             String countStr = numTokens.last;
+             int targetCount = int.tryParse(countStr) ?? 0;
+             if (targetCount == 0) continue;
+             
+             String targetNumber = numTokens[numTokens.length - 2];
+             String typeToUse = _selectedType ?? 'A';
+             
+             // Check if user provided type explicitly like 'A', 'AB', '3D10' etc.
+             // But usually they just paste number and count. We auto-infer type if mismatched.
+             if (targetNumber.length == 1) {
+               if (!['A','B','C'].contains(typeToUse)) typeToUse = 'A'; // fallback
+             } else if (targetNumber.length == 2) {
+               if (!['AB','BC','AC'].contains(typeToUse)) typeToUse = 'AB'; // fallback
+             } else if (targetNumber.length == 3) {
+               if (!['3D-10','3D-25','3D-30','3D-60'].contains(typeToUse)) typeToUse = '3D-10'; // fallback
+             } else if (targetNumber.length == 4) {
+               if (!['4D-110','4D-55','4D-20'].contains(typeToUse)) typeToUse = '4D-110'; // fallback
+             }
+             
+             handleProcessed(targetNumber, typeToUse, targetCount);
+          }
+          continue; // Skip KL logic
+        }
+
         // --- CASE: 3 DIGITS (SUPER, BOX, SET, BOTH) ---
         int mainNumIdx =
             tokens.indexWhere((t) => RegExp(r'^\d{3}$').hasMatch(t));
