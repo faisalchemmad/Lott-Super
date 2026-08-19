@@ -792,64 +792,25 @@ class _BettingScreenState extends State<BettingScreen>
     }
   }
 
-  void _showPasteDialog() {
-    final TextEditingController textController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('PASTE BET LIST',
-            style: TextStyle(
-                fontWeight: FontWeight.w900, color: AppColors.primary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Format examples: 123-10, 123*10, 11#20#AB, A,B 1 10, ABC-1-5, ALL-10-10\nWorks with Symbols (* . # , - + / : ; x X)',
-              style: TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: textController,
-              maxLines: 10,
-              decoration: InputDecoration(
-                hintText: 'Paste your list here...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                fillColor: Colors.grey[50],
-                filled: true,
-              ),
-              style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('CANCEL')),
-              const SizedBox(width: 8),
-
-              ElevatedButton(
-                onPressed: () {
-                  _processPasteText(textController.text, isRemoval: false);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary, elevation: 2),
-                child: const Text('ADD TO DRAFT',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-              ),
-            ],
+  Future<void> _pasteFromClipboard() async {
+    final ClipboardData? data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data != null && data.text != null && data.text!.trim().isNotEmpty) {
+      _processPasteText(data.text!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pasted from clipboard!'),
+            duration: Duration(seconds: 1),
           ),
-        ],
-      ),
-    );
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Clipboard is empty')),
+        );
+      }
+    }
   }
 
   void _processPasteText(String text, {bool isRemoval = false}) {
@@ -1121,7 +1082,7 @@ class _BettingScreenState extends State<BettingScreen>
         actions: [
           if (!_isLoading) ...[
             IconButton(
-              onPressed: _showPasteDialog,
+              onPressed: _pasteFromClipboard,
               icon: const Icon(Icons.content_paste_search_rounded,
                   color: Colors.white),
               tooltip: 'Paste Bets',
