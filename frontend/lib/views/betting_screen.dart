@@ -1234,7 +1234,7 @@ class _BettingScreenState extends State<BettingScreen>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 10),
+                              const Icon(Icons.arrow_back_ios_rounded, color: Colors.yellow, size: 10),
                               RotatedBox(
                                 quarterTurns: 3,
                                 child: Text(

@@ -321,8 +321,7 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                       child: Text(item['type'].toString(), style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                     ),
                     title: Text('${item['game']} - Number: ${item['number']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Count: ${item['count']} x ${item['amount']} = ${item['total']} 
-$dateStr'),
+                    subtitle: Text('Count: ${item["count"]} x ${item["amount"]} = ${item["total"]} \n$dateStr'),
                     trailing: const Icon(Icons.swipe_left, color: Colors.grey, size: 16),
                   ),
                 ),
