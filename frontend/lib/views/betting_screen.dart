@@ -819,9 +819,71 @@ class _BettingScreenState extends State<BettingScreen>
     int processedCount = 0;
     
     List<String> currentTnTypes = [];
-    List<String> blockAccumulator = [];
+    List<List<String>> blockLines = [];
 
     setState(() {
+      void handleProcessed(String num, String type, int count) {
+        if (isRemoval) {
+          int idx = _draftBets.indexWhere((item) =>
+              item['number'] == num &&
+              item['type'] == type &&
+              item['count'] == count);
+          if (idx != -1) {
+            _draftBets.removeAt(idx);
+            processedCount++;
+          }
+        } else {
+          _addSingleBetToDraft(num, type, count, selectedUser);
+          processedCount++;
+        }
+      }
+
+      void processNumber(String n, int count, List<String> types) {
+        for (String t in types) {
+            List<String> resolvedTypes = [];
+            if (t == 'ALL_WILD') {
+                if (n.length == 1) resolvedTypes = ['A', 'B', 'C'];
+                else if (n.length == 2) resolvedTypes = ['AB', 'BC', 'AC'];
+            } else {
+                resolvedTypes = [t];
+            }
+            
+            for (String rt in resolvedTypes) {
+                if (['A','B','C'].contains(rt) && n.length != 1) continue;
+                if (['AB','BC','AC'].contains(rt) && n.length != 2) continue;
+                
+                String finalRt = rt;
+                if (n.length == 1 && !['A','B','C'].contains(rt)) finalRt = 'A';
+                if (n.length == 2 && !['AB','BC','AC'].contains(rt)) finalRt = 'AB';
+                if (n.length == 3 && !['3D-10','3D-25','3D-30','3D-60'].contains(rt)) finalRt = '3D-10';
+                if (n.length == 4 && !['4D-110','4D-55','4D-20'].contains(rt)) finalRt = '4D-110';
+                
+                handleProcessed(n, finalRt, count);
+            }
+        }
+      }
+
+      void flushBlockLinesWithoutEach() {
+          if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
+          for (var lineNums in blockLines) {
+              if (lineNums.isEmpty) continue;
+              int count = 1;
+              List<String> targetNums = [];
+              if (lineNums.length > 1) {
+                  count = int.tryParse(lineNums.last) ?? 1;
+                  targetNums = lineNums.sublist(0, lineNums.length - 1);
+              } else {
+                  count = 1;
+                  targetNums = lineNums;
+              }
+              if (count == 0) continue;
+              for (String num in targetNums) {
+                  processNumber(num, count, currentTnTypes);
+              }
+          }
+          blockLines.clear();
+      }
+
       for (var line in lines) {
         String originalLine = line.trim();
         if (originalLine.isEmpty) continue;
@@ -834,49 +896,33 @@ class _BettingScreenState extends State<BettingScreen>
         List<String> tokens = cleanLine.trim().split(' ').where((t) => t.isNotEmpty).toList();
         if (tokens.isEmpty) continue;
 
-        void handleProcessed(String num, String type, int count) {
-          if (isRemoval) {
-            int idx = _draftBets.indexWhere((item) =>
-                item['number'] == num &&
-                item['type'] == type &&
-                item['count'] == count);
-            if (idx != -1) {
-              _draftBets.removeAt(idx);
-              processedCount++;
-            }
-          } else {
-            _addSingleBetToDraft(num, type, count, selectedUser);
-            processedCount++;
-          }
-        }
-
-        // Check if line contains 'EACH'
         int eachIdx = tokens.indexOf('EACH');
         if (eachIdx != -1) {
             int count = 1;
             if (eachIdx + 1 < tokens.length) {
                 count = int.tryParse(tokens[eachIdx + 1]) ?? 1;
             }
+            List<String> numsBeforeEach = [];
             for (int i = 0; i < eachIdx; i++) {
-                if (RegExp(r'^\d+$').hasMatch(tokens[i])) blockAccumulator.add(tokens[i]);
+                if (RegExp(r'^\d+$').hasMatch(tokens[i])) numsBeforeEach.add(tokens[i]);
             }
+            if (numsBeforeEach.isNotEmpty) blockLines.add(numsBeforeEach);
+            
             if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
-            for (String num in blockAccumulator) {
-                for (String t in currentTnTypes) {
-                   if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
-                   handleProcessed(num, t, count);
+            for (var lineNums in blockLines) {
+                for (String num in lineNums) {
+                    processNumber(num, count, currentTnTypes);
                 }
             }
-            blockAccumulator.clear();
+            blockLines.clear();
             continue;
         }
 
-        // Not an EACH line. Check for types:
         bool hasType = false;
         List<String> typesOnLine = [];
         for (String t in tokens) {
             if (t == 'AB' || t == 'BC' || t == 'AC') { typesOnLine.add(t); hasType = true; }
-            else if (t == 'ABC') { typesOnLine.addAll(['AB', 'BC', 'AC']); hasType = true; }
+            else if (t == 'ABC' || t == 'ALL' || t == 'ALLBOARD') { typesOnLine.add('ALL_WILD'); hasType = true; }
         }
         
         String combined = tokens.join('');
@@ -894,17 +940,8 @@ class _BettingScreenState extends State<BettingScreen>
         }
 
         if (hasType) {
-            if (blockAccumulator.isNotEmpty && numTokens.isNotEmpty) {
-                for (String num in blockAccumulator) {
-                   for (String t in currentTnTypes) {
-                       if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
-                       handleProcessed(num, t, 1);
-                   }
-                }
-                blockAccumulator.clear();
-                currentTnTypes.clear();
-            } else if (blockAccumulator.isNotEmpty && numTokens.isEmpty) {
-                // Keep accumulator, just update types
+            if (blockLines.isNotEmpty) {
+                flushBlockLinesWithoutEach();
             }
             if (numTokens.isNotEmpty) {
                 currentTnTypes = typesOnLine.toSet().toList();
@@ -913,53 +950,14 @@ class _BettingScreenState extends State<BettingScreen>
                 currentTnTypes = currentTnTypes.toSet().toList();
             }
         }
-
-        bool is2D = currentTnTypes.any((t) => ['AB','BC','AC'].contains(t));
         
-        if (is2D) {
-             blockAccumulator.addAll(numTokens);
-        } else {
-             if (numTokens.isNotEmpty) {
-                 int targetCount = 1;
-                 String targetNumber = numTokens.first;
-                 if (numTokens.length >= 2) {
-                     targetCount = int.tryParse(numTokens.last) ?? 1;
-                     targetNumber = numTokens[numTokens.length - 2];
-                 }
-                 if (targetCount > 0 && targetNumber.isNotEmpty) {
-                     String tToUse = currentTnTypes.isNotEmpty ? currentTnTypes.first : (_selectedType ?? 'A');
-                     
-                     // Fallback check
-                     if (targetNumber.length == 1 && !['A','B','C'].contains(tToUse)) tToUse = 'A';
-                     else if (targetNumber.length == 2 && !['AB','BC','AC'].contains(tToUse)) tToUse = 'AB';
-                     else if (targetNumber.length == 3 && !['3D-10','3D-25','3D-30','3D-60'].contains(tToUse)) tToUse = '3D-10';
-                     else if (targetNumber.length == 4 && !['4D-110','4D-55','4D-20'].contains(tToUse)) tToUse = '4D-110';
-                     
-                     handleProcessed(targetNumber, tToUse, targetCount);
-                 }
-             }
+        if (numTokens.isNotEmpty) {
+             blockLines.add(numTokens);
         }
       }
       
-      if (blockAccumulator.isNotEmpty) {
-          for (String num in blockAccumulator) {
-              for (String t in currentTnTypes) {
-                  if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
-                  
-                  void handleProcessed(String n, String ty, int c) {
-                     if (isRemoval) {
-                        int idx = _draftBets.indexWhere((item) => item['number'] == n && item['type'] == ty && item['count'] == c);
-                        if (idx != -1) { _draftBets.removeAt(idx); processedCount++; }
-                     } else {
-                        _addSingleBetToDraft(n, ty, c, selectedUser);
-                        processedCount++;
-                     }
-                  }
-                  
-                  handleProcessed(num, t, 1);
-              }
-          }
-          blockAccumulator.clear();
+      if (blockLines.isNotEmpty) {
+          flushBlockLinesWithoutEach();
       }
     });
 
