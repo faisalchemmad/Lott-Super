@@ -813,6 +813,167 @@ class _BettingScreenState extends State<BettingScreen>
     }
   }
 
+
+  void _processTNPasteText(String text, bool isRemoval, UserModel? selectedUser) {
+    final lines = text.split('\n');
+    int processedCount = 0;
+    
+    List<String> currentTnTypes = [];
+    List<String> blockAccumulator = [];
+
+    setState(() {
+      for (var line in lines) {
+        String originalLine = line.trim();
+        if (originalLine.isEmpty) continue;
+
+        String cleanLine = originalLine.replaceAll(RegExp(r'[\*\.\#\,\-\+\/\:\;xX\s\=\%\!]+'), ' ');
+        cleanLine = cleanLine.toUpperCase();
+        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d+)([A-Z]+)'), (m) => '${m[1]} ${m[2]}');
+        cleanLine = cleanLine.replaceAllMapped(RegExp(r'([A-Z]+)(\d+)'), (m) => '${m[1]} ${m[2]}');
+
+        List<String> tokens = cleanLine.trim().split(' ').where((t) => t.isNotEmpty).toList();
+        if (tokens.isEmpty) continue;
+
+        void handleProcessed(String num, String type, int count) {
+          if (isRemoval) {
+            int idx = _draftBets.indexWhere((item) =>
+                item['number'] == num &&
+                item['type'] == type &&
+                item['count'] == count);
+            if (idx != -1) {
+              _draftBets.removeAt(idx);
+              processedCount++;
+            }
+          } else {
+            _addSingleBetToDraft(num, type, count, selectedUser);
+            processedCount++;
+          }
+        }
+
+        // Check if line contains 'EACH'
+        int eachIdx = tokens.indexOf('EACH');
+        if (eachIdx != -1) {
+            int count = 1;
+            if (eachIdx + 1 < tokens.length) {
+                count = int.tryParse(tokens[eachIdx + 1]) ?? 1;
+            }
+            for (int i = 0; i < eachIdx; i++) {
+                if (RegExp(r'^\d+$').hasMatch(tokens[i])) blockAccumulator.add(tokens[i]);
+            }
+            if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
+            for (String num in blockAccumulator) {
+                for (String t in currentTnTypes) {
+                   if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
+                   handleProcessed(num, t, count);
+                }
+            }
+            blockAccumulator.clear();
+            continue;
+        }
+
+        // Not an EACH line. Check for types:
+        bool hasType = false;
+        List<String> typesOnLine = [];
+        for (String t in tokens) {
+            if (t == 'AB' || t == 'BC' || t == 'AC') { typesOnLine.add(t); hasType = true; }
+            else if (t == 'ABC') { typesOnLine.addAll(['AB', 'BC', 'AC']); hasType = true; }
+        }
+        
+        String combined = tokens.join('');
+        if (combined.contains('RS10') || combined.contains('3D10')) { typesOnLine.add('3D-10'); hasType = true; }
+        else if (combined.contains('RS25') || combined.contains('3D25')) { typesOnLine.add('3D-25'); hasType = true; }
+        else if (combined.contains('RS30') || combined.contains('3D30')) { typesOnLine.add('3D-30'); hasType = true; }
+        else if (combined.contains('RS60') || combined.contains('3D60')) { typesOnLine.add('3D-60'); hasType = true; }
+        else if (combined.contains('RS110') || combined.contains('4D110')) { typesOnLine.add('4D-110'); hasType = true; }
+        else if (combined.contains('RS55') || combined.contains('4D55')) { typesOnLine.add('4D-55'); hasType = true; }
+        else if (combined.contains('RS20') || combined.contains('4D20')) { typesOnLine.add('4D-20'); hasType = true; }
+
+        List<String> numTokens = tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
+        if (hasType && combined.contains('RS')) {
+            numTokens.removeWhere((n) => ['10','25','30','60','110','55','20'].contains(n));
+        }
+
+        if (hasType) {
+            if (blockAccumulator.isNotEmpty && numTokens.isNotEmpty) {
+                for (String num in blockAccumulator) {
+                   for (String t in currentTnTypes) {
+                       if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
+                       handleProcessed(num, t, 1);
+                   }
+                }
+                blockAccumulator.clear();
+                currentTnTypes.clear();
+            } else if (blockAccumulator.isNotEmpty && numTokens.isEmpty) {
+                // Keep accumulator, just update types
+            }
+            if (numTokens.isNotEmpty) {
+                currentTnTypes = typesOnLine.toSet().toList();
+            } else {
+                currentTnTypes.addAll(typesOnLine);
+                currentTnTypes = currentTnTypes.toSet().toList();
+            }
+        }
+
+        bool is2D = currentTnTypes.any((t) => ['AB','BC','AC'].contains(t));
+        
+        if (is2D) {
+             blockAccumulator.addAll(numTokens);
+        } else {
+             if (numTokens.isNotEmpty) {
+                 int targetCount = 1;
+                 String targetNumber = numTokens.first;
+                 if (numTokens.length >= 2) {
+                     targetCount = int.tryParse(numTokens.last) ?? 1;
+                     targetNumber = numTokens[numTokens.length - 2];
+                 }
+                 if (targetCount > 0 && targetNumber.isNotEmpty) {
+                     String tToUse = currentTnTypes.isNotEmpty ? currentTnTypes.first : (_selectedType ?? 'A');
+                     
+                     // Fallback check
+                     if (targetNumber.length == 1 && !['A','B','C'].contains(tToUse)) tToUse = 'A';
+                     else if (targetNumber.length == 2 && !['AB','BC','AC'].contains(tToUse)) tToUse = 'AB';
+                     else if (targetNumber.length == 3 && !['3D-10','3D-25','3D-30','3D-60'].contains(tToUse)) tToUse = '3D-10';
+                     else if (targetNumber.length == 4 && !['4D-110','4D-55','4D-20'].contains(tToUse)) tToUse = '4D-110';
+                     
+                     handleProcessed(targetNumber, tToUse, targetCount);
+                 }
+             }
+        }
+      }
+      
+      if (blockAccumulator.isNotEmpty) {
+          for (String num in blockAccumulator) {
+              for (String t in currentTnTypes) {
+                  if (['AB','BC','AC'].contains(t) && num.length != 2) continue;
+                  
+                  void handleProcessed(String n, String ty, int c) {
+                     if (isRemoval) {
+                        int idx = _draftBets.indexWhere((item) => item['number'] == n && item['type'] == ty && item['count'] == c);
+                        if (idx != -1) { _draftBets.removeAt(idx); processedCount++; }
+                     } else {
+                        _addSingleBetToDraft(n, ty, c, selectedUser);
+                        processedCount++;
+                     }
+                  }
+                  
+                  handleProcessed(num, t, 1);
+              }
+          }
+          blockAccumulator.clear();
+      }
+    });
+
+    if (processedCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isRemoval
+              ? 'Removed $processedCount bets from draft'
+              : 'Added $processedCount bets to draft'),
+          backgroundColor: isRemoval ? Colors.red[400] : Colors.green[600],
+        ),
+      );
+    }
+  }
   void _processPasteText(String text, {bool isRemoval = false}) {
     if (text.trim().isEmpty) return;
 
@@ -825,6 +986,11 @@ class _BettingScreenState extends State<BettingScreen>
           _users.firstWhere((u) => u.username == _userController.text);
     } catch (_) {
       selectedUser = _user;
+    }
+
+    if (_selectedStateCode == 'TN') {
+      _processTNPasteText(text, isRemoval, selectedUser);
+      return;
     }
 
     String? currentTnType;
@@ -862,63 +1028,6 @@ class _BettingScreenState extends State<BettingScreen>
             _addSingleBetToDraft(num, type, count, selectedUser);
             processedCount++;
           }
-        }
-
-        // ==========================================
-        // TN PASTE LOGIC
-        // ==========================================
-        if (_selectedStateCode == 'TN') {
-          // Check for type headers like 'RS 30', '3D 10', '4D 110'
-          if (tokens.contains('RS') || tokens.contains('3D') || tokens.contains('4D')) {
-             String combined = tokens.join('');
-             if (combined.contains('RS10') || combined.contains('3D10')) currentTnType = '3D-10';
-             else if (combined.contains('RS25') || combined.contains('3D25')) currentTnType = '3D-25';
-             else if (combined.contains('RS30') || combined.contains('3D30')) currentTnType = '3D-30';
-             else if (combined.contains('RS60') || combined.contains('3D60')) currentTnType = '3D-60';
-             else if (combined.contains('RS110') || combined.contains('4D110')) currentTnType = '4D-110';
-             else if (combined.contains('RS55') || combined.contains('4D55')) currentTnType = '4D-55';
-             else if (combined.contains('RS20') || combined.contains('4D20')) currentTnType = '4D-20';
-          }
-
-          List<String> numTokens = tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
-          
-          if (numTokens.isNotEmpty) {
-             String targetNumber = "";
-             int targetCount = 1;
-             
-             if (numTokens.length >= 2) {
-                 targetCount = int.tryParse(numTokens.last) ?? 1;
-                 targetNumber = numTokens[numTokens.length - 2];
-             } else {
-                 // Only one number token - it's the target number, count defaults to 1
-                 targetNumber = numTokens.first;
-                 // But wait, if this token is actually just the number in 'RS 30' header, skip it.
-                 // We already parsed headers. Let's make sure it's not a standalone '30' from 'RS 30'.
-                 bool isHeaderToken = (tokens.contains('RS') || tokens.contains('3D') || tokens.contains('4D')) && 
-                     ['10', '25', '30', '60', '110', '55', '20'].contains(targetNumber);
-                 if (isHeaderToken) continue;
-                 
-                 targetCount = 1; 
-             }
-             
-             if (targetCount == 0) continue;
-             if (targetNumber.isEmpty) continue;
-             
-             String typeToUse = currentTnType ?? _selectedType ?? 'A';
-             
-             if (targetNumber.length == 1) {
-               if (!['A','B','C'].contains(typeToUse)) typeToUse = 'A'; // fallback
-             } else if (targetNumber.length == 2) {
-               if (!['AB','BC','AC'].contains(typeToUse)) typeToUse = 'AB'; // fallback
-             } else if (targetNumber.length == 3) {
-               if (!['3D-10','3D-25','3D-30','3D-60'].contains(typeToUse)) typeToUse = '3D-10'; // fallback
-             } else if (targetNumber.length == 4) {
-               if (!['4D-110','4D-55','4D-20'].contains(typeToUse)) typeToUse = '4D-110'; // fallback
-             }
-             
-             handleProcessed(targetNumber, typeToUse, targetCount);
-          }
-          continue; // Skip KL logic
         }
 
         // --- CASE: 3 DIGITS (SUPER, BOX, SET, BOTH) ---
