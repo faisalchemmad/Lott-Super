@@ -1757,7 +1757,11 @@ class WinningReportView(views.APIView):
         search_number = request.query_params.get('number')
         
         user = request.user
+        forwarded_only = request.query_params.get('forwarded_only') == 'true'
+        
         bets = Bet.objects.filter(is_winner=True).select_related('user', 'game').distinct()
+        if forwarded_only:
+            bets = Bet.objects.none()
         
         if user.role != 'SUPER_ADMIN':
             # Admin/Agent sees their own and their descendants' winners
@@ -1905,19 +1909,25 @@ class WinningReportView(views.APIView):
         # --- INCLUDE FORWARDED BET WINNINGS ---
         from .models import ForwardedBet
         
-        # Determine if we are viewing as SUPER_ADMIN or ADMIN
-        if user.role == 'SUPER_ADMIN':
-            fwd_qs = ForwardedBet.objects.filter(forwarded_to=user, is_winner=True)
-            fwd_username = "FORWARDED (IN)"
+        # Only include forwarded bets if specifically requested
+        if forwarded_only:
+            # Determine if we are viewing as SUPER_ADMIN or ADMIN
+            if user.role == 'SUPER_ADMIN':
+                fwd_qs = ForwardedBet.objects.filter(forwarded_to=user, is_winner=True)
+                fwd_username = "FORWARDED (IN)"
+            else:
+                fwd_qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
+                fwd_username = "FORWARDED (OUT)"
+                
+            if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
+            if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
+            if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
+            if search_number: fwd_qs = fwd_qs.filter(number=search_number)
         else:
-            fwd_qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
-            fwd_username = "FORWARDED (OUT)"
-            
-        if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
-        if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
-        if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
-        if search_number: fwd_qs = fwd_qs.filter(number=search_number)
+            fwd_qs = ForwardedBet.objects.none()
+            fwd_username = ""
 
+            
         fwd_amount_total = 0.0
         fwd_count_total = 0
 

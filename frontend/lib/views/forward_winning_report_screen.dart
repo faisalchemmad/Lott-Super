@@ -10,7 +10,7 @@ import '../models/game_model.dart';
 import '../models/user_model.dart';
 import '../utils/constants.dart';
 
-class WinningReportScreen extends StatefulWidget {
+class ForwardWinningReportScreen extends StatefulWidget {
   final DateTime? initialFromDate;
   final DateTime? initialToDate;
   final int? initialGameId;
@@ -18,7 +18,7 @@ class WinningReportScreen extends StatefulWidget {
   final bool initialAgentRate;
   final String? initialNumber;
 
-  const WinningReportScreen({
+  const ForwardWinningReportScreen({
     super.key,
     this.initialFromDate,
     this.initialToDate,
@@ -29,10 +29,10 @@ class WinningReportScreen extends StatefulWidget {
   });
 
   @override
-  State<WinningReportScreen> createState() => _WinningReportScreenState();
+  State<ForwardWinningReportScreen> createState() => _ForwardWinningReportScreenState();
 }
 
-class _WinningReportScreenState extends State<WinningReportScreen> {
+class _ForwardWinningReportScreenState extends State<ForwardWinningReportScreen> {
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   List<GameModel> _games = [];
@@ -105,10 +105,10 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGame?.id,
-        userId: _selectedAgent?.id,
+        
         number:
             _numberController.text.isNotEmpty ? _numberController.text : null,
-        adminRate: _agentRate,
+        forwardedOnly: true,
       );
       setState(() {
         _winners = data['winners'] ?? [];

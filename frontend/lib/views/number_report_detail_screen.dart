@@ -80,7 +80,7 @@ class NumberReportDetailScreen extends StatelessWidget {
             headerDecoration:
                 const pw.BoxDecoration(color: PdfColors.blueGrey700),
             cellAlignment: pw.Alignment.centerLeft,
-            headers: ['USER', 'GAME', 'NUMBER', 'TYPE', 'QTY'],
+            headers: ['USER', 'GAME', 'NUMBER', 'TYPE', 'QTY', 'FWD'],
             data: reportData
                 .map((item) => [
                       item['user__username'] ?? 'SYSTEM',
@@ -88,6 +88,7 @@ class NumberReportDetailScreen extends StatelessWidget {
                       item['number'].toString(),
                       item['type'].toString().toUpperCase(),
                       item['total_qty'].toString(),
+                      (item['forwarded_qty'] ?? 0).toString(),
                     ])
                 .toList(),
           ),
@@ -186,13 +187,24 @@ class NumberReportDetailScreen extends StatelessWidget {
                                 letterSpacing: 1)),
                       ),
                       Expanded(
-                        flex: 1,
-                        child: Text('${item['total_qty']}',
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary),
-                            textAlign: TextAlign.right),
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('${item['total_qty']}',
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary)),
+                            if ((item['forwarded_qty'] ?? 0) > 0)
+                              Text('Fwd: ${item['forwarded_qty']}',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red[700])),
+                          ],
+                        ),
                       ),
                     ],
                   ),

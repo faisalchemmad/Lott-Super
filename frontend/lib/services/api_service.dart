@@ -724,6 +724,7 @@ class ApiService {
     int? userId,
     String? number,
     bool adminRate = false,
+    bool forwardedOnly = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -734,6 +735,7 @@ class ApiService {
     if (userId != null) queryParams['user'] = userId.toString();
     if (number != null) queryParams['number'] = number;
     if (adminRate) queryParams['admin_rate'] = 'true';
+    if (forwardedOnly) queryParams['forwarded_only'] = 'true';
 
     final uri = Uri.parse('$baseUrl/report/winning/')
         .replace(queryParameters: queryParams);
