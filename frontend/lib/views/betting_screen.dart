@@ -205,7 +205,7 @@ class _BettingScreenState extends State<BettingScreen>
 
   void _autoJumpCountToBox() {
     if (_countController.text.length == 3) {
-      if (_tabController.index >= 2) {
+      if (_tabController.index >= 2 && _selectedStateCode != 'TN') {
         _boxCountFocusNode.requestFocus();
       } else {
         _countFocusNode.unfocus();
@@ -1496,7 +1496,7 @@ class _BettingScreenState extends State<BettingScreen>
                   decoration: _inputDecoration(label: 'Count', hint: 'Qty'),
                 ),
               ),
-              if (_tabController.index >= 2) ...[
+              if (_tabController.index >= 2 && _selectedStateCode != 'TN') ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -1550,7 +1550,7 @@ class _BettingScreenState extends State<BettingScreen>
                   decoration: _inputDecoration(label: 'Count', hint: 'Qty'),
                 ),
               ),
-              if (_tabController.index >= 2) ...[
+              if (_tabController.index >= 2 && _selectedStateCode != 'TN') ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -2080,6 +2080,7 @@ class _BettingScreenState extends State<BettingScreen>
                 _tabController.dispose();
                 _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
                 _tabController.addListener(_tabListener);
+                _boxCountController.clear();
               });
             },
             child: Container(
