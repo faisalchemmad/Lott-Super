@@ -23,6 +23,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
   String? _userRole;
   int? _selectedGameId;
   int? _selectedAgentId;
+  String _selectedState = 'ALL';
   UserModel? _currentUser;
 
   List<GameModel> _games = [];
@@ -103,6 +104,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         userId: _selectedAgentId,
         number:
             _numberController.text.isNotEmpty ? _numberController.text : null,
+        state: _selectedState,
         fullView: _fullView,
         adminRate: _agentRate,
       );
@@ -213,6 +215,31 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       icon: Icons.person_search_rounded,
                     ),
                   const SizedBox(height: 24),
+                  _buildSectionTitle('STATE'),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStateRadio('ALL'),
+                        _buildStateRadio('KL'),
+                        _buildStateRadio('TN'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   _buildSectionTitle('SPECIFIC NUMBER (OPTIONAL)'),
                   const SizedBox(height: 12),
                   _buildTextFieldTile(
@@ -256,6 +283,32 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildStateRadio(String state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<String>(
+          value: state,
+          groupValue: _selectedState,
+          activeColor: AppColors.primary,
+          onChanged: (val) {
+            setState(() {
+              _selectedState = val!;
+            });
+          },
+        ),
+        Text(
+          state,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            color: _selectedState == state ? AppColors.primary : Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 

@@ -836,8 +836,12 @@ class SalesReportView(views.APIView):
         game_id = request.query_params.get('game')
         agent_id = request.query_params.get('user')
         search_number = request.query_params.get('number')
+        state_filter = request.query_params.get('state')
 
         bets = Bet.objects.all()
+        
+        if state_filter and state_filter.upper() != 'ALL':
+            bets = bets.filter(state=state_filter.upper())
         
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)
@@ -1619,8 +1623,12 @@ class NumberReportView(views.APIView):
         agent_id = request.query_params.get('user')
         bet_type = request.query_params.get('type')
         search_number = request.query_params.get('number')
+        state_filter = request.query_params.get('state')
 
         bets = Bet.objects.all()
+        
+        if state_filter and state_filter.upper() != 'ALL':
+            bets = bets.filter(state=state_filter.upper())
         
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)

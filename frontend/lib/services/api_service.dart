@@ -190,6 +190,7 @@ class ApiService {
     int? gameId,
     int? userId,
     String? number,
+    String? state,
     bool fullView = false,
     bool adminRate = false,
     bool onlyDirect = false,
@@ -201,6 +202,7 @@ class ApiService {
     if (gameId != null) url += '&game=$gameId';
     if (userId != null) url += '&user=$userId';
     if (number != null) url += '&number=$number';
+    if (state != null && state.isNotEmpty) url += '&state=$state';
     if (fullView) url += '&full_view=true';
     if (adminRate) url += '&admin_rate=true';
     if (onlyDirect) url += '&only_direct=true';
