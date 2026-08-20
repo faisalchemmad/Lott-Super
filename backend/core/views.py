@@ -212,7 +212,7 @@ class BetViewSet(viewsets.ModelViewSet):
             'SUPER': user.price_super,
             'BOX': user.price_box,
         }
-        amount = price_map.get(bet_type, 1.0)
+        amount = Decimal(str(price_map.get(bet_type, 1.0)))
         count = serializer.validated_data.get('count', 1)
         total_bet_amount = amount * count
 
@@ -430,7 +430,7 @@ class BetViewSet(viewsets.ModelViewSet):
                 elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(user, 'tn_price_4d_55', 55.0)
                 elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(user, 'tn_price_4d_20', 20.0)
                 
-            amount = p_price_map.get(bet_type, 1.0)
+            amount = Decimal(str(p_price_map.get(bet_type, 1.0)))
             
             # Skip if count is invalid
             if not isinstance(count, int) or count <= 0:
@@ -626,7 +626,7 @@ class BetViewSet(viewsets.ModelViewSet):
                                     elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(p, 'tn_price_4d_55', 55.0)
                                     elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(p, 'tn_price_4d_20', 20.0)
                                 
-                                p_amount = p_price_map.get(bet_type, 1.0)
+                                p_amount = Decimal(str(p_price_map.get(bet_type, 1.0)))
                             
                                 ForwardedBet.objects.create(
                                     forwarded_by=p,
@@ -2821,7 +2821,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
                 elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(user, 'tn_price_4d_55', 55.0)
                 elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(user, 'tn_price_4d_20', 20.0)
 
-            p_amount = p_price_map.get(bet_type, 1.0)
+            p_amount = Decimal(str(p_price_map.get(bet_type, 1.0)))
             
             f = ForwardedBet.objects.create(
                 forwarded_by=user,
