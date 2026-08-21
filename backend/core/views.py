@@ -772,14 +772,26 @@ class BetViewSet(viewsets.ModelViewSet):
             # Calculate Commission
             c_rate = Decimal('0.00')
             btype = (bet.type or "").upper()
-            if btype in ['A', 'B', 'C']:
-                c_rate = Decimal(str(comm_subject.sales_comm_abc))
-            elif btype in ['AB', 'BC', 'AC']:
-                c_rate = Decimal(str(comm_subject.sales_comm_ab_bc_ac))
-            elif btype == 'SUPER':
-                c_rate = Decimal(str(comm_subject.sales_comm_super))
-            elif btype == 'BOX':
-                c_rate = Decimal(str(comm_subject.sales_comm_box))
+            
+            if bet.state == 'TN':
+                if btype in ['A', 'B', 'C']: c_rate = Decimal(str(comm_subject.tn_sales_comm_abc))
+                elif btype in ['AB', 'BC', 'AC']: c_rate = Decimal(str(comm_subject.tn_sales_comm_ab_bc_ac))
+                elif btype == '3D-10': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_10))
+                elif btype == '3D-25': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_25))
+                elif btype == '3D-30': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_30))
+                elif btype == '3D-60': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_60))
+                elif btype == '4D-110': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_110))
+                elif btype == '4D-55': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_55))
+                elif btype == '4D-20': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_20))
+            else:
+                if btype in ['A', 'B', 'C']:
+                    c_rate = Decimal(str(comm_subject.sales_comm_abc))
+                elif btype in ['AB', 'BC', 'AC']:
+                    c_rate = Decimal(str(comm_subject.sales_comm_ab_bc_ac))
+                elif btype == 'SUPER':
+                    c_rate = Decimal(str(comm_subject.sales_comm_super))
+                elif btype == 'BOX':
+                    c_rate = Decimal(str(comm_subject.sales_comm_box))
             
             bet_comm = c_rate * Decimal(str(bet.count))
             
@@ -918,14 +930,26 @@ class SalesReportView(views.APIView):
             # Calculate Commission
             c_rate = Decimal('0.00')
             btype = (bet.type or "").upper()
-            if btype in ['A', 'B', 'C']:
-                c_rate = Decimal(str(comm_subject.sales_comm_abc))
-            elif btype in ['AB', 'BC', 'AC']:
-                c_rate = Decimal(str(comm_subject.sales_comm_ab_bc_ac))
-            elif btype == 'SUPER':
-                c_rate = Decimal(str(comm_subject.sales_comm_super))
-            elif btype == 'BOX':
-                c_rate = Decimal(str(comm_subject.sales_comm_box))
+            
+            if bet.state == 'TN':
+                if btype in ['A', 'B', 'C']: c_rate = Decimal(str(comm_subject.tn_sales_comm_abc))
+                elif btype in ['AB', 'BC', 'AC']: c_rate = Decimal(str(comm_subject.tn_sales_comm_ab_bc_ac))
+                elif btype == '3D-10': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_10))
+                elif btype == '3D-25': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_25))
+                elif btype == '3D-30': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_30))
+                elif btype == '3D-60': c_rate = Decimal(str(comm_subject.tn_sales_comm_3d_60))
+                elif btype == '4D-110': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_110))
+                elif btype == '4D-55': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_55))
+                elif btype == '4D-20': c_rate = Decimal(str(comm_subject.tn_sales_comm_4d_20))
+            else:
+                if btype in ['A', 'B', 'C']:
+                    c_rate = Decimal(str(comm_subject.sales_comm_abc))
+                elif btype in ['AB', 'BC', 'AC']:
+                    c_rate = Decimal(str(comm_subject.sales_comm_ab_bc_ac))
+                elif btype == 'SUPER':
+                    c_rate = Decimal(str(comm_subject.sales_comm_super))
+                elif btype == 'BOX':
+                    c_rate = Decimal(str(comm_subject.sales_comm_box))
             
             bet_comm = c_rate * Decimal(str(bet.count))
             total_comm += bet_comm
@@ -1026,7 +1050,7 @@ class NetReportView(views.APIView):
             if game_id:
                 branch_bets = branch_bets.filter(game_id=game_id)
             
-            type_stats = branch_bets.values('type').annotate(
+            type_stats = branch_bets.values('type', 'state').annotate(
                 total_count=Sum('count'),
                 total_sale_price=Sum(F('amount') * F('count')),
                 total_winning=Sum('winning_amount')
@@ -1038,19 +1062,31 @@ class NetReportView(views.APIView):
             
             for stat in type_stats:
                 btype = stat['type'].upper()
+                state = stat['state']
                 count = stat['total_count'] or 0
                 total_sale_price += float(stat['total_sale_price'] or 0)
                 total_winning += float(stat['total_winning'] or 0)
                 
                 c_rate = 0.0
-                if btype in ['A', 'B', 'C']:
-                    c_rate = float(comm_user.sales_comm_abc)
-                elif btype in ['AB', 'BC', 'AC']:
-                    c_rate = float(comm_user.sales_comm_ab_bc_ac)
-                elif btype == 'SUPER':
-                    c_rate = float(comm_user.sales_comm_super)
-                elif btype == 'BOX':
-                    c_rate = float(comm_user.sales_comm_box)
+                if state == 'TN':
+                    if btype in ['A', 'B', 'C']: c_rate = float(comm_user.tn_sales_comm_abc)
+                    elif btype in ['AB', 'BC', 'AC']: c_rate = float(comm_user.tn_sales_comm_ab_bc_ac)
+                    elif btype == '3D-10': c_rate = float(comm_user.tn_sales_comm_3d_10)
+                    elif btype == '3D-25': c_rate = float(comm_user.tn_sales_comm_3d_25)
+                    elif btype == '3D-30': c_rate = float(comm_user.tn_sales_comm_3d_30)
+                    elif btype == '3D-60': c_rate = float(comm_user.tn_sales_comm_3d_60)
+                    elif btype == '4D-110': c_rate = float(comm_user.tn_sales_comm_4d_110)
+                    elif btype == '4D-55': c_rate = float(comm_user.tn_sales_comm_4d_55)
+                    elif btype == '4D-20': c_rate = float(comm_user.tn_sales_comm_4d_20)
+                else:
+                    if btype in ['A', 'B', 'C']:
+                        c_rate = float(comm_user.sales_comm_abc)
+                    elif btype in ['AB', 'BC', 'AC']:
+                        c_rate = float(comm_user.sales_comm_ab_bc_ac)
+                    elif btype == 'SUPER':
+                        c_rate = float(comm_user.sales_comm_super)
+                    elif btype == 'BOX':
+                        c_rate = float(comm_user.sales_comm_box)
                 
                 total_comm += (c_rate * count)
             
@@ -1330,7 +1366,7 @@ class DailyReportView(views.APIView):
                     output_field=CharField(),
                 )
             )
-            sub_groups = bets_annotated.values('bet_type_category').annotate(
+            sub_groups = bets_annotated.values('bet_type_category', 'state').annotate(
                 sub_sale=Sum(F('amount') * F('count')),
                 sub_count_total=Sum('count'),
                 sub_winning=Sum('winning_amount'),
@@ -1351,14 +1387,22 @@ class DailyReportView(views.APIView):
                 else:
                     # Admin rate: viewer's own commission
                     bcat = sg['bet_type_category']
-                    if bcat == 'ABC':
-                        comm_rate = Decimal(str(user.sales_comm_abc))
-                    elif bcat == 'AB_BC_AC':
-                        comm_rate = Decimal(str(user.sales_comm_ab_bc_ac))
-                    elif bcat == 'SUPER':
-                        comm_rate = Decimal(str(user.sales_comm_super))
-                    elif bcat == 'BOX':
-                        comm_rate = Decimal(str(user.sales_comm_box))
+                    state = sg.get('state', 'KL') # Default to KL if not grouped by state
+                    if state == 'TN':
+                        if bcat == 'ABC': comm_rate = Decimal(str(user.tn_sales_comm_abc))
+                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.tn_sales_comm_ab_bc_ac))
+                        elif bcat == '3D-10': comm_rate = Decimal(str(user.tn_sales_comm_3d_10))
+                        elif bcat == '3D-25': comm_rate = Decimal(str(user.tn_sales_comm_3d_25))
+                        elif bcat == '3D-30': comm_rate = Decimal(str(user.tn_sales_comm_3d_30))
+                        elif bcat == '3D-60': comm_rate = Decimal(str(user.tn_sales_comm_3d_60))
+                        elif bcat == '4D-110': comm_rate = Decimal(str(user.tn_sales_comm_4d_110))
+                        elif bcat == '4D-55': comm_rate = Decimal(str(user.tn_sales_comm_4d_55))
+                        elif bcat == '4D-20': comm_rate = Decimal(str(user.tn_sales_comm_4d_20))
+                    else:
+                        if bcat == 'ABC': comm_rate = Decimal(str(user.sales_comm_abc))
+                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.sales_comm_ab_bc_ac))
+                        elif bcat == 'SUPER': comm_rate = Decimal(str(user.sales_comm_super))
+                        elif bcat == 'BOX': comm_rate = Decimal(str(user.sales_comm_box))
                 comm = comm_rate * cnt
                 total_sale += s
                 total_commission += comm
@@ -1496,13 +1540,13 @@ class DailyReportView(views.APIView):
 
         # ── Execute grouped aggregation ───────────────────────────────────────
         grouped_bets = (
-            bets.values(*group_fields_for_query, 'bet_type_category')
+            bets.values(*group_fields_for_query, 'bet_type_category', 'state')
             .annotate(
                 sub_total_sale=Sum(F('amount') * F('count')),
                 sub_total_count=Sum('count'),
                 sub_total_winning=Sum('winning_amount'),
             )
-            .order_by(*group_fields_for_query, 'bet_type_category')
+            .order_by(*group_fields_for_query, 'bet_type_category', 'state')
         )
 
         # Pre-fetch direct-sub User objects for commission lookup (agent_rate=ON)
@@ -1538,14 +1582,26 @@ class DailyReportView(views.APIView):
             commission_rate = Decimal('0.00')
             if target_user_for_comm:
                 bcat = r['bet_type_category']
-                if bcat == 'ABC':
-                    commission_rate = Decimal(str(target_user_for_comm.sales_comm_abc))
-                elif bcat == 'AB_BC_AC':
-                    commission_rate = Decimal(str(target_user_for_comm.sales_comm_ab_bc_ac))
-                elif bcat == 'SUPER':
-                    commission_rate = Decimal(str(target_user_for_comm.sales_comm_super))
-                elif bcat == 'BOX':
-                    commission_rate = Decimal(str(target_user_for_comm.sales_comm_box))
+                state = r.get('state', 'KL')
+                if state == 'TN':
+                    if bcat == 'ABC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_abc))
+                    elif bcat == 'AB_BC_AC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_ab_bc_ac))
+                    elif bcat == '3D-10': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_10))
+                    elif bcat == '3D-25': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_25))
+                    elif bcat == '3D-30': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_30))
+                    elif bcat == '3D-60': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_60))
+                    elif bcat == '4D-110': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_110))
+                    elif bcat == '4D-55': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_55))
+                    elif bcat == '4D-20': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_20))
+                else:
+                    if bcat == 'ABC':
+                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_abc))
+                    elif bcat == 'AB_BC_AC':
+                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_ab_bc_ac))
+                    elif bcat == 'SUPER':
+                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_super))
+                    elif bcat == 'BOX':
+                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_box))
 
             sub_sale    = Decimal(str(r['sub_total_sale'] or 0))
             sub_count   = Decimal(str(r['sub_total_count'] or 0))
