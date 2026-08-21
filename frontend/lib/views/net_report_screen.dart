@@ -403,29 +403,29 @@ class _NetReportScreenState extends State<NetReportScreen> {
     );
   }
 
-  Widget _buildDateTile(String label, DateTime date, VoidCallback onTap, bool isDesktop) {
+  Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      child: Container(
-        height: isDesktop ? 50 : 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(label,
-                style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: isDesktop ? 10 : 8,
-                    fontWeight: FontWeight.bold)),
-            Text(DateFormat('dd/MM/yyyy').format(date),
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 10)),
-          ],
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+        ),
+        child: Text(
+          // ignore: undefined_function
+          DateFormat('dd/MM/yyyy').format(date),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
       ),
     );

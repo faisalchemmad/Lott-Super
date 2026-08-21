@@ -167,7 +167,6 @@ Widget build(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   
-                  _buildSectionTitle('STATE FILTER'),
                   Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 24),
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -185,8 +184,7 @@ Widget build(BuildContext context) {
                       ],
                     ),
                   ),
-_buildSectionTitle('DATE RANGE'),
-                  const SizedBox(height: 8),
+
                   Row(
                     children: [
                       Expanded(
@@ -198,8 +196,7 @@ _buildSectionTitle('DATE RANGE'),
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildSectionTitle('GAME & AGENT'),
+                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -275,31 +272,32 @@ _buildSectionTitle('DATE RANGE'),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(title,
-        style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey[600],
-            letterSpacing: 1));
-  }
+  
 
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-            color: Colors.white,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.black.withOpacity(0.05))),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 10)),
-          const SizedBox(height: 4),
-          Text(DateFormat('dd/MM/yy').format(date),
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-        ]),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+        ),
+        child: Text(
+          // ignore: undefined_function
+          DateFormat('dd/MM/yyyy').format(date),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
       ),
     );
   }
@@ -310,21 +308,25 @@ _buildSectionTitle('DATE RANGE'),
       required List<DropdownMenuItem<T>> items,
       required ValueChanged<T?> onChanged,
       required IconData icon}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-          color: Colors.white,
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.black.withOpacity(0.05))),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButtonFormField<T>(
-            value: value,
-            items: items,
-            onChanged: onChanged,
-            decoration: InputDecoration(
-                labelText: label,
-                prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-                border: InputBorder.none)),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
       ),
     );
   }

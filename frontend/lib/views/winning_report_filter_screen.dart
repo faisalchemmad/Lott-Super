@@ -83,8 +83,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Date Range'),
-                  const SizedBox(height: 8),
+                  
                   Row(
                     children: [
                       Expanded(
@@ -104,8 +103,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildSectionTitle('Game & Agent'),
+                  
                   const SizedBox(height: 8),
                   _buildDropdown<int?>(
                     label: 'Select Game',
@@ -143,7 +141,6 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       icon: Icons.person_search_rounded,
                     ),
                   const SizedBox(height: 16),
-                  _buildSectionTitle('Specific Number (Optional)'),
                   TextField(
                     controller: _numberController,
                     keyboardType: TextInputType.number,
@@ -238,14 +235,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(title,
-        style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey[600],
-            letterSpacing: 1));
-  }
+  
 
   Widget _buildDatePicker(
       String label, DateTime date, Function(DateTime) onPicked) {
