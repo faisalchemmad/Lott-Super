@@ -508,7 +508,7 @@ Widget build(BuildContext context) {
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(2)),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 const Row(
                   children: [
                     Icon(Icons.tune_rounded, color: AppColors.primary),
@@ -520,7 +520,7 @@ Widget build(BuildContext context) {
                             letterSpacing: 0.5)),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 
                 
 Row(
@@ -1054,7 +1054,7 @@ const SizedBox(height: 16),
         ),
         child: Column(
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Container(
               width: 40,
               height: 4,
@@ -1116,11 +1116,11 @@ const SizedBox(height: 16),
               child: ListView.separated(
                 padding: const EdgeInsets.all(20),
                 itemCount: users.length,
-                separatorBuilder: (c, i) => const SizedBox(height: 12),
+                separatorBuilder: (c, i) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final win = users[index];
                   return Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(16),

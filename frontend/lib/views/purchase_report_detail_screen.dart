@@ -122,7 +122,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: reportData.length,
               separatorBuilder: (context, index) =>
                   Divider(height: 1, color: Colors.grey[200]),
@@ -225,7 +225,7 @@ class PurchaseReportDetailScreen extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

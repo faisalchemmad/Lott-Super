@@ -162,7 +162,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('DATE RANGE'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -176,9 +176,9 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       })),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('GAME & AGENT'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
                     value: _selectedGameId,
@@ -215,13 +215,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                           setState(() => _selectedAgentId = val),
                       icon: Icons.person_search_rounded,
                     ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('STATE'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(6),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.04),
@@ -240,9 +240,9 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('SPECIFIC NUMBER (OPTIONAL)'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildTextFieldTile(
                     label: 'SEARCH NUMBER',
                     controller: _numberController,
@@ -270,7 +270,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(6)),
                         elevation: 4,
                       ),
                       child: _isGeneratingReport
@@ -326,10 +326,10 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Colors.black.withOpacity(0.05)),
         ),
         child: Column(
@@ -357,7 +357,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: DropdownButtonHideUnderline(
@@ -368,7 +368,9 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           decoration: InputDecoration(
               labelText: label,
               prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-              border: InputBorder.none),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8)),
         ),
       ),
     );
@@ -388,8 +390,10 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide.none),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       ),
     );
   }

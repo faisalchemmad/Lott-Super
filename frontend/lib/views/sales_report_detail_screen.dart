@@ -244,7 +244,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(

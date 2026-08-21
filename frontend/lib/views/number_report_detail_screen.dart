@@ -122,7 +122,7 @@ class NumberReportDetailScreen extends StatelessWidget {
       body: reportData.isEmpty
           ? _buildNoData()
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: reportData.length,
               separatorBuilder: (context, index) =>
                   Divider(height: 1, color: Colors.grey[200]),

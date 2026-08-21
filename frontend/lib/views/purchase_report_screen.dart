@@ -146,7 +146,7 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('DATE RANGE'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -158,9 +158,9 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('GAME & TYPE'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
                     value: _selectedGameId,
@@ -197,7 +197,7 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
+                              borderRadius: BorderRadius.circular(6)),
                           elevation: 4),
                       child: _isGenerating
                           ? const CircularProgressIndicator(color: Colors.white)
@@ -226,10 +226,10 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: Colors.black.withOpacity(0.05))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 10)),
@@ -252,7 +252,7 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Colors.black.withOpacity(0.05))),
       child: DropdownButtonHideUnderline(
         child: DropdownButtonFormField<T>(

@@ -84,7 +84,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('Date Range'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -104,9 +104,9 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('Game & Agent'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildDropdown<int?>(
                     label: 'Select Game',
                     value: _selectedGameId,
@@ -142,7 +142,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       onChanged: (v) => setState(() => _selectedAgentId = v),
                       icon: Icons.person_search_rounded,
                     ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('Specific Number (Optional)'),
                   TextField(
                     controller: _numberController,
@@ -154,19 +154,19 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   if (_userRole != 'SUB_DEALER')
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(6),
                         border:
                             Border.all(color: Colors.black.withOpacity(0.05)),
                       ),
@@ -223,7 +223,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(6)),
                         elevation: 4,
                         shadowColor: AppColors.primary.withOpacity(0.4),
                       ),
@@ -263,7 +263,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Colors.black.withOpacity(0.05)),
         ),
         child: Column(
@@ -292,7 +292,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: DropdownButtonHideUnderline(

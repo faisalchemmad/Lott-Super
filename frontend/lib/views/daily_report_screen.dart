@@ -193,7 +193,7 @@ Widget build(BuildContext context) {
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: Colors.grey[200]!),
                     ),
                     child: Row(
@@ -206,7 +206,7 @@ Widget build(BuildContext context) {
                     ),
                   ),
 _buildSectionTitle('DATE RANGE'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -218,9 +218,9 @@ _buildSectionTitle('DATE RANGE'),
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('GAME & AGENT'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
                     value: _selectedGameId,
@@ -253,9 +253,9 @@ _buildSectionTitle('DATE RANGE'),
                           setState(() => _selectedAgentId = val),
                       icon: Icons.person_search_rounded,
                     ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildSectionTitle('REPORT OPTIONS'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildToggle('DAY DETAIL', _dayDetail,
                       (v) => setState(() => _dayDetail = v)),
                   _buildToggle('GAME DETAIL', _gameDetail,
@@ -274,7 +274,7 @@ _buildSectionTitle('DATE RANGE'),
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(6)),
                         elevation: 4,
                       ),
                       child: _isGenerating
@@ -304,10 +304,10 @@ _buildSectionTitle('DATE RANGE'),
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Colors.black.withOpacity(0.05)),
         ),
         child: Column(
@@ -335,7 +335,7 @@ _buildSectionTitle('DATE RANGE'),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: DropdownButtonHideUnderline(
@@ -346,7 +346,9 @@ _buildSectionTitle('DATE RANGE'),
           decoration: InputDecoration(
               labelText: label,
               prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-              border: InputBorder.none),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8)),
         ),
       ),
     );
