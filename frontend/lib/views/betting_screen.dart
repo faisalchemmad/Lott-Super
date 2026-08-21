@@ -357,6 +357,7 @@ class _BettingScreenState extends State<BettingScreen>
               int count = int.parse(_countController.text);
               if (count > 0) {
                 _draftBets.insert(0, {
+                  'state': _selectedStateCode,
                   'number': perm,
                   'count': count,
                   'type': 'SUPER',
@@ -373,6 +374,7 @@ class _BettingScreenState extends State<BettingScreen>
                 double unitPrice = selectedUser?.priceBox ?? 10.0;
                 double commRate = selectedUser?.salesCommBox ?? 0.0;
                 _draftBets.insert(0, {
+                  'state': _selectedStateCode,
                   'number': perm,
                   'count': boxCount,
                   'type': 'BOX',
@@ -428,6 +430,7 @@ class _BettingScreenState extends State<BettingScreen>
               count = int.tryParse(_boxCountController.text) ?? count;
             }
             _draftBets.insert(0, {
+                  'state': _selectedStateCode,
               'number': num,
               'count': count,
               'type': t,
@@ -482,6 +485,7 @@ class _BettingScreenState extends State<BettingScreen>
 
             if (count > 0) {
               _draftBets.insert(0, {
+                  'state': _selectedStateCode,
                 'number': num,
                 'count': count,
                 'type': 'SUPER',
@@ -498,6 +502,7 @@ class _BettingScreenState extends State<BettingScreen>
               double unitPrice = selectedUser?.priceBox ?? 10.0;
               double commRate = selectedUser?.salesCommBox ?? 0.0;
               _draftBets.insert(0, {
+                  'state': _selectedStateCode,
                 'number': num,
                 'count': boxCount,
                 'type': 'BOX',
@@ -524,6 +529,7 @@ class _BettingScreenState extends State<BettingScreen>
 
             if (count > 0) {
               _draftBets.insert(0, {
+                  'state': _selectedStateCode,
                 'number': num,
                 'count': count,
                 'type': type,
@@ -581,6 +587,7 @@ class _BettingScreenState extends State<BettingScreen>
 
           if (count > 0) {
             _draftBets.insert(0, {
+                  'state': _selectedStateCode,
               'number': num,
               'count': count,
               'type': t,
