@@ -13,6 +13,7 @@ class SalesReportDetailScreen extends StatefulWidget {
   final String userRole;
   final bool isAgentRate;
   final String? searchNumber;
+  final String state; // ADDED
 
   const SalesReportDetailScreen({
     super.key,
@@ -23,6 +24,7 @@ class SalesReportDetailScreen extends StatefulWidget {
     required this.userRole,
     this.isAgentRate = true,
     this.searchNumber,
+    this.state = 'ALL', // ADDED
   });
 
   @override
@@ -50,6 +52,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
         number: widget.searchNumber,
         fullView: widget.fullView,
         adminRate: widget.isAgentRate,
+        state: widget.state, // ADDED
       );
       setState(() {
         _currentReportData = data;

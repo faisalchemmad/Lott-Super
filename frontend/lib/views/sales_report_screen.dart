@@ -128,6 +128,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
               searchNumber: _numberController.text.isNotEmpty
                   ? _numberController.text
                   : null,
+              state: _selectedState, // ADDED
             ),
           ),
         );

@@ -362,6 +362,9 @@ class BetViewSet(viewsets.ModelViewSet):
         bets_data = request.data.get('bets', [])
         if not bets_data:
             return Response({'error': 'No bets provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # LOGGING
+        print('BULK CREATE RECEIVED BETS:', bets_data)
 
         # Generate 8-digit Invoice ID (will only be used if we save at least one bet)
         invoice_id = ''.join(random.choices(string.digits, k=8))
@@ -443,6 +446,7 @@ class BetViewSet(viewsets.ModelViewSet):
                     'number': number,
                     'type': bet_type,
                     'count': count,
+                    'state': state,
                     'error': err_msg
                 })
 

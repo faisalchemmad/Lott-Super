@@ -986,7 +986,29 @@ class _BettingScreenState extends State<BettingScreen>
       selectedUser = _user;
     }
 
-    if (_selectedStateCode == 'TN') {
+    // If it looks like TN paste, force it to TN!
+    bool looksLikeTN = text.toLowerCase().contains('rs30') || 
+                       text.toLowerCase().contains('rs10') ||
+                       text.toLowerCase().contains('rs25') ||
+                       text.toLowerCase().contains('rs60') ||
+                       text.toLowerCase().contains('all board') ||
+                       text.toLowerCase().contains('all.5') ||
+                       text.toLowerCase().contains('each') ||
+                       text.toUpperCase().contains('ABC') ||
+                       text.toUpperCase().contains('AB') ||
+                       text.toUpperCase().contains('BC') ||
+                       text.toUpperCase().contains('AC');
+                       
+    if (_selectedStateCode == 'TN' || looksLikeTN) {
+      if (_selectedStateCode != 'TN') {
+         setState(() {
+            _selectedStateCode = 'TN';
+            _tabController.removeListener(_tabListener);
+            _tabController.dispose();
+            _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
+            _tabController.addListener(_tabListener);
+         });
+      }
       _processTNPasteText(text, isRemoval, selectedUser);
       return;
     }
