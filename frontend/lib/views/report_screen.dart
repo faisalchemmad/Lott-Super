@@ -67,7 +67,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         builder: (context) => const SalesReportScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildReportCard(
                   title: 'Winning Report',
                   subtitle: 'Track winners and prize distributions',
@@ -80,7 +80,7 @@ class _ReportScreenState extends State<ReportScreen> {
                             const WinningReportFilterScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
                   _buildReportCard(
                     title: 'Forward Purchase Report',
@@ -94,7 +94,7 @@ class _ReportScreenState extends State<ReportScreen> {
                               const ForwardPurchaseReportScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildReportCard(
                     title: 'Forward Winning Report',
                     subtitle: 'Track winners from forwarded bets',
@@ -107,7 +107,7 @@ class _ReportScreenState extends State<ReportScreen> {
                               const ForwardWinningReportScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _buildReportCard(
                     title: 'Forward Net Report',
                     subtitle: 'Summary of forwarded bets (Purchase - Win - Commi)',
@@ -120,7 +120,7 @@ class _ReportScreenState extends State<ReportScreen> {
                               const ForwardNetReportScreen()),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
                 _buildReportCard(
                   title: 'Number Report',
@@ -133,7 +133,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         builder: (context) => const NumberReportScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildReportCard(
                   title: 'Count Report',
                   subtitle: 'Summary of ticket counts by type',
@@ -145,8 +145,8 @@ class _ReportScreenState extends State<ReportScreen> {
                         builder: (context) => const CountReportScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 _buildReportCard(
                   title: 'Daily Report',
                   subtitle: 'Summary grouped by Date or Game name',
@@ -158,7 +158,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         builder: (context) => const DailyReportScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildReportCard(
                   title: 'Purchase Report',
                   subtitle: 'View forwarded numbers and total purchase amount',
@@ -187,12 +187,12 @@ class _ReportScreenState extends State<ReportScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: color.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -200,38 +200,32 @@ class _ReportScreenState extends State<ReportScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(icon, color: color, size: 28),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
-                        ),
-                      ),
-                      // Subtitle removed as requested
-                    ],
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
+                    ),
                   ),
                 ),
                 Icon(
