@@ -230,15 +230,7 @@ class _ReportScreenState extends State<ReportScreen> {
                           color: Color(0xFF1A1A1A),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                          height: 1.2,
-                        ),
-                      ),
+                      // Subtitle removed as requested
                     ],
                   ),
                 ),
