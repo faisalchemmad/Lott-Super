@@ -522,24 +522,7 @@ Widget build(BuildContext context) {
                 ),
                 const SizedBox(height: 24),
                 
-                Text('STATE FILTER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.grey[600])),
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 24),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStateRadio('ALL', setSheetState),
-                      _buildStateRadio('KL', setSheetState),
-                      _buildStateRadio('TN', setSheetState),
-                    ],
-                  ),
-                ),
+                
 Row(
                   children: [
                     Expanded(
@@ -634,7 +617,26 @@ Row(
                       ],
                     ),
                   ),
-                const SizedBox(height: 16),
+                
+                Text('STATE FILTER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.grey[600])),
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 24),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStateRadio('ALL', setSheetState),
+                      _buildStateRadio('KL', setSheetState),
+                      _buildStateRadio('TN', setSheetState),
+                    ],
+                  ),
+                ),
+const SizedBox(height: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
