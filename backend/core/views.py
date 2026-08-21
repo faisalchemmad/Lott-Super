@@ -414,6 +414,12 @@ class BetViewSet(viewsets.ModelViewSet):
             number = b_data.get('number', '')
             state = b_data.get('state', 'KL')
             
+            # FORCE TN STATE FOR TN TYPES
+            if bet_type in ['3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20']:
+                state = 'TN'
+            # For SUPER/BOX/A/B/C/AB/BC/AC, we trust the state provided by frontend.
+
+            
             p_price_map = {
                 'A': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),
                 'B': user.price_abc if state == 'KL' else getattr(user, 'tn_price_abc', 12.0),

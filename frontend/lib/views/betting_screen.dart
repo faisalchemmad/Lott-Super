@@ -2161,6 +2161,11 @@ class _BettingScreenState extends State<BettingScreen>
       _tabController.dispose();
       _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
       _tabController.addListener(_tabListener);
+      if (stateCode == 'TN') {
+        _selectedType = ['3D-10', '3D-25', '3D-30', '3D-60'][newIndex];
+      } else {
+        _selectedType = ['SUPER', 'BOX', 'ABC'][newIndex];
+      }
     });
   }
 
