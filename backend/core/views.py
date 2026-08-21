@@ -1200,8 +1200,11 @@ class CountReportView(views.APIView):
         game_id = request.query_params.get('game')
         agent_id = request.query_params.get('user')
 
+        state = request.query_params.get('state')
         bets = Bet.objects.all()
         
+        if state and state.upper() in ['KL', 'TN']:
+            bets = bets.filter(state=state.upper())
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)
         if to_date:
@@ -1318,6 +1321,7 @@ class DailyReportView(views.APIView):
         agent_id = request.query_params.get('user')
         game_ids = request.query_params.getlist('games') # Support multiple games
         
+        state = request.query_params.get('state')
         day_detail = request.query_params.get('day_detail') == 'true'
         game_detail = request.query_params.get('game_detail') == 'true'
         user_detail = request.query_params.get('user_detail') == 'true'
@@ -1326,6 +1330,8 @@ class DailyReportView(views.APIView):
 
         bets = Bet.objects.all()
         
+        if state and state.upper() in ['KL', 'TN']:
+            bets = bets.filter(state=state.upper())
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)
         if to_date:
@@ -1691,11 +1697,14 @@ class NumberReportView(views.APIView):
         search_number = request.query_params.get('number')
         state_filter = request.query_params.get('state')
 
+        state = request.query_params.get('state')
         bets = Bet.objects.all()
         
         if state_filter and state_filter.upper() != 'ALL':
             bets = bets.filter(state=state_filter.upper())
         
+        if state and state.upper() in ['KL', 'TN']:
+            bets = bets.filter(state=state.upper())
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)
         if to_date:
@@ -1845,6 +1854,7 @@ class WinningReportView(views.APIView):
         user_id = request.query_params.get('user')
         search_number = request.query_params.get('number')
         
+        state = request.query_params.get('state')
         user = request.user
         forwarded_only = request.query_params.get('forwarded_only') == 'true'
         
@@ -1862,6 +1872,8 @@ class WinningReportView(views.APIView):
             bets = bets.filter(created_at__date__lte=to_date)
         if game_id:
             bets = bets.filter(game_id=game_id)
+        if state and state.upper() in ['KL', 'TN']:
+            bets = bets.filter(state=state.upper())
         if search_number:
             bets = bets.filter(number=search_number)
         if user_id:
