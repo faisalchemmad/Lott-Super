@@ -88,13 +88,13 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         Padding(
                           padding: const EdgeInsets.only(left: 4),
                           child: Text('RECENT INVOICES',
@@ -216,7 +216,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         color: Color(0xFFFAF4F4),
       ),
@@ -230,21 +230,22 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                 children: [
                   Text('REPORT PERIOD',
                       style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600)),
+                          color: Colors.grey[500],
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5)),
                   Text(
                     '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}',
                     style: const TextStyle(
                         color: AppColors.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -257,7 +258,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -282,16 +283,16 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
         Text(
           label,
           style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 13,
+              color: Colors.grey[700],
+              fontSize: 11,
               fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 1),
         Text(
           value,
           style: const TextStyle(
               color: AppColors.primary,
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.bold),
         ),
       ],
