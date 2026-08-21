@@ -359,11 +359,11 @@ class _NetReportScreenState extends State<NetReportScreen> {
             children: [
               SizedBox(
                 width: isDesktop ? 260 : 110,
-                child: _buildDateTile('FROM', _fromDate, () => _selectDate(true), isDesktop),
+                child: _buildDateTile('FROM', _fromDate, () => _selectDate(true)),
               ),
               SizedBox(
                 width: isDesktop ? 260 : 110,
-                child: _buildDateTile('TO', _toDate, () => _selectDate(false), isDesktop),
+                child: _buildDateTile('TO', _toDate, () => _selectDate(false)),
               ),
               if (!_isLoadingGames)
                 Container(
