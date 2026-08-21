@@ -33,6 +33,7 @@ class WinningReportScreen extends StatefulWidget {
 }
 
 class _WinningReportScreenState extends State<WinningReportScreen> {
+  String _selectedState = 'ALL';
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   List<GameModel> _games = [];
@@ -102,6 +103,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getWinningReport(
+          state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGame?.id,
@@ -294,7 +296,34 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  
+  Widget _buildStateRadio(String state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<String>(
+          value: state,
+          groupValue: _selectedState,
+          activeColor: AppColors.primary,
+          onChanged: (val) {
+            setState(() {
+              _selectedState = val!;
+            });
+          },
+        ),
+        Text(
+          state,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            color: _selectedState == state ? AppColors.primary : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(

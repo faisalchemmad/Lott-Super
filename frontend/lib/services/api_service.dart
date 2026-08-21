@@ -510,7 +510,7 @@ class ApiService {
     return response.statusCode == 204;
   }
 
-  Future<Map<String, dynamic>> getCountReport({
+  Future<Map<String, dynamic>> getCountReport({String state = 'ALL', 
     required String fromDate,
     required String toDate,
     int? gameId,
@@ -522,6 +522,7 @@ class ApiService {
     final token = prefs.getString('token');
 
     String url = '$baseUrl/report/count/?from=$fromDate&to=$toDate';
+    if (state != 'ALL') url += '&state=$state';
     if (gameId != null) url += '&game=$gameId';
     if (userId != null) url += '&user=$userId';
     if (number != null) url += '&number=$number';
@@ -538,7 +539,7 @@ class ApiService {
     return {};
   }
 
-  Future<List<dynamic>> getDailyReport({
+  Future<List<dynamic>> getDailyReport({String state = 'ALL', 
     required String fromDate,
     required String toDate,
     int? userId,
@@ -552,6 +553,7 @@ class ApiService {
     final token = prefs.getString('token');
 
     String url = '$baseUrl/report/daily/?from=$fromDate&to=$toDate';
+    if (state != 'ALL') url += '&state=$state';
     if (userId != null) url += '&user=$userId';
     if (dayDetail) url += '&day_detail=true';
     if (gameDetail) url += '&game_detail=true';
@@ -631,7 +633,7 @@ class ApiService {
     return response.statusCode == 204;
   }
 
-  Future<List<dynamic>> getNumberReport({
+  Future<List<dynamic>> getNumberReport({String state = 'ALL', 
     String? fromDate,
     String? toDate,
     int? gameId,
@@ -641,6 +643,7 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final Map<String, String> queryParams = {};
+    if (state != 'ALL') queryParams['state'] = state;
     if (fromDate != null) queryParams['from'] = fromDate;
     if (toDate != null) queryParams['to'] = toDate;
     if (gameId != null) queryParams['game'] = gameId.toString();
@@ -719,7 +722,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  Future<Map<String, dynamic>> getWinningReport({
+  Future<Map<String, dynamic>> getWinningReport({String state = 'ALL', 
     String? fromDate,
     String? toDate,
     int? gameId,
@@ -731,6 +734,7 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final Map<String, String> queryParams = {};
+    if (state != 'ALL') queryParams['state'] = state;
     if (fromDate != null) queryParams['from'] = fromDate;
     if (toDate != null) queryParams['to'] = toDate;
     if (gameId != null) queryParams['game'] = gameId.toString();

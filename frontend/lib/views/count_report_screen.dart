@@ -16,6 +16,7 @@ class CountReportScreen extends StatefulWidget {
 }
 
 class _CountReportScreenState extends State<CountReportScreen> {
+  String _selectedState = 'ALL';
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   bool _agentRate = false;
@@ -94,6 +95,7 @@ class _CountReportScreenState extends State<CountReportScreen> {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getCountReport(
+          state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGameId,
@@ -120,7 +122,34 @@ class _CountReportScreenState extends State<CountReportScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  
+  Widget _buildStateRadio(String state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<String>(
+          value: state,
+          groupValue: _selectedState,
+          activeColor: AppColors.primary,
+          onChanged: (val) {
+            setState(() {
+              _selectedState = val!;
+            });
+          },
+        ),
+        Text(
+          state,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            color: _selectedState == state ? AppColors.primary : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -137,7 +166,26 @@ class _CountReportScreenState extends State<CountReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('DATE RANGE'),
+                  
+                  _buildSectionTitle('STATE FILTER'),
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStateRadio('ALL'),
+                        _buildStateRadio('KL'),
+                        _buildStateRadio('TN'),
+                      ],
+                    ),
+                  ),
+_buildSectionTitle('DATE RANGE'),
                   const SizedBox(height: 12),
                   Row(
                     children: [
