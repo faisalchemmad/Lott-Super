@@ -1011,6 +1011,7 @@ class SalesReportView(views.APIView):
 
 class NetReportView(views.APIView):
     def get(self, request):
+        from django.db.models import Sum, F, Case, When, Value, CharField
         user = request.user
         from_date = request.query_params.get('from')
         to_date = request.query_params.get('to')
@@ -1114,7 +1115,6 @@ class NetReportView(views.APIView):
         # --- Inject Forwarding Calculations into Net Report ---
         if target_user.id == user.id:
             from .models import ForwardedBet
-            from django.db.models import Sum, F
             
             fwd_sales = 0.0
             fwd_win = 0.0
