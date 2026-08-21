@@ -297,7 +297,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
 
   @override
   
-  Widget _buildStateRadio(String state) {
+  Widget _buildStateRadio(String state, void Function(void Function()) setSheetState) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -309,6 +309,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
             setState(() {
               _selectedState = val!;
             });
+            setSheetState(() {});
           },
         ),
         Text(
@@ -533,9 +534,9 @@ Widget build(BuildContext context) {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStateRadio('ALL'),
-                      _buildStateRadio('KL'),
-                      _buildStateRadio('TN'),
+                      _buildStateRadio('ALL', setSheetState),
+                      _buildStateRadio('KL', setSheetState),
+                      _buildStateRadio('TN', setSheetState),
                     ],
                   ),
                 ),
