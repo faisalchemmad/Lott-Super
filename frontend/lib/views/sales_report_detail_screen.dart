@@ -224,125 +224,128 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: Color(0xFFFAF4F4),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('REPORT PERIOD',
-                      style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5)),
-                  Text(
-                    '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}',
-                    style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildRedStatItem(
-                    'TotalCount:', '${_currentReportData['count'] ?? 0}'),
-              ),
-              Expanded(
-                child: _buildRedStatItem(
-                    commLabel, '₹${_currentReportData['commission'] ?? 0}'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildRedStatItem(
-                    netLabel, '₹${_currentReportData['net'] ?? 0}'),
-              ),
-              Expanded(
-                child: _buildRedStatItem(
-                    'Total Sales', '₹${_currentReportData['sales'] ?? 0}'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRedStatItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-              color: Colors.grey[700],
-              fontSize: 11,
-              fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 1),
-        Text(
-          value,
-          style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 13,
-              fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(
-      String title, String value, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Report Period Card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.calendar_month_rounded,
+                      color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('REPORT PERIOD',
+                          style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5)),
+                      const SizedBox(height: 2),
+                      Text(
+                        ' – ',
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down_rounded,
+                    color: Colors.grey),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // 2. Summary 4-Column Card
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildNewStatItem(
+                      Icons.people_alt_rounded, 'TotalCount', ''),
+                ),
+                Container(width: 1, height: 60, color: Colors.grey.shade300),
+                Expanded(
+                  child:
+                      _buildNewStatItem(Icons.percent_rounded, commLabel, '₹'),
+                ),
+                Container(width: 1, height: 60, color: Colors.grey.shade300),
+                Expanded(
+                  child: _buildNewStatItem(
+                      Icons.account_balance_wallet_rounded, netLabel, '₹'),
+                ),
+                Container(width: 1, height: 60, color: Colors.grey.shade300),
+                Expanded(
+                  child: _buildNewStatItem(
+                      Icons.bar_chart_rounded, 'Total Sales', '₹'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNewStatItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 18),
+            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
-          const SizedBox(height: 16),
-          Text(title,
-              style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 11,
+                fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 4),
-          Text(value,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
               style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900)),
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900),
+            ),
+          ),
         ],
       ),
     );
@@ -676,18 +679,19 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
               child: InkWell(
                 onTap: () async {
                   final result = await showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: InvoiceDetailScreen(
-                    invoiceId: invoiceId,
-                    isAgentRate: widget.isAgentRate,
-                  ),
-                ),
-              );
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => ClipRRect(
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(20)),
+                      child: InvoiceDetailScreen(
+                        invoiceId: invoiceId,
+                        isAgentRate: widget.isAgentRate,
+                      ),
+                    ),
+                  );
                   if (result == true) {
                     _reFetchData();
                   }
