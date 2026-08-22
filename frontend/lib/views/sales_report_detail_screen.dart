@@ -270,8 +270,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                     ],
                   ),
                 ),
-                const Icon(Icons.keyboard_arrow_down_rounded,
-                    color: Colors.grey),
+                
               ],
             ),
           ),
