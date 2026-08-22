@@ -89,43 +89,44 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text('RECENT INVOICES',
+                            style: TextStyle(
+                                color: Colors.grey[800],
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                                fontSize: 14)),
+                      ),
+                      const SizedBox(height: 16),
+                      if (invoices.isEmpty)
+                        Center(
+                            child: Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: Column(
+                            children: [
+                              Icon(Icons.receipt_long_rounded,
+                                  size: 60, color: Colors.grey[300]),
+                              const SizedBox(height: 16),
+                              Text('No invoices found',
+                                  style: TextStyle(color: Colors.grey[400])),
+                            ],
+                          ),
+                        ))
+                      else
                         Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: Text('RECENT INVOICES',
-                              style: TextStyle(
-                                  color: Colors.grey[800],
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.5,
-                                  fontSize: 14)),
-                        ),
-                        const SizedBox(height: 16),
-                        if (invoices.isEmpty)
-                          Center(
-                              child: Padding(
-                            padding: const EdgeInsets.only(top: 40),
-                            child: Column(
-                              children: [
-                                Icon(Icons.receipt_long_rounded,
-                                    size: 60, color: Colors.grey[300]),
-                                const SizedBox(height: 16),
-                                Text('No invoices found',
-                                    style: TextStyle(color: Colors.grey[400])),
-                              ],
-                            ),
-                          ))
-                        else
-                          widget.searchNumber != null &&
+                          padding: EdgeInsets.symmetric(
+                              horizontal: (widget.fullView || (widget.searchNumber != null && widget.searchNumber!.isNotEmpty)) ? 0 : 20),
+                          child: widget.searchNumber != null &&
                                   widget.searchNumber!.isNotEmpty
                               ? _buildSearchNumberTable(invoices)
                               : _buildInvoiceList(invoices),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -353,14 +354,20 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
           final displayId = inv['invoice_id'].toString();
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 20),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey[300]!),
+              color: Colors.white,
             ),
-            child: Column(
-              children: [
-                // Invoice Header
-                Container(
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.only(right: 8),
+                backgroundColor: const Color(0xFF1A233E),
+                collapsedBackgroundColor: const Color(0xFF1A233E),
+                iconColor: Colors.white,
+                collapsedIconColor: Colors.white,
+                title: Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                   color: const Color(0xFF1A233E), // Dark Navy Blue
@@ -428,8 +435,10 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                     ],
                   ),
                 ),
-                // Invoice Items Header
-                Container(
+                children: [
+                  Container(color: Colors.white, child: Column(children: [
+                  // Invoice Items Header
+                  Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
                   color: Colors.grey[100],
@@ -541,7 +550,9 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                     ),
                   );
                 }).toList(),
-              ],
+                  ]))
+                ],
+              ),
             ),
           );
         }).toList(),
