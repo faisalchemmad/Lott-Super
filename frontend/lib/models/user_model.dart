@@ -48,6 +48,28 @@ class UserModel {
   final double prizeSuper5;
   final double commSuper5;
 
+  // TN Prize Settings
+  final double tnPrizeAbc;
+  final double tnPrizeAbBcAc;
+  final double tnPrize3d10;
+  final double tnPrize3d10Bc;
+  final double tnPrize3d25;
+  final double tnPrize3d25Bc;
+  final double tnPrize3d30;
+  final double tnPrize3d30Bc;
+  final double tnPrize3d30C;
+  final double tnPrize3d60;
+  final double tnPrize3d60Bc;
+  final double tnPrize3d60C;
+  final double tnPrize4d110_1;
+  final double tnPrize4d110_2;
+  final double tnPrize4d110_3;
+  final double tnPrize4d110_4;
+  final double tnPrize4d55_1;
+  final double tnPrize4d55_2;
+  final double tnPrize4d55_3;
+  final double tnPrize4d55_4;
+  final double tnPrize4d20_1;
   final double prize6th;
   final double comm6th;
 
@@ -126,6 +148,27 @@ class UserModel {
     this.commSuper4 = 20,
     this.prizeSuper5 = 50,
     this.commSuper5 = 20,
+    this.tnPrizeAbc = 1000.0,
+    this.tnPrizeAbBcAc = 1000.0,
+    this.tnPrize3d10 = 5000.0,
+    this.tnPrize3d10Bc = 100.0,
+    this.tnPrize3d25 = 10000.0,
+    this.tnPrize3d25Bc = 1000.0,
+    this.tnPrize3d30 = 15000.0,
+    this.tnPrize3d30Bc = 500.0,
+    this.tnPrize3d30C = 50.0,
+    this.tnPrize3d60 = 30000.0,
+    this.tnPrize3d60Bc = 1000.0,
+    this.tnPrize3d60C = 100.0,
+    this.tnPrize4d110_1 = 450000.0,
+    this.tnPrize4d110_2 = 10000.0,
+    this.tnPrize4d110_3 = 1000.0,
+    this.tnPrize4d110_4 = 100.0,
+    this.tnPrize4d55_1 = 225000.0,
+    this.tnPrize4d55_2 = 5000.0,
+    this.tnPrize4d55_3 = 500.0,
+    this.tnPrize4d55_4 = 50.0,
+    this.tnPrize4d20_1 = 100000.0,
     this.prize6th = 20,
     this.comm6th = 10,
     this.prizeAbBcAc1 = 700,
@@ -184,12 +227,14 @@ class UserModel {
       priceSuper: double.parse(json['price_super']?.toString() ?? '10.0'),
       priceBox: double.parse(json['price_box']?.toString() ?? '10.0'),
       tnPriceAbc: double.parse(json['tn_price_abc']?.toString() ?? '12.0'),
-      tnPriceAbBcAc: double.parse(json['tn_price_ab_bc_ac']?.toString() ?? '10.0'),
+      tnPriceAbBcAc:
+          double.parse(json['tn_price_ab_bc_ac']?.toString() ?? '10.0'),
       tnPrice3d10: double.parse(json['tn_price_3d_10']?.toString() ?? '10.0'),
       tnPrice3d25: double.parse(json['tn_price_3d_25']?.toString() ?? '25.0'),
       tnPrice3d30: double.parse(json['tn_price_3d_30']?.toString() ?? '30.0'),
       tnPrice3d60: double.parse(json['tn_price_3d_60']?.toString() ?? '60.0'),
-      tnPrice4d110: double.parse(json['tn_price_4d_110']?.toString() ?? '110.0'),
+      tnPrice4d110:
+          double.parse(json['tn_price_4d_110']?.toString() ?? '110.0'),
       tnPrice4d55: double.parse(json['tn_price_4d_55']?.toString() ?? '55.0'),
       tnPrice4d20: double.parse(json['tn_price_4d_20']?.toString() ?? '20.0'),
       prizeSuper1: double.parse(json['prize_super_1']?.toString() ?? '5000'),
@@ -202,6 +247,46 @@ class UserModel {
       commSuper4: double.parse(json['comm_super_4']?.toString() ?? '20'),
       prizeSuper5: double.parse(json['prize_super_5']?.toString() ?? '50'),
       commSuper5: double.parse(json['comm_super_5']?.toString() ?? '20'),
+      tnPrizeAbc: double.parse(json['tn_prize_abc']?.toString() ?? '1000.0'),
+      tnPrizeAbBcAc:
+          double.parse(json['tn_prize_ab_bc_ac']?.toString() ?? '1000.0'),
+      tnPrize3d10: double.parse(json['tn_prize_3d_10']?.toString() ?? '5000.0'),
+      tnPrize3d10Bc:
+          double.parse(json['tn_prize_3d_10_bc']?.toString() ?? '100.0'),
+      tnPrize3d25:
+          double.parse(json['tn_prize_3d_25']?.toString() ?? '10000.0'),
+      tnPrize3d25Bc:
+          double.parse(json['tn_prize_3d_25_bc']?.toString() ?? '1000.0'),
+      tnPrize3d30:
+          double.parse(json['tn_prize_3d_30']?.toString() ?? '15000.0'),
+      tnPrize3d30Bc:
+          double.parse(json['tn_prize_3d_30_bc']?.toString() ?? '500.0'),
+      tnPrize3d30C:
+          double.parse(json['tn_prize_3d_30_c']?.toString() ?? '50.0'),
+      tnPrize3d60:
+          double.parse(json['tn_prize_3d_60']?.toString() ?? '30000.0'),
+      tnPrize3d60Bc:
+          double.parse(json['tn_prize_3d_60_bc']?.toString() ?? '1000.0'),
+      tnPrize3d60C:
+          double.parse(json['tn_prize_3d_60_c']?.toString() ?? '100.0'),
+      tnPrize4d110_1:
+          double.parse(json['tn_prize_4d_110_1']?.toString() ?? '450000.0'),
+      tnPrize4d110_2:
+          double.parse(json['tn_prize_4d_110_2']?.toString() ?? '10000.0'),
+      tnPrize4d110_3:
+          double.parse(json['tn_prize_4d_110_3']?.toString() ?? '1000.0'),
+      tnPrize4d110_4:
+          double.parse(json['tn_prize_4d_110_4']?.toString() ?? '100.0'),
+      tnPrize4d55_1:
+          double.parse(json['tn_prize_4d_55_1']?.toString() ?? '225000.0'),
+      tnPrize4d55_2:
+          double.parse(json['tn_prize_4d_55_2']?.toString() ?? '5000.0'),
+      tnPrize4d55_3:
+          double.parse(json['tn_prize_4d_55_3']?.toString() ?? '500.0'),
+      tnPrize4d55_4:
+          double.parse(json['tn_prize_4d_55_4']?.toString() ?? '50.0'),
+      tnPrize4d20_1:
+          double.parse(json['tn_prize_4d_20_1']?.toString() ?? '100000.0'),
       prize6th: double.parse(json['prize_6th']?.toString() ?? '20'),
       comm6th: double.parse(json['comm_6th']?.toString() ?? '10'),
       prizeAbBcAc1: double.parse(json['prize_ab_bc_ac_1']?.toString() ?? '700'),
@@ -224,19 +309,29 @@ class UserModel {
       salesCommAbBcAc:
           double.parse(json['sales_comm_ab_bc_ac']?.toString() ?? '0.0'),
       salesCommBox: double.parse(json['sales_comm_box']?.toString() ?? '0.0'),
-      tnSalesCommAbc: double.parse(json['tn_sales_comm_abc']?.toString() ?? '0.0'),
-      tnSalesCommAbBcAc: double.parse(json['tn_sales_comm_ab_bc_ac']?.toString() ?? '0.0'),
-      tnSalesComm3d10: double.parse(json['tn_sales_comm_3d_10']?.toString() ?? '0.0'),
-      tnSalesComm3d25: double.parse(json['tn_sales_comm_3d_25']?.toString() ?? '0.0'),
-      tnSalesComm3d30: double.parse(json['tn_sales_comm_3d_30']?.toString() ?? '0.0'),
-      tnSalesComm3d60: double.parse(json['tn_sales_comm_3d_60']?.toString() ?? '0.0'),
-      tnSalesComm4d110: double.parse(json['tn_sales_comm_4d_110']?.toString() ?? '0.0'),
-      tnSalesComm4d55: double.parse(json['tn_sales_comm_4d_55']?.toString() ?? '0.0'),
-      tnSalesComm4d20: double.parse(json['tn_sales_comm_4d_20']?.toString() ?? '0.0'),
+      tnSalesCommAbc:
+          double.parse(json['tn_sales_comm_abc']?.toString() ?? '0.0'),
+      tnSalesCommAbBcAc:
+          double.parse(json['tn_sales_comm_ab_bc_ac']?.toString() ?? '0.0'),
+      tnSalesComm3d10:
+          double.parse(json['tn_sales_comm_3d_10']?.toString() ?? '0.0'),
+      tnSalesComm3d25:
+          double.parse(json['tn_sales_comm_3d_25']?.toString() ?? '0.0'),
+      tnSalesComm3d30:
+          double.parse(json['tn_sales_comm_3d_30']?.toString() ?? '0.0'),
+      tnSalesComm3d60:
+          double.parse(json['tn_sales_comm_3d_60']?.toString() ?? '0.0'),
+      tnSalesComm4d110:
+          double.parse(json['tn_sales_comm_4d_110']?.toString() ?? '0.0'),
+      tnSalesComm4d55:
+          double.parse(json['tn_sales_comm_4d_55']?.toString() ?? '0.0'),
+      tnSalesComm4d20:
+          double.parse(json['tn_sales_comm_4d_20']?.toString() ?? '0.0'),
       isBlocked: json['is_blocked'] ?? false,
       isDefault: json['is_default'] ?? false,
       parent: json['parent'],
-      allowedGames: (json['allowed_games'] as List?)?.map((e) => e as int).toList() ?? [],
+      allowedGames:
+          (json['allowed_games'] as List?)?.map((e) => e as int).toList() ?? [],
     );
   }
 
@@ -280,6 +375,27 @@ class UserModel {
       'comm_super_4': commSuper4,
       'prize_super_5': prizeSuper5,
       'comm_super_5': commSuper5,
+      'tn_prize_abc': tnPrizeAbc,
+      'tn_prize_ab_bc_ac': tnPrizeAbBcAc,
+      'tn_prize_3d_10': tnPrize3d10,
+      'tn_prize_3d_10_bc': tnPrize3d10Bc,
+      'tn_prize_3d_25': tnPrize3d25,
+      'tn_prize_3d_25_bc': tnPrize3d25Bc,
+      'tn_prize_3d_30': tnPrize3d30,
+      'tn_prize_3d_30_bc': tnPrize3d30Bc,
+      'tn_prize_3d_30_c': tnPrize3d30C,
+      'tn_prize_3d_60': tnPrize3d60,
+      'tn_prize_3d_60_bc': tnPrize3d60Bc,
+      'tn_prize_3d_60_c': tnPrize3d60C,
+      'tn_prize_4d_110_1': tnPrize4d110_1,
+      'tn_prize_4d_110_2': tnPrize4d110_2,
+      'tn_prize_4d_110_3': tnPrize4d110_3,
+      'tn_prize_4d_110_4': tnPrize4d110_4,
+      'tn_prize_4d_55_1': tnPrize4d55_1,
+      'tn_prize_4d_55_2': tnPrize4d55_2,
+      'tn_prize_4d_55_3': tnPrize4d55_3,
+      'tn_prize_4d_55_4': tnPrize4d55_4,
+      'tn_prize_4d_20_1': tnPrize4d20_1,
       'prize_6th': prize6th,
       'comm_6th': comm6th,
       'prize_ab_bc_ac_1': prizeAbBcAc1,

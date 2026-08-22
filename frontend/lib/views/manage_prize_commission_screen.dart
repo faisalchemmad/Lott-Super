@@ -58,6 +58,29 @@ class _ManagePrizeCommissionScreenState
   final TextEditingController _box3SP1 = TextEditingController();
   final TextEditingController _box3SC1 = TextEditingController();
 
+  // TN Prizes
+  final TextEditingController _tnPrizeAbc = TextEditingController();
+  final TextEditingController _tnPrizeAbBcAc = TextEditingController();
+  final TextEditingController _tnPrize3d10 = TextEditingController();
+  final TextEditingController _tnPrize3d10Bc = TextEditingController();
+  final TextEditingController _tnPrize3d25 = TextEditingController();
+  final TextEditingController _tnPrize3d25Bc = TextEditingController();
+  final TextEditingController _tnPrize3d30 = TextEditingController();
+  final TextEditingController _tnPrize3d30Bc = TextEditingController();
+  final TextEditingController _tnPrize3d30C = TextEditingController();
+  final TextEditingController _tnPrize3d60 = TextEditingController();
+  final TextEditingController _tnPrize3d60Bc = TextEditingController();
+  final TextEditingController _tnPrize3d60C = TextEditingController();
+  final TextEditingController _tnPrize4d110_1 = TextEditingController();
+  final TextEditingController _tnPrize4d110_2 = TextEditingController();
+  final TextEditingController _tnPrize4d110_3 = TextEditingController();
+  final TextEditingController _tnPrize4d110_4 = TextEditingController();
+  final TextEditingController _tnPrize4d55_1 = TextEditingController();
+  final TextEditingController _tnPrize4d55_2 = TextEditingController();
+  final TextEditingController _tnPrize4d55_3 = TextEditingController();
+  final TextEditingController _tnPrize4d55_4 = TextEditingController();
+  final TextEditingController _tnPrize4d20_1 = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +120,28 @@ class _ManagePrizeCommissionScreenState
 
     _box3SP1.text = widget.user.prizeBox3s1.toStringAsFixed(0);
     _box3SC1.text = widget.user.commBox3s1.toStringAsFixed(0);
+
+    _tnPrizeAbc.text = widget.user.tnPrizeAbc.toStringAsFixed(0);
+    _tnPrizeAbBcAc.text = widget.user.tnPrizeAbBcAc.toStringAsFixed(0);
+    _tnPrize3d10.text = widget.user.tnPrize3d10.toStringAsFixed(0);
+    _tnPrize3d10Bc.text = widget.user.tnPrize3d10Bc.toStringAsFixed(0);
+    _tnPrize3d25.text = widget.user.tnPrize3d25.toStringAsFixed(0);
+    _tnPrize3d25Bc.text = widget.user.tnPrize3d25Bc.toStringAsFixed(0);
+    _tnPrize3d30.text = widget.user.tnPrize3d30.toStringAsFixed(0);
+    _tnPrize3d30Bc.text = widget.user.tnPrize3d30Bc.toStringAsFixed(0);
+    _tnPrize3d30C.text = widget.user.tnPrize3d30C.toStringAsFixed(0);
+    _tnPrize3d60.text = widget.user.tnPrize3d60.toStringAsFixed(0);
+    _tnPrize3d60Bc.text = widget.user.tnPrize3d60Bc.toStringAsFixed(0);
+    _tnPrize3d60C.text = widget.user.tnPrize3d60C.toStringAsFixed(0);
+    _tnPrize4d110_1.text = widget.user.tnPrize4d110_1.toStringAsFixed(0);
+    _tnPrize4d110_2.text = widget.user.tnPrize4d110_2.toStringAsFixed(0);
+    _tnPrize4d110_3.text = widget.user.tnPrize4d110_3.toStringAsFixed(0);
+    _tnPrize4d110_4.text = widget.user.tnPrize4d110_4.toStringAsFixed(0);
+    _tnPrize4d55_1.text = widget.user.tnPrize4d55_1.toStringAsFixed(0);
+    _tnPrize4d55_2.text = widget.user.tnPrize4d55_2.toStringAsFixed(0);
+    _tnPrize4d55_3.text = widget.user.tnPrize4d55_3.toStringAsFixed(0);
+    _tnPrize4d55_4.text = widget.user.tnPrize4d55_4.toStringAsFixed(0);
+    _tnPrize4d20_1.text = widget.user.tnPrize4d20_1.toStringAsFixed(0);
   }
 
   Future<void> _save() async {
@@ -130,6 +175,27 @@ class _ManagePrizeCommissionScreenState
       'comm_box_2s_2': double.tryParse(_box2SC2.text) ?? 0.0,
       'prize_box_3s_1': double.tryParse(_box3SP1.text) ?? 0.0,
       'comm_box_3s_1': double.tryParse(_box3SC1.text) ?? 0.0,
+      'tn_prize_abc': double.tryParse(_tnPrizeAbc.text) ?? 0.0,
+      'tn_prize_ab_bc_ac': double.tryParse(_tnPrizeAbBcAc.text) ?? 0.0,
+      'tn_prize_3d_10': double.tryParse(_tnPrize3d10.text) ?? 0.0,
+      'tn_prize_3d_10_bc': double.tryParse(_tnPrize3d10Bc.text) ?? 0.0,
+      'tn_prize_3d_25': double.tryParse(_tnPrize3d25.text) ?? 0.0,
+      'tn_prize_3d_25_bc': double.tryParse(_tnPrize3d25Bc.text) ?? 0.0,
+      'tn_prize_3d_30': double.tryParse(_tnPrize3d30.text) ?? 0.0,
+      'tn_prize_3d_30_bc': double.tryParse(_tnPrize3d30Bc.text) ?? 0.0,
+      'tn_prize_3d_30_c': double.tryParse(_tnPrize3d30C.text) ?? 0.0,
+      'tn_prize_3d_60': double.tryParse(_tnPrize3d60.text) ?? 0.0,
+      'tn_prize_3d_60_bc': double.tryParse(_tnPrize3d60Bc.text) ?? 0.0,
+      'tn_prize_3d_60_c': double.tryParse(_tnPrize3d60C.text) ?? 0.0,
+      'tn_prize_4d_110_1': double.tryParse(_tnPrize4d110_1.text) ?? 0.0,
+      'tn_prize_4d_110_2': double.tryParse(_tnPrize4d110_2.text) ?? 0.0,
+      'tn_prize_4d_110_3': double.tryParse(_tnPrize4d110_3.text) ?? 0.0,
+      'tn_prize_4d_110_4': double.tryParse(_tnPrize4d110_4.text) ?? 0.0,
+      'tn_prize_4d_55_1': double.tryParse(_tnPrize4d55_1.text) ?? 0.0,
+      'tn_prize_4d_55_2': double.tryParse(_tnPrize4d55_2.text) ?? 0.0,
+      'tn_prize_4d_55_3': double.tryParse(_tnPrize4d55_3.text) ?? 0.0,
+      'tn_prize_4d_55_4': double.tryParse(_tnPrize4d55_4.text) ?? 0.0,
+      'tn_prize_4d_20_1': double.tryParse(_tnPrize4d20_1.text) ?? 0.0,
     };
 
     try {
@@ -252,6 +318,14 @@ class _ManagePrizeCommissionScreenState
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const Center(
+                        child: Text('KL',
+                            style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary))),
+                    const SizedBox(height: 16),
                     const SizedBox(height: 24),
                     _buildSectionCard(
                       title: 'LSK SUPER',
@@ -326,6 +400,82 @@ class _ManagePrizeCommissionScreenState
                         _buildSubHeader('3 NUMBERS SAME'),
                         _buildDoubleRow(
                             '1ST PRIZE', _box3SP1, 'Commission', _box3SC1),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    const Center(
+                        child: Text('TN',
+                            style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary))),
+                    const SizedBox(height: 16),
+                    _buildSectionCard(
+                      title: 'A / B / C',
+                      icon: Icons.format_list_numbered_rounded,
+                      children: [
+                        _buildSingleRow('PRIZE', _tnPrizeAbc),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionCard(
+                      title: 'AB / BC / AC',
+                      icon: Icons.layers_rounded,
+                      children: [
+                        _buildSingleRow('PRIZE', _tnPrizeAbBcAc),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionCard(
+                      title: '3D GAMES',
+                      icon: Icons.grid_3x3_rounded,
+                      children: [
+                        _buildSubHeader('3D-10'),
+                        _buildDoubleRow(
+                            'PRIZE', _tnPrize3d10, 'BC', _tnPrize3d10Bc),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Colors.black12)),
+                        _buildSubHeader('3D-25'),
+                        _buildDoubleRow(
+                            'PRIZE', _tnPrize3d25, 'BC', _tnPrize3d25Bc),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Colors.black12)),
+                        _buildSubHeader('3D-30'),
+                        _buildTripleRow('PRIZE', _tnPrize3d30, 'BC',
+                            _tnPrize3d30Bc, 'C', _tnPrize3d30C),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Colors.black12)),
+                        _buildSubHeader('3D-60'),
+                        _buildTripleRow('PRIZE', _tnPrize3d60, 'BC',
+                            _tnPrize3d60Bc, 'C', _tnPrize3d60C),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionCard(
+                      title: '4D GAMES',
+                      icon: Icons.grid_4x4_rounded,
+                      children: [
+                        _buildSubHeader('4D-110'),
+                        _buildDoubleRow('1ST PRIZE', _tnPrize4d110_1,
+                            '2ND PRIZE', _tnPrize4d110_2),
+                        _buildDoubleRow('3RD PRIZE', _tnPrize4d110_3,
+                            '4TH PRIZE', _tnPrize4d110_4),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Colors.black12)),
+                        _buildSubHeader('4D-55'),
+                        _buildDoubleRow('1ST PRIZE', _tnPrize4d55_1,
+                            '2ND PRIZE', _tnPrize4d55_2),
+                        _buildDoubleRow('3RD PRIZE', _tnPrize4d55_3,
+                            '4TH PRIZE', _tnPrize4d55_4),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1, color: Colors.black12)),
+                        _buildSubHeader('4D-20'),
+                        _buildSingleRow('1ST PRIZE', _tnPrize4d20_1),
                       ],
                     ),
                     const SizedBox(height: 40),
