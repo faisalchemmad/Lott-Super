@@ -246,6 +246,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Invoice Detail',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF9C212C),
