@@ -2583,7 +2583,7 @@ class GameResultViewSet(viewsets.ModelViewSet):
                 fb.winning_amount = sum(w[1] for w in wins) * fb.count
                 fb.save()
 
-    class NumberLimitViewSet(viewsets.ModelViewSet):
+class NumberLimitViewSet(viewsets.ModelViewSet):
     queryset = NumberLimit.objects.all()
     serializer_class = NumberLimitSerializer
 
