@@ -29,10 +29,11 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
 
   Future<void> _fetchDetails() async {
     final apiService = Provider.of<ApiService>(context, listen: false);
-    
+
     // Fetch settings and details in parallel for faster loading
     final results = await Future.wait([
-      apiService.getInvoiceDetails(widget.invoiceId, adminRate: widget.isAgentRate),
+      apiService.getInvoiceDetails(widget.invoiceId,
+          adminRate: widget.isAgentRate),
       apiService.getSystemSettings(),
       apiService.getProfile(), // To check if current user is SUPER_ADMIN
     ]);
@@ -45,7 +46,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     if (currentUser?.role != 'SUPER_ADMIN') {
       // 1. Check Global Master Switch
       allowedBySystem = settings['can_edit_delete_invoice'] ?? true;
-      
+
       // 2. Check Game-Wise Settings (from first bet in invoice)
       if (allowedBySystem && bets.isNotEmpty) {
         final firstBet = bets.first;
@@ -55,9 +56,11 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           try {
             final timeStr = firstBet.gameEditDeleteLimitTime!;
             final parts = timeStr.split(':');
-            final limit = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+            final limit = TimeOfDay(
+                hour: int.parse(parts[0]), minute: int.parse(parts[1]));
             final now = TimeOfDay.now();
-            if (now.hour > limit.hour || (now.hour == limit.hour && now.minute > limit.minute)) {
+            if (now.hour > limit.hour ||
+                (now.hour == limit.hour && now.minute > limit.minute)) {
               allowedBySystem = false;
             }
           } catch (_) {}
@@ -344,7 +347,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               itemBuilder: (context, index) {
                 final bet = _bets[index];
                 return GestureDetector(
-                  onTap: _canEditDeleteSys ? () => _showEditBetDialog(bet) : null,
+                  onTap:
+                      _canEditDeleteSys ? () => _showEditBetDialog(bet) : null,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
@@ -372,24 +376,27 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 _TableCell(bet.totalAmount.toStringAsFixed(0))),
                         Expanded(
                           flex: 2,
-                          child: _canEditDeleteSys 
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () => _showEditBetDialog(bet),
-                                    child: const Icon(Icons.edit_note_rounded,
-                                        color: Colors.blue, size: 20),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  GestureDetector(
-                                    onTap: () => _deleteBet(bet.id),
-                                    child: const Icon(Icons.delete_outline_rounded,
-                                        color: Colors.red, size: 20),
-                                  ),
-                                ],
-                              )
-                            : const Icon(Icons.lock_outline, color: Colors.grey, size: 16),
+                          child: _canEditDeleteSys
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _showEditBetDialog(bet),
+                                      child: const Icon(Icons.edit_note_rounded,
+                                          color: Colors.blue, size: 20),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () => _deleteBet(bet.id),
+                                      child: const Icon(
+                                          Icons.delete_outline_rounded,
+                                          color: Colors.red,
+                                          size: 20),
+                                    ),
+                                  ],
+                                )
+                              : const Icon(Icons.lock_outline,
+                                  color: Colors.grey, size: 16),
                         ),
                       ],
                     ),
@@ -426,11 +433,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   Widget _buildSummaryLabel(String text, Color color) {
     return Text(
       text,
-      style: TextStyle(
-          color: color,
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5),
+      textAlign: TextAlign.center,
+      style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold),
     );
   }
 }
