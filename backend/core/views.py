@@ -2396,13 +2396,329 @@ class GameResultViewSet(viewsets.ModelViewSet):
         # Add compliments
         if game_result.complimentary_numbers:
             import re
+            comps = re.split(r'[,\s
+]+', game_result.complimentary_numbers.strip())
+            for c_num in comps:
+                if c_num.strip():
+                    prizes.append(("COMPLIMENT", c_num.strip()))
+
+        # 2. Reset all bets for this game/date
+        # Use a 2-day window: bets may have been placed on the result date or the day before
+        from datetime import timedelta
+        date_from = date - timedelta(days=1)
+        all_bets_qs = Bet.objects.filter(game=game, created_at__date__gte=date_from, created_at__date__lte=date)
+        all_bets_qs.update(is_winner=False, winning_amount=0, winning_commission=0, winning_prize_type=None)
+
+        # 3. Find potential bets
+        # We check all bets that aren't empty
+        potential_winners = all_bets_qs.exclude(number="").select_related('user')
+
+        def get_sorted_num(n):
+            return "".join(sorted(n)) if n else None
+
+        def evaluate_wins(u, b_num, b_type, state):
+            wins = []
+            for tier_name, win_num in prizes:
+                if not win_num: continue
+                match = False
+                p, c = 0.0, 0.0
+                
+                # Check match based on type
+                if b_type == 'SUPER':
+                    if b_num == win_num:
+                        match = True
+                        if tier_name == "1ST PRIZE": p, c = u.prize_super_1, u.comm_super_1
+                        elif tier_name == "2ND PRIZE": p, c = u.prize_super_2, u.comm_super_2
+                        elif tier_name == "3RD PRIZE": p, c = u.prize_super_3, u.comm_super_3
+                        elif tier_name == "4TH PRIZE": p, c = u.prize_super_4, u.comm_super_4
+                        elif tier_name == "5TH PRIZE": p, c = u.prize_super_5, u.comm_super_5
+                        else: p, c = u.prize_6th, u.comm_6th # COMPLIMENT
+                
+                elif b_type == 'BOX':
+                    if tier_name != "1ST PRIZE":
+                        continue
+                    s_b = get_sorted_num(b_num)
+                    s_w = get_sorted_num(win_num)
+                    if s_b and s_w and s_b == s_w:
+                        match = True
+                        distinct = len(set(b_num))
+                        is_exact = (b_num == win_num)
+                        box_level = 1 if is_exact else 2
+                        if distinct == 3:
+                            p = float(u.prize_box_3d_1) if box_level == 1 else float(u.prize_box_3d_2)
+                            c = float(u.comm_box_3d_1)  if box_level == 1 else float(u.comm_box_3d_2)
+                        elif distinct == 2:
+                            p = float(u.prize_box_2s_1) if box_level == 1 else float(u.prize_box_2s_2)
+                            c = float(u.comm_box_2s_1)  if box_level == 1 else float(u.comm_box_2s_2)
+                        else:
+                            p = float(u.prize_box_3s_1)
+                            c = float(u.comm_box_3s_1)
+
+                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                    if tier_name != "1ST PRIZE":
+                        continue
+                    
+                    base_win = win_num[-3:] if len(win_num) >= 3 else win_num
+                    target = ""
+                    if len(base_win) >= 3:
+                        if b_type == 'AB': target = base_win[0:2]
+                        elif b_type == 'BC': target = base_win[1:3]
+                        elif b_type == 'AC': target = base_win[0] + base_win[2]
+                        elif b_type == 'A': target = base_win[0]
+                        elif b_type == 'B': target = base_win[1]
+                        elif b_type == 'C': target = base_win[2]
+                    elif len(base_win) == 2:
+                        if b_type == 'AB': target = base_win
+                        elif b_type == 'A': target = base_win[0]
+                        elif b_type == 'B': target = base_win[1]
+                    elif len(base_win) == 1:
+                        if b_type == 'A': target = base_win
+                    
+                    if target and b_num == target:
+                        match = True
+                        if state == 'TN':
+                            if b_type in ['AB', 'BC', 'AC']: p, c = float(u.tn_prize_ab_bc_ac), 0.0
+                            else: p, c = float(u.tn_prize_abc), 0.0
+                        else:
+                            if b_type in ['AB', 'BC', 'AC']: p, c = float(u.prize_ab_bc_ac_1), float(u.comm_ab_bc_ac_1)
+                            else: p, c = float(u.prize_abc_1), float(u.comm_abc_1)
+
+                elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
+                    if tier_name != "2ND PRIZE":
+                        continue
+                    if not win_num or len(win_num) < 3:
+                        continue
+                    if b_num == win_num:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-10': p = float(u.tn_prize_3d_10)
+                        elif b_type == '3D-25': p = float(u.tn_prize_3d_25)
+                        elif b_type == '3D-30': p = float(u.tn_prize_3d_30)
+                        elif b_type == '3D-60': p = float(u.tn_prize_3d_60)
+                    elif len(b_num) >= 2 and b_num[-2:] == win_num[-2:]:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-10': p = float(u.tn_prize_3d_10_bc)
+                        elif b_type == '3D-25': p = float(u.tn_prize_3d_25_bc)
+                        elif b_type == '3D-30': p = float(u.tn_prize_3d_30_bc)
+                        elif b_type == '3D-60': p = float(u.tn_prize_3d_60_bc)
+                    elif len(b_num) >= 1 and b_num[-1:] == win_num[-1:] and b_type in ['3D-30', '3D-60']:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-30': p = float(u.tn_prize_3d_30_c)
+                        elif b_type == '3D-60': p = float(u.tn_prize_3d_60_c)
+
+                elif b_type in ['4D-110', '4D-55', '4D-20']:
+                    if tier_name != "1ST PRIZE":
+                        continue
+                    if not win_num or len(win_num) < 4:
+                        continue
+                    if b_num == win_num:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = float(u.tn_prize_4d_110_1)
+                        elif b_type == '4D-55': p = float(u.tn_prize_4d_55_1)
+                        elif b_type == '4D-20': p = float(u.tn_prize_4d_20_1)
+                    elif b_num[-3:] == win_num[-3:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = float(u.tn_prize_4d_110_2)
+                        elif b_type == '4D-55': p = float(u.tn_prize_4d_55_2)
+                    elif b_num[-2:] == win_num[-2:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = float(u.tn_prize_4d_110_3)
+                        elif b_type == '4D-55': p = float(u.tn_prize_4d_55_3)
+                    elif b_num[-1:] == win_num[-1:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = float(u.tn_prize_4d_110_4)
+                        elif b_type == '4D-55': p = float(u.tn_prize_4d_55_4)
+
+                if match:
+                    display_name = f"{tier_name} ({b_type})"
+                    if b_type == 'SUPER':
+                        display_name = tier_name
+                    elif b_type == 'BOX':
+                        is_exact_match = (b_num == win_num)
+                        display_name = "BOX (1ST PRIZE) EXACT" if is_exact_match else "BOX2 (1ND PRIZE)"
+                    elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
+                        # Determine if they won exactly, BC, or C based on length of match?
+                        # It's easier to determine from `win_num` vs `b_num`.
+                        if b_num == win_num: display_name = f"{tier_name} ({b_type}) EXACT"
+                        elif len(b_num) >= 2 and b_num[-2:] == win_num[-2:]: display_name = f"{tier_name} ({b_type}) BC MATCH"
+                        elif len(b_num) >= 1 and b_num[-1:] == win_num[-1:]: display_name = f"{tier_name} ({b_type}) C MATCH"
+                    elif b_type in ['4D-110', '4D-55']:
+                        if b_num == win_num: display_name = f"1ST PRIZE ({b_type})"
+                        elif b_num[-3:] == win_num[-3:]: display_name = f"2ND PRIZE ({b_type})"
+                        elif b_num[-2:] == win_num[-2:]: display_name = f"3RD PRIZE ({b_type})"
+                        elif b_num[-1:] == win_num[-1:]: display_name = f"4TH PRIZE ({b_type})"
+
+                    wins.append((display_name, p, c))
+                    break # Usually stop matching after finding highest tier for this type against the same prize structure! Wait, no, we iterate over prizes. 
+                    # If it's a 3D/4D match, it matches one of the tiers. `match` means they won. But what if they match another prize?
+                    # The `prizes` loop continues. So they could win multiple times? E.g., multiple exact matches?
+                    # Actually, for 4D it only checks "1ST PRIZE" tier. So it breaks anyway.
+
+            return wins
+
+        for b in potential_winners:
+            wins = evaluate_wins(b.user, b.number.strip(), b.type.upper(), b.state)
+            if wins:
+                b.is_winner = True
+                b.winning_amount = sum(w[1] for w in wins) * b.count
+                b.winning_commission = sum(w[2] for w in wins) * b.count
+                b.winning_prize_type = "|".join(w[0] for w in wins)
+                b.save()
+                
+        # 4. Update ForwardedBets
+        from .models import ForwardedBet
+        all_fwd_bets = ForwardedBet.objects.filter(game=game, date=date)
+        all_fwd_bets.update(is_winner=False, winning_amount=0)
+        
+        potential_fwd_winners = all_fwd_bets.exclude(number="").select_related('forwarded_by')
+        for fb in potential_fwd_winners:
+            wins = evaluate_wins(fb.forwarded_by, fb.number.strip(), fb.type.upper(), fb.state)
+            if wins:
+                fb.is_winner = True
+                fb.winning_amount = sum(w[1] for w in wins) * fb.count
+                fb.save()
+
+    class NumberLimitViewSet(viewsets.ModelViewSet):
+    queryset = NumberLimit.objects.all()
+    serializer_class = NumberLimitSerializer
+
+    def get_queryset(self):
+        game_id = self.request.query_params.get('game')
+        user_id = self.request.query_params.get('user')
+        qs = NumberLimit.objects.all()
+        if game_id:
+            qs = qs.filter(game_id=game_id)
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+        return qs
+
+class GlobalNumberLimitViewSet(viewsets.ModelViewSet):
+    queryset = GlobalNumberLimit.objects.all()
+    serializer_class = GlobalNumberLimitSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        game_id = self.request.query_params.get('game')
+        
+        # Super Admin sees everything
+        if user.role == 'SUPER_ADMIN':
+            qs = GlobalNumberLimit.objects.all()
+        else:
+            # Admins see their own limits and system-wide (None) limits
+            qs = GlobalNumberLimit.objects.filter(Q(admin=user) | Q(admin__isnull=True))
+
+        if game_id:
+            qs = qs.filter(game_id=game_id)
+        return qs
+
+    def perform_create(self, serializer):
+        # Assign current user as owner of the limit they are creating
+        # Unless they are Super Admin, in which case null admin = System Global
+        if self.request.user.role != 'SUPER_ADMIN':
+            serializer.save(admin=self.request.user)
+        else:
+            serializer.save()
+
+class UserGameTimingViewSet(viewsets.ModelViewSet):
+    queryset = UserGameTiming.objects.all()
+    serializer_class = UserGameTimingSerializer
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            return UserGameTiming.objects.filter(user_id=user_id)
+        return UserGameTiming.objects.all()
+
+    def perform_create(self, serializer):
+        # Allow superadmin or admin to set timings
+        serializer.save()
+
+
+class GameResultViewSet(viewsets.ModelViewSet):
+    queryset = GameResult.objects.all()
+    serializer_class = GameResultSerializer
+
+    def get_queryset(self):
+        queryset = GameResult.objects.all()
+        date = self.request.query_params.get('date')
+        game_id = self.request.query_params.get('game')
+        if date:
+            queryset = queryset.filter(date=date)
+        if game_id:
+            queryset = queryset.filter(game_id=game_id)
+        return queryset.order_by('-date', '-created_at')
+
+    def create(self, request, *args, **kwargs):
+        game_id = request.data.get('game')
+        date_str = request.data.get('date')
+        
+        if date_str:
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        else:
+            date = timezone.now().date()
+            
+        # Check if result already exists for this game/date
+        existing = GameResult.objects.filter(game_id=game_id, date=date).first()
+        if existing:
+            # Re-route to update
+            serializer = self.get_serializer(existing, data=request.data, partial=True)
+        else:
+            # Standard create
+            serializer = self.get_serializer(data=request.data)
+            
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED if not existing else status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        game_result = serializer.save()
+        self._calculate_winners(game_result)
+
+    def perform_destroy(self, instance):
+        # Reset bets associated with this game/date
+        game = instance.game
+        date = instance.date
+        Bet.objects.filter(game=game, created_at__date=date).update(
+            is_winner=False,
+            winning_amount=0,
+            winning_commission=0,
+            winning_prize_type=None
+        )
+        instance.delete()
+
+    def _calculate_winners(self, game_result):
+        game = game_result.game
+        date = game_result.date
+        
+        # 1. Define all prize sources
+        prizes = [
+            ("1ST PRIZE", (game_result.winning_number or "").strip()),
+            ("2ND PRIZE", (game_result.second_prize or "").strip()),
+            ("3RD PRIZE", (game_result.third_prize or "").strip()),
+            ("4TH PRIZE", (game_result.fourth_prize or "").strip()),
+            ("5TH PRIZE", (game_result.fifth_prize or "").strip()),
+        ]
+        
+        # Add compliments
+        if game_result.complimentary_numbers:
+            import re
             comps = re.split(r'[,\s\n]+', game_result.complimentary_numbers.strip())
             for c_num in comps:
                 if c_num.strip():
                     prizes.append(("COMPLIMENT", c_num.strip()))
 
         # 2. Reset all bets for this game/date
-        all_bets_qs = Bet.objects.filter(game=game, created_at__date=date)
+        # Use a 2-day window: bets may have been placed on the result date or the day before
+        from datetime import timedelta
+        date_from = date - timedelta(days=1)
+        all_bets_qs = Bet.objects.filter(game=game, created_at__date__gte=date_from, created_at__date__lte=date)
         all_bets_qs.update(is_winner=False, winning_amount=0, winning_commission=0, winning_prize_type=None)
 
         # 3. Find potential bets
@@ -2470,24 +2786,100 @@ class GameResultViewSet(viewsets.ModelViewSet):
 
                     # Derived match logic
                     target = ""
-                    if len(win_num) >= 3:
-                        if b_type == 'AB': target = win_num[0:2]
-                        elif b_type == 'BC': target = win_num[1:3]
-                        elif b_type == 'AC': target = win_num[0] + win_num[2]
-                        elif b_type == 'A': target = win_num[0]
-                        elif b_type == 'B': target = win_num[1]
-                        elif b_type == 'C': target = win_num[2]
-                    elif len(win_num) == 2:
-                        if b_type == 'AB': target = win_num
-                        elif b_type == 'A': target = win_num[0]
-                        elif b_type == 'B': target = win_num[1]
-                    elif len(win_num) == 1:
-                        if b_type == 'A': target = win_num
+                    # For TN bets, we want to extract the last 3 digits of the 1st prize if it is 4 digits.
+                    # Actually, for ANY game state, the A,B,C are always derived from the LAST 3 digits of the 1st prize.
+                    # If win_num is "1425", the last 3 digits are "425".
+                    base_win = win_num[-3:] if len(win_num) >= 3 else win_num
+                    
+                    if len(base_win) >= 3:
+                        if b_type == 'AB': target = base_win[0:2]
+                        elif b_type == 'BC': target = base_win[1:3]
+                        elif b_type == 'AC': target = base_win[0] + base_win[2]
+                        elif b_type == 'A': target = base_win[0]
+                        elif b_type == 'B': target = base_win[1]
+                        elif b_type == 'C': target = base_win[2]
+                    elif len(base_win) == 2:
+                        if b_type == 'AB': target = base_win
+                        elif b_type == 'A': target = base_win[0]
+                        elif b_type == 'B': target = base_win[1]
+                    elif len(base_win) == 1:
+                        if b_type == 'A': target = base_win
                     
                     if target and b_num == target:
                         match = True
-                        if b_type in ['AB', 'BC', 'AC']: p, c = u.prize_ab_bc_ac_1, u.comm_ab_bc_ac_1
-                        else: p, c = u.prize_abc_1, u.comm_abc_1
+                        if b.state == 'TN':
+                            if b_type in ['AB', 'BC', 'AC']: 
+                                p, c = u.tn_prize_ab_bc_ac, 0.0
+                            else: 
+                                p, c = u.tn_prize_abc, 0.0
+                        else:
+                            if b_type in ['AB', 'BC', 'AC']: 
+                                p, c = u.prize_ab_bc_ac_1, u.comm_ab_bc_ac_1
+                            else: 
+                                p, c = u.prize_abc_1, u.comm_abc_1
+
+                elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
+                    # 3D games check against 2nd PRIZE (which in TN is the last 3 digits of 1st PRIZE)
+                    if tier_name != "2ND PRIZE":
+                        continue
+                    if not win_num or len(win_num) < 3:
+                        continue
+                    
+                    # Exact Match
+                    if b_num == win_num:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-10': p = u.tn_prize_3d_10
+                        elif b_type == '3D-25': p = u.tn_prize_3d_25
+                        elif b_type == '3D-30': p = u.tn_prize_3d_30
+                        elif b_type == '3D-60': p = u.tn_prize_3d_60
+                    # BC Match (last 2 digits)
+                    elif len(b_num) >= 2 and b_num[-2:] == win_num[-2:]:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-10': p = u.tn_prize_3d_10_bc
+                        elif b_type == '3D-25': p = u.tn_prize_3d_25_bc
+                        elif b_type == '3D-30': p = u.tn_prize_3d_30_bc
+                        elif b_type == '3D-60': p = u.tn_prize_3d_60_bc
+                    # C Match (last 1 digit)
+                    elif len(b_num) >= 1 and b_num[-1:] == win_num[-1:] and b_type in ['3D-30', '3D-60']:
+                        match = True
+                        c = 0.0
+                        if b_type == '3D-30': p = u.tn_prize_3d_30_c
+                        elif b_type == '3D-60': p = u.tn_prize_3d_60_c
+
+                elif b_type in ['4D-110', '4D-55', '4D-20']:
+                    # 4D games match against 1ST PRIZE
+                    if tier_name != "1ST PRIZE":
+                        continue
+                    if not win_num or len(win_num) < 4:
+                        continue
+                    
+                    # Exact match (1st Prize)
+                    if b_num == win_num:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = u.tn_prize_4d_110_1
+                        elif b_type == '4D-55': p = u.tn_prize_4d_55_1
+                        elif b_type == '4D-20': p = u.tn_prize_4d_20_1
+                    # 2nd Prize match (last 3 digits)
+                    elif b_num[-3:] == win_num[-3:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = u.tn_prize_4d_110_2
+                        elif b_type == '4D-55': p = u.tn_prize_4d_55_2
+                    # 3rd Prize match (last 2 digits)
+                    elif b_num[-2:] == win_num[-2:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = u.tn_prize_4d_110_3
+                        elif b_type == '4D-55': p = u.tn_prize_4d_55_3
+                    # 4th Prize match (last 1 digit)
+                    elif b_num[-1:] == win_num[-1:] and b_type in ['4D-110', '4D-55']:
+                        match = True
+                        c = 0.0
+                        if b_type == '4D-110': p = u.tn_prize_4d_110_4
+                        elif b_type == '4D-55': p = u.tn_prize_4d_55_4
 
                 if match:
                     if b_type == 'SUPER':
