@@ -544,6 +544,46 @@ class _ManagePrizeCommissionScreenState
     );
   }
 
+  Widget _buildSingleRow(String label, TextEditingController controller,
+      [Color? accentColor]) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+              child: _buildTextField(
+                  label, controller, accentColor ?? AppColors.primary)),
+          const SizedBox(width: 16),
+          const Expanded(child: SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripleRow(
+      String label1,
+      TextEditingController controller1,
+      String label2,
+      TextEditingController controller2,
+      String label3,
+      TextEditingController controller3) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+              child: _buildTextField(label1, controller1, AppColors.primary)),
+          const SizedBox(width: 8),
+          Expanded(
+              child: _buildTextField(label2, controller2, AppColors.primary)),
+          const SizedBox(width: 8),
+          Expanded(
+              child: _buildTextField(label3, controller3, AppColors.primary)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDoubleRow(String pLabel, TextEditingController pController,
       String cLabel, TextEditingController cController) {
     return Padding(
