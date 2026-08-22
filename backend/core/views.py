@@ -2396,8 +2396,7 @@ class GameResultViewSet(viewsets.ModelViewSet):
         # Add compliments
         if game_result.complimentary_numbers:
             import re
-            comps = re.split(r'[,\s
-]+', game_result.complimentary_numbers.strip())
+            comps = re.split(r'[,\s\n]+', game_result.complimentary_numbers.strip())
             for c_num in comps:
                 if c_num.strip():
                     prizes.append(("COMPLIMENT", c_num.strip()))
