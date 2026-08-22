@@ -188,10 +188,14 @@ class BetViewSet(viewsets.ModelViewSet):
 
         if user.role in ['SUPER_ADMIN', 'ADMIN']:
             descendants = user.get_descendant_ids()
-            return queryset.filter(user__id__in=descendants).order_by('-created_at')[:100]
+            queryset = queryset.filter(user__id__in=descendants).order_by('-created_at')
+        else:
+            # For lower roles (Agent/Dealer/Sub-dealer), only show their own bets in the recent list for speed
+            queryset = queryset.filter(user=user).order_by('-created_at')
             
-        # For lower roles (Agent/Dealer/Sub-dealer), only show their own bets in the recent list for speed
-        return queryset.filter(user=user).order_by('-created_at')[:100]
+        if self.action == 'list':
+            return queryset[:100]
+        return queryset
 
     def perform_create(self, serializer):
         from rest_framework import serializers as drf_serializers
