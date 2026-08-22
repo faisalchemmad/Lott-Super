@@ -261,7 +261,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                               letterSpacing: 0.5)),
                       const SizedBox(height: 2),
                       Text(
-                        ' – ',
+                        '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}',
                         style: const TextStyle(
                             color: AppColors.primary,
                             fontSize: 14,
@@ -286,23 +286,23 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _buildNewStatItem(
-                      Icons.people_alt_rounded, 'TotalCount', ''),
+                  child: _buildNewStatItem(Icons.people_alt_rounded,
+                      'TotalCount', '${_currentReportData['count'] ?? 0}'),
                 ),
                 Container(width: 1, height: 60, color: Colors.grey.shade300),
                 Expanded(
-                  child:
-                      _buildNewStatItem(Icons.percent_rounded, commLabel, '₹'),
+                  child: _buildNewStatItem(Icons.percent_rounded, commLabel,
+                      '₹${_currentReportData['commission'] ?? 0}'),
                 ),
                 Container(width: 1, height: 60, color: Colors.grey.shade300),
                 Expanded(
-                  child: _buildNewStatItem(
-                      Icons.account_balance_wallet_rounded, netLabel, '₹'),
+                  child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
+                      netLabel, '₹${_currentReportData['net'] ?? 0}'),
                 ),
                 Container(width: 1, height: 60, color: Colors.grey.shade300),
                 Expanded(
-                  child: _buildNewStatItem(
-                      Icons.bar_chart_rounded, 'Total Sales', '₹'),
+                  child: _buildNewStatItem(Icons.bar_chart_rounded,
+                      'Total Sales', '₹${_currentReportData['sales'] ?? 0}'),
                 ),
               ],
             ),
