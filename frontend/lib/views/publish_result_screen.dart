@@ -16,7 +16,7 @@ class PublishResultScreen extends StatefulWidget {
 
 class _PublishResultScreenState extends State<PublishResultScreen> {
   int? _selectedGameId;
-  int _digitCount = 3;
+  String _resultType = 'KL';
   List<GameModel> _games = [];
   bool _isLoadingGames = true;
   bool _isSubmitting = false;
@@ -36,7 +36,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       _selectedGameId = widget.resultData!['game'];
       String winNum = widget.resultData!['winning_number'] ?? '';
       if (winNum.length == 4) {
-        _digitCount = 4;
+        _resultType = 'TN';
       }
       _selectedDate = DateTime.parse(widget.resultData!['date']);
       _p1Controller.text = widget.resultData!['winning_number'] ?? '';
@@ -63,18 +63,15 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     if (data != null && data.text != null) {
       String text = data.text!.trim();
       // Split by comma, space or newline and take first 30 numbers of 3 digits
-      List<String> parts = text
-          .split(RegExp(r'[,\s\n]+'))
-          .where((e) => e.length == _digitCount)
-          .toList();
+      List<String> parts =
+          text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
 
       if (parts.length >= 30) {
         _compController.text = parts.take(30).join(', ');
       } else {
         _compController.text = parts.join(', ');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                'Found only ${parts.length} $_digitCount-digit numbers.')));
+            content: Text('Found only ${parts.length} 3-digit numbers.')));
       }
     }
   }
@@ -83,10 +80,8 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     ClipboardData? data = await Clipboard.getData('text/plain');
     if (data != null && data.text != null) {
       String text = data.text!.trim();
-      List<String> parts = text
-          .split(RegExp(r'[,\s\n]+'))
-          .where((e) => e.length == _digitCount)
-          .toList();
+      List<String> parts =
+          text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
 
       if (parts.isNotEmpty) {
         setState(() {
@@ -186,8 +181,10 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   _buildSelectionHeader(),
                   const SizedBox(height: 24),
                   _buildPrizeFields(),
-                  const SizedBox(height: 24),
-                  _buildCompField(),
+                  if (_resultType == 'KL') ...[
+                    const SizedBox(height: 24),
+                    _buildCompField(),
+                  ],
                   const SizedBox(height: 32),
                   _buildSubmitButton(),
                   const SizedBox(height: 40),
@@ -231,7 +228,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('DIGITS',
+        Text('TYPE',
             style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 10,
@@ -248,9 +245,9 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDigitOption(3),
+              _buildDigitOption('KL'),
               Container(width: 1, color: Colors.black.withOpacity(0.05)),
-              _buildDigitOption(4),
+              _buildDigitOption('TN'),
             ],
           ),
         ),
@@ -258,13 +255,13 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     );
   }
 
-  Widget _buildDigitOption(int digit) {
-    bool isSelected = _digitCount == digit;
+  Widget _buildDigitOption(String type) {
+    bool isSelected = _resultType == type;
     return GestureDetector(
       onTap: () {
         setState(() {
-          _digitCount = digit;
-          // Clear current inputs when switching digit count
+          _resultType = type;
+          // Clear current inputs when switching type
           _p1Controller.clear();
           _p2Controller.clear();
           _p3Controller.clear();
@@ -281,7 +278,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         ),
         alignment: Alignment.center,
         child: Text(
-          '$digit',
+          type,
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey[600],
             fontWeight: FontWeight.bold,
@@ -414,15 +411,36 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          _buildPrizeInput('1st Prize', _p1Controller, AppColors.primary, true),
+          _buildPrizeInput('1st Prize', _p1Controller, AppColors.primary, true,
+              _resultType == 'TN' ? 4 : 3, (val) {
+            if (_resultType == 'TN') {
+              _p2Controller.text =
+                  val.length >= 3 ? val.substring(val.length - 3) : val;
+              _p3Controller.text =
+                  val.length >= 2 ? val.substring(val.length - 2) : val;
+              _p4Controller.text =
+                  val.length >= 1 ? val.substring(val.length - 1) : val;
+            }
+          }),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(color: Colors.black12),
           ),
-          _buildPrizeInput('2nd Prize', _p2Controller, Colors.grey[700]!),
-          _buildPrizeInput('3rd Prize', _p3Controller, Colors.grey[700]!),
-          _buildPrizeInput('4th Prize', _p4Controller, Colors.grey[700]!),
-          _buildPrizeInput('5th Prize', _p5Controller, Colors.grey[700]!),
+          _buildPrizeInput(
+              '2nd Prize', _p2Controller, Colors.grey[700]!, false, 3),
+          if (_resultType == 'TN') ...[
+            _buildPrizeInput(
+                '3rd Prize', _p3Controller, Colors.grey[700]!, false, 2),
+            _buildPrizeInput(
+                '4th Prize', _p4Controller, Colors.grey[700]!, false, 1),
+          ] else ...[
+            _buildPrizeInput(
+                '3rd Prize', _p3Controller, Colors.grey[700]!, false, 3),
+            _buildPrizeInput(
+                '4th Prize', _p4Controller, Colors.grey[700]!, false, 3),
+            _buildPrizeInput(
+                '5th Prize', _p5Controller, Colors.grey[700]!, false, 3),
+          ],
         ],
       ),
     );
@@ -430,7 +448,9 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
   Widget _buildPrizeInput(
       String label, TextEditingController controller, Color color,
-      [bool isFirst = false]) {
+      [bool isFirst = false,
+      int maxLength = 3,
+      void Function(String)? onChanged]) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -457,12 +477,13 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
               ),
               child: TextField(
                 controller: controller,
-                style: TextStyle(
+                onChanged: onChanged,
+                style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2),
-                maxLength: _digitCount,
+                maxLength: maxLength,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   counterText: "",
@@ -548,7 +569,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2),
               decoration: InputDecoration(
-                hintText: "Paste comma separated $_digitCount-digit numbers...",
+                hintText: "Paste comma separated 3-digit numbers...",
                 hintStyle: TextStyle(
                     color: Colors.grey[400], fontWeight: FontWeight.normal),
                 border: InputBorder.none,
