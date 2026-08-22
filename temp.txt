@@ -1,0 +1,108 @@
+Widget _buildSummaryHeader() {
+    bool isAdminView = widget.userRole == 'SUPER_ADMIN' ||
+        widget.userRole == 'ADMIN' ||
+        widget.userRole == 'AGENT' ||
+        widget.userRole == 'DEALER';
+
+    String commLabel = isAdminView
+        ? (widget.isAgentRate
+            ? (widget.userRole == 'AGENT'
+                ? 'Agent Comm'
+                : (widget.userRole == 'DEALER'
+                    ? 'Dealer Comm'
+                    : (widget.userRole == 'SUPER_ADMIN'
+                        ? 'User Comm'
+                        : 'Admin Comm')))
+            : 'Self Comm')
+        : 'Total Commission';
+
+    String netLabel = isAdminView
+        ? (widget.isAgentRate
+            ? (widget.userRole == 'AGENT'
+                ? 'Agent Net'
+                : (widget.userRole == 'DEALER'
+                    ? 'Dealer Net'
+                    : (widget.userRole == 'SUPER_ADMIN'
+                        ? 'User Net'
+                        : 'Admin Net')))
+            : 'Self Net')
+        : 'Net Amount';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFAF4F4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('REPORT PERIOD',
+                      style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5)),
+                  Text(
+                    '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}',
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildRedStatItem(
+                    'TotalCount:', '${_currentReportData['count'] ?? 0}'),
+              ),
+              Expanded(
+                child: _buildRedStatItem(
+                    commLabel, '₹${_currentReportData['commission'] ?? 0}'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildRedStatItem(
+                    netLabel, '₹${_currentReportData['net'] ?? 0}'),
+              ),
+              Expanded(
+                child: _buildRedStatItem(
+                    'Total Sales', '₹${_currentReportData['sales'] ?? 0}'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRedStatItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+              color: Colors.grey[700],
+              fontSize: 11,
+              fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          value,
+          style: const TextStyle(
+              color: AppColors.prim

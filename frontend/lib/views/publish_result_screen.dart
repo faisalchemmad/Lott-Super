@@ -16,6 +16,7 @@ class PublishResultScreen extends StatefulWidget {
 
 class _PublishResultScreenState extends State<PublishResultScreen> {
   int? _selectedGameId;
+  int _digitCount = 3;
   List<GameModel> _games = [];
   bool _isLoadingGames = true;
   bool _isSubmitting = false;
@@ -33,6 +34,10 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     super.initState();
     if (widget.resultData != null) {
       _selectedGameId = widget.resultData!['game'];
+      String winNum = widget.resultData!['winning_number'] ?? '';
+      if (winNum.length == 4) {
+        _digitCount = 4;
+      }
       _selectedDate = DateTime.parse(widget.resultData!['date']);
       _p1Controller.text = widget.resultData!['winning_number'] ?? '';
       _p2Controller.text = widget.resultData!['second_prize'] ?? '';
@@ -58,15 +63,18 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     if (data != null && data.text != null) {
       String text = data.text!.trim();
       // Split by comma, space or newline and take first 30 numbers of 3 digits
-      List<String> parts =
-          text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
+      List<String> parts = text
+          .split(RegExp(r'[,\s\n]+'))
+          .where((e) => e.length == _digitCount)
+          .toList();
 
       if (parts.length >= 30) {
         _compController.text = parts.take(30).join(', ');
       } else {
         _compController.text = parts.join(', ');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Found only ${parts.length} 3-digit numbers.')));
+            content: Text(
+                'Found only ${parts.length} $_digitCount-digit numbers.')));
       }
     }
   }
@@ -75,8 +83,10 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     ClipboardData? data = await Clipboard.getData('text/plain');
     if (data != null && data.text != null) {
       String text = data.text!.trim();
-      List<String> parts =
-          text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
+      List<String> parts = text
+          .split(RegExp(r'[,\s\n]+'))
+          .where((e) => e.length == _digitCount)
+          .toList();
 
       if (parts.isNotEmpty) {
         setState(() {
@@ -203,10 +213,81 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       ),
       child: Column(
         children: [
-          _buildGameDropdown(),
+          Row(
+            children: [
+              Expanded(child: _buildGameDropdown()),
+              const SizedBox(width: 12),
+              _buildDigitToggle(),
+            ],
+          ),
           const SizedBox(height: 16),
           _buildDateSelector(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDigitToggle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('DIGITS',
+            style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5)),
+        const SizedBox(height: 8),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.black.withOpacity(0.05)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDigitOption(3),
+              Container(width: 1, color: Colors.black.withOpacity(0.05)),
+              _buildDigitOption(4),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDigitOption(int digit) {
+    bool isSelected = _digitCount == digit;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _digitCount = digit;
+          // Clear current inputs when switching digit count
+          _p1Controller.clear();
+          _p2Controller.clear();
+          _p3Controller.clear();
+          _p4Controller.clear();
+          _p5Controller.clear();
+          _compController.clear();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '$digit',
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[600],
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }
@@ -381,7 +462,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2),
-                maxLength: 3,
+                maxLength: _digitCount,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   counterText: "",
@@ -467,7 +548,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2),
               decoration: InputDecoration(
-                hintText: "Paste comma separated 3-digit numbers...",
+                hintText: "Paste comma separated $_digitCount-digit numbers...",
                 hintStyle: TextStyle(
                     color: Colors.grey[400], fontWeight: FontWeight.normal),
                 border: InputBorder.none,

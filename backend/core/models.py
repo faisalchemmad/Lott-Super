@@ -207,11 +207,11 @@ class Bet(models.Model):
 class GameResult(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='results')
     date = models.DateField(default=timezone.now)
-    winning_number = models.CharField(max_length=3, help_text="1st Prize")
-    second_prize = models.CharField(max_length=3, blank=True, null=True)
-    third_prize = models.CharField(max_length=3, blank=True, null=True)
-    fourth_prize = models.CharField(max_length=3, blank=True, null=True)
-    fifth_prize = models.CharField(max_length=3, blank=True, null=True)
+    winning_number = models.CharField(max_length=10, help_text="1st Prize")
+    second_prize = models.CharField(max_length=10, blank=True, null=True)
+    third_prize = models.CharField(max_length=10, blank=True, null=True)
+    fourth_prize = models.CharField(max_length=10, blank=True, null=True)
+    fifth_prize = models.CharField(max_length=10, blank=True, null=True)
     complimentary_numbers = models.TextField(blank=True, null=True, help_text="Paste 30 complimentary numbers here")
     created_at = models.DateTimeField(auto_now_add=True)
 
