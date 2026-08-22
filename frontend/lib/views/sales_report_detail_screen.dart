@@ -47,7 +47,8 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
       final data = await apiService.getSalesReport(
         fromDate: DateFormat('yyyy-MM-dd').format(widget.fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(widget.toDate),
-        gameId: _currentReportData['game_id'], // Need to ensure this is available or pass original params
+        gameId: _currentReportData[
+            'game_id'], // Need to ensure this is available or pass original params
         userId: _currentReportData['user_id'],
         number: widget.searchNumber,
         fullView: widget.fullView,
@@ -120,7 +121,11 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                       else
                         Padding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: (widget.fullView || (widget.searchNumber != null && widget.searchNumber!.isNotEmpty)) ? 0 : 20),
+                              horizontal: (widget.fullView ||
+                                      (widget.searchNumber != null &&
+                                          widget.searchNumber!.isNotEmpty))
+                                  ? 0
+                                  : 20),
                           child: widget.searchNumber != null &&
                                   widget.searchNumber!.isNotEmpty
                               ? _buildSearchNumberTable(invoices)
@@ -356,201 +361,214 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: Colors.grey[200]!),
               color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                tilePadding: const EdgeInsets.only(right: 8),
-                backgroundColor: const Color(0xFF1A233E),
-                collapsedBackgroundColor: const Color(0xFF1A233E),
-                iconColor: Colors.white,
-                collapsedIconColor: Colors.white,
-                title: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  color: const Color(0xFF1A233E), // Dark Navy Blue
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                backgroundColor: Colors.transparent,
+                collapsedBackgroundColor: Colors.transparent,
+                iconColor: AppColors.primary,
+                collapsedIconColor: Colors.grey[600],
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
-                            Text(dateStr,
+                            const Icon(Icons.receipt_rounded,
+                                size: 16, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Text('INV-${displayId}',
                                 style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600)),
-                            Text(timeStr,
-                                style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500)),
+                                    color: Colors.black87,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900)),
                           ],
                         ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(displayId,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontStyle: FontStyle.italic)),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(inv['user__username'] ?? '',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text('${inv['count']}',
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500)),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                            '${(widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'ADMIN' || widget.userRole == 'AGENT' || widget.userRole == 'DEALER') ? inv['net'] : inv['amount']}',
-                            textAlign: TextAlign.right,
+                        Text('${dateStr}  ${timeStr}',
                             style: TextStyle(
-                                color: (widget.userRole == 'SUPER_ADMIN' ||
-                                        widget.userRole == 'ADMIN' ||
-                                        widget.userRole == 'AGENT' ||
-                                        widget.userRole == 'DEALER')
-                                    ? const Color(0xFF10B981)
-                                    : Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900)),
-                      ),
-                    ],
-                  ),
-                ),
-                children: [
-                  Container(color: Colors.white, child: Column(children: [
-                  // Invoice Items Header
-                  Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                  color: Colors.grey[100],
-                  child: Row(
-                    children: [
-                      const Expanded(
-                          flex: 3,
-                          child: Text('TYPE',
-                              style: TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold))),
-                      const Expanded(
-                          flex: 2,
-                          child: Text('NUM',
-                              style: TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold))),
-                      const Expanded(
-                          flex: 1,
-                          child: Text('QTY',
-                              style: TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold))),
-                      if (widget.userRole == 'SUPER_ADMIN' ||
-                          widget.userRole == 'ADMIN' ||
-                          widget.userRole == 'AGENT' ||
-                          widget.userRole == 'DEALER') ...[
-                        const Expanded(
-                            flex: 2,
-                            child: Text('NET',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold))),
-                        const Expanded(
-                            flex: 2,
-                            child: Text('TOT',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF10B981)))),
-                      ] else
-                        const Expanded(
-                            flex: 2,
-                            child: Text('TOTAL',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold))),
-                    ],
-                  ),
-                ),
-                // Invoice Items
-                ...items.map((item) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      border:
-                          Border(bottom: BorderSide(color: Colors.grey[200]!)),
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                              '${inv['game__name']}-${item['type']}'
-                                  .toUpperCase(),
-                              style: const TextStyle(fontSize: 12)),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(item['number'],
-                              style: const TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.bold)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('${item['count']}',
-                              style: const TextStyle(fontSize: 13)),
-                        ),
-                        if (widget.userRole == 'SUPER_ADMIN' ||
-                            widget.userRole == 'ADMIN' ||
-                            widget.userRole == 'AGENT' ||
-                            widget.userRole == 'DEALER') ...[
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                                (item['net'] / item['count'])
-                                    .toStringAsFixed(2),
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(fontSize: 12)),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text('${item['net']}',
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF10B981))),
-                          ),
-                        ] else
-                          Expanded(
-                            flex: 2,
-                            child: Text('${item['total']}',
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(fontSize: 13)),
-                          ),
+                                color: Colors.grey[500],
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
                       ],
                     ),
-                  );
-                }).toList(),
-                  ]))
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline_rounded,
+                                size: 14, color: Colors.grey[400]),
+                            const SizedBox(width: 4),
+                            Text(inv['user__username'] ?? '',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text('Qty: ${inv['count']}',
+                                style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                  '₹${(widget.userRole == "SUPER_ADMIN" || widget.userRole == "ADMIN" || widget.userRole == "AGENT" || widget.userRole == "DEALER") ? inv['net'] : inv['amount']}',
+                                  style: const TextStyle(
+                                      color: Color(0xFF10B981),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                children: [
+                  Container(
+                      color: Colors.white,
+                      child: Column(children: [
+                        // Invoice Items Header
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 12),
+                          color: Colors.grey[100],
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                  flex: 3,
+                                  child: Text('TYPE',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold))),
+                              const Expanded(
+                                  flex: 2,
+                                  child: Text('NUM',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold))),
+                              const Expanded(
+                                  flex: 1,
+                                  child: Text('QTY',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold))),
+                              if (widget.userRole == 'SUPER_ADMIN' ||
+                                  widget.userRole == 'ADMIN' ||
+                                  widget.userRole == 'AGENT' ||
+                                  widget.userRole == 'DEALER') ...[
+                                const Expanded(
+                                    flex: 2,
+                                    child: Text('NET',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold))),
+                                const Expanded(
+                                    flex: 2,
+                                    child: Text('TOT',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF10B981)))),
+                              ] else
+                                const Expanded(
+                                    flex: 2,
+                                    child: Text('TOTAL',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold))),
+                            ],
+                          ),
+                        ),
+                        // Invoice Items
+                        ...items.map((item) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                  bottom: BorderSide(color: Colors.grey[200]!)),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                      '${inv['game__name']}-${item['type']}'
+                                          .toUpperCase(),
+                                      style: const TextStyle(fontSize: 12)),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(item['number'].toString(),
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Text('${item['count']}',
+                                      style: const TextStyle(fontSize: 13)),
+                                ),
+                                if (widget.userRole == 'SUPER_ADMIN' ||
+                                    widget.userRole == 'ADMIN' ||
+                                    widget.userRole == 'AGENT' ||
+                                    widget.userRole == 'DEALER') ...[
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                        (item['count'] > 0
+                                                ? (item['net'] / item['count'])
+                                                : 0.0)
+                                            .toStringAsFixed(2),
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(fontSize: 12)),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text('${item['net']}',
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF10B981))),
+                                  ),
+                                ] else
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text('${item['total']}',
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(fontSize: 13)),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ]))
                 ],
               ),
             ),
