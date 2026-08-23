@@ -1837,6 +1837,22 @@ def calculate_bet_win_prize_and_comm(bet, user, specific_prize_type=None):
             else:                  # Triple (e.g. 333) — only one prize level
                 p, c = (count * float(user.prize_box_3s_1), count * float(user.comm_box_3s_1))
                     
+        elif btype in ['TN-AB', 'TN-BC', 'TN-AC']:
+            p = count * float(user.tn_prize_ab_bc_ac)
+            c = 0.0  # No commission for TN
+            
+        elif btype in ['TN-A', 'TN-B', 'TN-C']:
+            p = count * float(user.tn_prize_abc)
+            c = 0.0  # No commission for TN
+
+        elif btype in ['AB', 'BC', 'AC'] and bet.state == 'TN':
+            p = count * float(user.tn_prize_ab_bc_ac)
+            c = 0.0  # No commission for TN
+
+        elif btype in ['A', 'B', 'C'] and bet.state == 'TN':
+            p = count * float(user.tn_prize_abc)
+            c = 0.0  # No commission for TN
+
         elif btype in ['AB', 'BC', 'AC']:
             p = count * float(user.prize_ab_bc_ac_1)
             c = count * float(user.comm_ab_bc_ac_1)
@@ -1844,6 +1860,34 @@ def calculate_bet_win_prize_and_comm(bet, user, specific_prize_type=None):
         elif btype in ['A', 'B', 'C']:
             p = count * float(user.prize_abc_1)
             c = count * float(user.comm_abc_1)
+
+        elif btype in ['3D-10']:
+            p = count * float(getattr(user, 'tn_prize_3d_10', 0))
+            c = 0.0
+        elif btype in ['3D-25']:
+            p = count * float(getattr(user, 'tn_prize_3d_25', 0))
+            c = 0.0
+        elif btype in ['3D-30']:
+            p = count * float(getattr(user, 'tn_prize_3d_30', 0))
+            c = 0.0
+        elif btype in ['3D-60']:
+            p = count * float(getattr(user, 'tn_prize_3d_60', 0))
+            c = 0.0
+        elif btype in ['4D-110']:
+            if '1ST' in pt: p = count * float(getattr(user, 'tn_prize_4d_110_1', 0))
+            elif '2ND' in pt: p = count * float(getattr(user, 'tn_prize_4d_110_2', 0))
+            elif '3RD' in pt: p = count * float(getattr(user, 'tn_prize_4d_110_3', 0))
+            elif '4TH' in pt: p = count * float(getattr(user, 'tn_prize_4d_110_4', 0))
+            c = 0.0
+        elif btype in ['4D-55']:
+            if '1ST' in pt: p = count * float(getattr(user, 'tn_prize_4d_55_1', 0))
+            elif '2ND' in pt: p = count * float(getattr(user, 'tn_prize_4d_55_2', 0))
+            elif '3RD' in pt: p = count * float(getattr(user, 'tn_prize_4d_55_3', 0))
+            elif '4TH' in pt: p = count * float(getattr(user, 'tn_prize_4d_55_4', 0))
+            c = 0.0
+        elif btype in ['4D-20']:
+            p = count * float(getattr(user, 'tn_prize_4d_20_1', 0))
+            c = 0.0
         
         total_prize += p
         total_comm += c
