@@ -2453,33 +2453,36 @@ class GameResultViewSet(viewsets.ModelViewSet):
                             p = float(u.prize_box_3s_1)
                             c = float(u.comm_box_3s_1)
 
-                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C', 'TN-AB', 'TN-BC', 'TN-AC', 'TN-A', 'TN-B', 'TN-C']:
                     if tier_name != "1ST PRIZE":
                         continue
                     
                     base_win = win_num[-3:] if len(win_num) >= 3 else win_num
                     target = ""
+                    # Normalize type for matching (strip TN- prefix)
+                    norm_type = b_type.replace('TN-', '')
+                    is_tn_type = b_type.startswith('TN-')
                     if len(base_win) >= 3:
-                        if b_type == 'AB': target = base_win[0:2]
-                        elif b_type == 'BC': target = base_win[1:3]
-                        elif b_type == 'AC': target = base_win[0] + base_win[2]
-                        elif b_type == 'A': target = base_win[0]
-                        elif b_type == 'B': target = base_win[1]
-                        elif b_type == 'C': target = base_win[2]
+                        if norm_type == 'AB': target = base_win[0:2]
+                        elif norm_type == 'BC': target = base_win[1:3]
+                        elif norm_type == 'AC': target = base_win[0] + base_win[2]
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
+                        elif norm_type == 'C': target = base_win[2]
                     elif len(base_win) == 2:
-                        if b_type == 'AB': target = base_win
-                        elif b_type == 'A': target = base_win[0]
-                        elif b_type == 'B': target = base_win[1]
+                        if norm_type == 'AB': target = base_win
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
                     elif len(base_win) == 1:
-                        if b_type == 'A': target = base_win
+                        if norm_type == 'A': target = base_win
                     
                     if target and b_num == target:
                         match = True
-                        if state == 'TN':
-                            if b_type in ['AB', 'BC', 'AC']: p, c = float(u.tn_prize_ab_bc_ac), 0.0
+                        if is_tn_type or state == 'TN':
+                            if norm_type in ['AB', 'BC', 'AC']: p, c = float(u.tn_prize_ab_bc_ac), 0.0
                             else: p, c = float(u.tn_prize_abc), 0.0
                         else:
-                            if b_type in ['AB', 'BC', 'AC']: p, c = float(u.prize_ab_bc_ac_1), float(u.comm_ab_bc_ac_1)
+                            if norm_type in ['AB', 'BC', 'AC']: p, c = float(u.prize_ab_bc_ac_1), float(u.comm_ab_bc_ac_1)
                             else: p, c = float(u.prize_abc_1), float(u.comm_abc_1)
 
                 elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
@@ -2779,43 +2782,43 @@ class GameResultViewSet(viewsets.ModelViewSet):
                             p = float(u.prize_box_3s_1)
                             c = float(u.comm_box_3s_1)
 
-                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C', 'TN-AB', 'TN-BC', 'TN-AC', 'TN-A', 'TN-B', 'TN-C']:
                     if tier_name != "1ST PRIZE":
                         continue
 
                     # Derived match logic
                     target = ""
-                    # For TN bets, we want to extract the last 3 digits of the 1st prize if it is 4 digits.
-                    # Actually, for ANY game state, the A,B,C are always derived from the LAST 3 digits of the 1st prize.
-                    # If win_num is "1425", the last 3 digits are "425".
                     base_win = win_num[-3:] if len(win_num) >= 3 else win_num
-                    
+                    # Normalize type for matching (strip TN- prefix)
+                    norm_type = b_type.replace('TN-', '')
+                    is_tn_type = b_type.startswith('TN-')
+
                     if len(base_win) >= 3:
-                        if b_type == 'AB': target = base_win[0:2]
-                        elif b_type == 'BC': target = base_win[1:3]
-                        elif b_type == 'AC': target = base_win[0] + base_win[2]
-                        elif b_type == 'A': target = base_win[0]
-                        elif b_type == 'B': target = base_win[1]
-                        elif b_type == 'C': target = base_win[2]
+                        if norm_type == 'AB': target = base_win[0:2]
+                        elif norm_type == 'BC': target = base_win[1:3]
+                        elif norm_type == 'AC': target = base_win[0] + base_win[2]
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
+                        elif norm_type == 'C': target = base_win[2]
                     elif len(base_win) == 2:
-                        if b_type == 'AB': target = base_win
-                        elif b_type == 'A': target = base_win[0]
-                        elif b_type == 'B': target = base_win[1]
+                        if norm_type == 'AB': target = base_win
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
                     elif len(base_win) == 1:
-                        if b_type == 'A': target = base_win
-                    
+                        if norm_type == 'A': target = base_win
+
                     if target and b_num == target:
                         match = True
-                        if b.state == 'TN':
-                            if b_type in ['AB', 'BC', 'AC']: 
-                                p, c = u.tn_prize_ab_bc_ac, 0.0
-                            else: 
-                                p, c = u.tn_prize_abc, 0.0
+                        if is_tn_type or b.state == 'TN':
+                            if norm_type in ['AB', 'BC', 'AC']:
+                                p, c = float(u.tn_prize_ab_bc_ac), 0.0
+                            else:
+                                p, c = float(u.tn_prize_abc), 0.0
                         else:
-                            if b_type in ['AB', 'BC', 'AC']: 
-                                p, c = u.prize_ab_bc_ac_1, u.comm_ab_bc_ac_1
-                            else: 
-                                p, c = u.prize_abc_1, u.comm_abc_1
+                            if norm_type in ['AB', 'BC', 'AC']:
+                                p, c = float(u.prize_ab_bc_ac_1), float(u.comm_ab_bc_ac_1)
+                            else:
+                                p, c = float(u.prize_abc_1), float(u.comm_abc_1)
 
                 elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
                     # 3D games check against 2nd PRIZE (which in TN is the last 3 digits of 1st PRIZE)
@@ -2942,26 +2945,33 @@ class GameResultViewSet(viewsets.ModelViewSet):
                             p = float(u.prize_box_2s_1) if box_level == 1 else float(u.prize_box_2s_2)
                         else:
                             p = float(u.prize_box_3s_1)
-                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C']:
+                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C', 'TN-AB', 'TN-BC', 'TN-AC', 'TN-A', 'TN-B', 'TN-C']:
                     if tier_name != "1ST PRIZE": continue
                     target = ""
-                    if len(win_num) >= 3:
-                        if b_type == 'AB': target = win_num[0:2]
-                        elif b_type == 'BC': target = win_num[1:3]
-                        elif b_type == 'AC': target = win_num[0] + win_num[2]
-                        elif b_type == 'A': target = win_num[0]
-                        elif b_type == 'B': target = win_num[1]
-                        elif b_type == 'C': target = win_num[2]
-                    elif len(win_num) == 2:
-                        if b_type == 'AB': target = win_num
-                        elif b_type == 'A': target = win_num[0]
-                        elif b_type == 'B': target = win_num[1]
-                    elif len(win_num) == 1:
-                        if b_type == 'A': target = win_num
+                    norm_type = b_type.replace('TN-', '')
+                    is_tn_type = b_type.startswith('TN-')
+                    base_win = win_num[-3:] if len(win_num) >= 3 else win_num
+                    if len(base_win) >= 3:
+                        if norm_type == 'AB': target = base_win[0:2]
+                        elif norm_type == 'BC': target = base_win[1:3]
+                        elif norm_type == 'AC': target = base_win[0] + base_win[2]
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
+                        elif norm_type == 'C': target = base_win[2]
+                    elif len(base_win) == 2:
+                        if norm_type == 'AB': target = base_win
+                        elif norm_type == 'A': target = base_win[0]
+                        elif norm_type == 'B': target = base_win[1]
+                    elif len(base_win) == 1:
+                        if norm_type == 'A': target = base_win
                     if target and b_num == target:
                         match = True
-                        if b_type in ['AB', 'BC', 'AC']: p = u.prize_ab_bc_ac_1
-                        else: p = u.prize_abc_1
+                        if is_tn_type or b.state == 'TN':
+                            if norm_type in ['AB', 'BC', 'AC']: p = float(u.tn_prize_ab_bc_ac)
+                            else: p = float(u.tn_prize_abc)
+                        else:
+                            if norm_type in ['AB', 'BC', 'AC']: p = float(u.prize_ab_bc_ac_1)
+                            else: p = float(u.prize_abc_1)
 
                 if match:
                     if b_type == 'SUPER':

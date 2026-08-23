@@ -206,6 +206,12 @@ class Bet(models.Model):
         ('AB', 'AB'),
         ('BC', 'BC'),
         ('AC', 'AC'),
+        ('TN-A', 'TN-A'),
+        ('TN-B', 'TN-B'),
+        ('TN-C', 'TN-C'),
+        ('TN-AB', 'TN-AB'),
+        ('TN-BC', 'TN-BC'),
+        ('TN-AC', 'TN-AC'),
         ('SUPER', 'SUPER'),
         ('BOX', 'BOX'),
     )
@@ -213,7 +219,7 @@ class Bet(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='bets')
     number = models.CharField(max_length=3)
     amount = models.DecimalField(max_digits=10, decimal_places=2) # Price per count
-    count = models.IntegerField(default=1) 
+    count = models.IntegerField(default=1)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     state = models.CharField(max_length=5, default='KL')
     invoice_id = models.CharField(max_length=8, blank=True, null=True)

@@ -114,9 +114,10 @@ class _BettingScreenState extends State<BettingScreen>
         int hour = int.parse(parts[0]);
         int minute = int.parse(parts[1]);
         int second = parts.length > 2 ? int.parse(parts[2]) : 0;
-        
-        DateTime endDateTime = DateTime(now.year, now.month, now.day, hour, minute, second);
-        
+
+        DateTime endDateTime =
+            DateTime(now.year, now.month, now.day, hour, minute, second);
+
         if (endDateTime.isBefore(now)) {
           _remainingTime = Duration.zero;
         } else {
@@ -193,7 +194,8 @@ class _BettingScreenState extends State<BettingScreen>
 
   void _autoJumpEndToStep() {
     if (_endController.text.length == _getRangeDigits()) {
-      _countFocusNode.requestFocus(); // Skipping step as per usual lotto apps, or wait, user usually skips step. Let's jump to count.
+      _countFocusNode
+          .requestFocus(); // Skipping step as per usual lotto apps, or wait, user usually skips step. Let's jump to count.
     }
   }
 
@@ -247,7 +249,8 @@ class _BettingScreenState extends State<BettingScreen>
       if (user != null) {
         // Find the designated 'Default' sub-dealer first
         final defaultUser = _users.firstWhere((u) => u.isDefault,
-            orElse: () => _users.firstWhere((u) => u.id != user.id && u.role == 'SUB_DEALER',
+            orElse: () => _users.firstWhere(
+                (u) => u.id != user.id && u.role == 'SUB_DEALER',
                 orElse: () => user));
         _userController.text = defaultUser.username;
       }
@@ -277,8 +280,8 @@ class _BettingScreenState extends State<BettingScreen>
       int cVal = int.tryParse(_countController.text) ?? 0;
       int bVal = int.tryParse(_boxCountController.text) ?? 0;
       if (cVal == 0 && bVal == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('0 Count Not Allowed')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('0 Count Not Allowed')));
         return;
       }
     }
@@ -296,11 +299,44 @@ class _BettingScreenState extends State<BettingScreen>
           return;
         }
         if (_tabController.index == 3) {
-          rangeNumbers = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999'];
+          rangeNumbers = [
+            '0000',
+            '1111',
+            '2222',
+            '3333',
+            '4444',
+            '5555',
+            '6666',
+            '7777',
+            '8888',
+            '9999'
+          ];
         } else if (_tabController.index == 2) {
-          rangeNumbers = ['000', '111', '222', '333', '444', '555', '666', '777', '888', '999'];
+          rangeNumbers = [
+            '000',
+            '111',
+            '222',
+            '333',
+            '444',
+            '555',
+            '666',
+            '777',
+            '888',
+            '999'
+          ];
         } else if (_tabController.index == 1) {
-          rangeNumbers = ['00', '11', '22', '33', '44', '55', '66', '77', '88', '99'];
+          rangeNumbers = [
+            '00',
+            '11',
+            '22',
+            '33',
+            '44',
+            '55',
+            '66',
+            '77',
+            '88',
+            '99'
+          ];
         }
       } else if (_is100Enabled) {
         if (_countController.text.isEmpty) {
@@ -309,18 +345,51 @@ class _BettingScreenState extends State<BettingScreen>
           return;
         }
         if (_tabController.index == 3) {
-          rangeNumbers = ['0000', '1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000', '9000'];
+          rangeNumbers = [
+            '0000',
+            '1000',
+            '2000',
+            '3000',
+            '4000',
+            '5000',
+            '6000',
+            '7000',
+            '8000',
+            '9000'
+          ];
         } else if (_tabController.index == 2) {
-          rangeNumbers = ['000', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+          rangeNumbers = [
+            '000',
+            '100',
+            '200',
+            '300',
+            '400',
+            '500',
+            '600',
+            '700',
+            '800',
+            '900'
+          ];
         } else if (_tabController.index == 1) {
-          rangeNumbers = ['00', '10', '20', '30', '40', '50', '60', '70', '80', '90'];
+          rangeNumbers = [
+            '00',
+            '10',
+            '20',
+            '30',
+            '40',
+            '50',
+            '60',
+            '70',
+            '80',
+            '90'
+          ];
         }
       } else if (_isRangeEnabled) {
         if (_startController.text.isEmpty ||
             _endController.text.isEmpty ||
             _countController.text.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Please enter Start, End and Count')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Please enter Start, End and Count')));
           return;
         }
         int start = int.tryParse(_startController.text) ?? 0;
@@ -430,7 +499,7 @@ class _BettingScreenState extends State<BettingScreen>
               count = int.tryParse(_boxCountController.text) ?? count;
             }
             _draftBets.insert(0, {
-                  'state': _selectedStateCode,
+              'state': _selectedStateCode,
               'number': num,
               'count': count,
               'type': t,
@@ -463,7 +532,10 @@ class _BettingScreenState extends State<BettingScreen>
       return;
     }
 
-    if (type == 'SET' || (_selectedStateCode == 'TN' && _isTnSetChecked && _tabController.index >= 2)) {
+    if (type == 'SET' ||
+        (_selectedStateCode == 'TN' &&
+            _isTnSetChecked &&
+            _tabController.index >= 2)) {
       final String originalNum = _numberController.text;
       final List<String> perms = _getPermutations(originalNum);
 
@@ -485,7 +557,7 @@ class _BettingScreenState extends State<BettingScreen>
 
             if (count > 0) {
               _draftBets.insert(0, {
-                  'state': _selectedStateCode,
+                'state': _selectedStateCode,
                 'number': num,
                 'count': count,
                 'type': 'SUPER',
@@ -502,7 +574,7 @@ class _BettingScreenState extends State<BettingScreen>
               double unitPrice = selectedUser?.priceBox ?? 10.0;
               double commRate = selectedUser?.salesCommBox ?? 0.0;
               _draftBets.insert(0, {
-                  'state': _selectedStateCode,
+                'state': _selectedStateCode,
                 'number': num,
                 'count': boxCount,
                 'type': 'BOX',
@@ -517,19 +589,34 @@ class _BettingScreenState extends State<BettingScreen>
             double unitPrice = 0.0;
             double commRate = 0.0;
             if (selectedUser != null) {
-              if (type == '3D-10') { unitPrice = selectedUser.tnPrice3d10; commRate = selectedUser.tnSalesComm3d10; }
-              else if (type == '3D-25') { unitPrice = selectedUser.tnPrice3d25; commRate = selectedUser.tnSalesComm3d25; }
-              else if (type == '3D-30') { unitPrice = selectedUser.tnPrice3d30; commRate = selectedUser.tnSalesComm3d30; }
-              else if (type == '3D-60') { unitPrice = selectedUser.tnPrice3d60; commRate = selectedUser.tnSalesComm3d60; }
-              else if (type == '4D-110') { unitPrice = selectedUser.tnPrice4d110; commRate = selectedUser.tnSalesComm4d110; }
-              else if (type == '4D-55') { unitPrice = selectedUser.tnPrice4d55; commRate = selectedUser.tnSalesComm4d55; }
-              else if (type == '4D-20') { unitPrice = selectedUser.tnPrice4d20; commRate = selectedUser.tnSalesComm4d20; }
+              if (type == '3D-10') {
+                unitPrice = selectedUser.tnPrice3d10;
+                commRate = selectedUser.tnSalesComm3d10;
+              } else if (type == '3D-25') {
+                unitPrice = selectedUser.tnPrice3d25;
+                commRate = selectedUser.tnSalesComm3d25;
+              } else if (type == '3D-30') {
+                unitPrice = selectedUser.tnPrice3d30;
+                commRate = selectedUser.tnSalesComm3d30;
+              } else if (type == '3D-60') {
+                unitPrice = selectedUser.tnPrice3d60;
+                commRate = selectedUser.tnSalesComm3d60;
+              } else if (type == '4D-110') {
+                unitPrice = selectedUser.tnPrice4d110;
+                commRate = selectedUser.tnSalesComm4d110;
+              } else if (type == '4D-55') {
+                unitPrice = selectedUser.tnPrice4d55;
+                commRate = selectedUser.tnSalesComm4d55;
+              } else if (type == '4D-20') {
+                unitPrice = selectedUser.tnPrice4d20;
+                commRate = selectedUser.tnSalesComm4d20;
+              }
             }
             int count = int.parse(_countController.text);
 
             if (count > 0) {
               _draftBets.insert(0, {
-                  'state': _selectedStateCode,
+                'state': _selectedStateCode,
                 'number': num,
                 'count': count,
                 'type': type,
@@ -587,7 +674,7 @@ class _BettingScreenState extends State<BettingScreen>
 
           if (count > 0) {
             _draftBets.insert(0, {
-                  'state': _selectedStateCode,
+              'state': _selectedStateCode,
               'number': num,
               'count': count,
               'type': t,
@@ -820,11 +907,11 @@ class _BettingScreenState extends State<BettingScreen>
     }
   }
 
-
-  void _processTNPasteText(String text, bool isRemoval, UserModel? selectedUser) {
+  void _processTNPasteText(
+      String text, bool isRemoval, UserModel? selectedUser) {
     final lines = text.split('\n');
     int processedCount = 0;
-    
+
     List<String> currentTnTypes = [];
     List<List<String>> blockLines = [];
 
@@ -847,124 +934,156 @@ class _BettingScreenState extends State<BettingScreen>
 
       void processNumber(String n, int count, List<String> types) {
         for (String t in types) {
-            List<String> resolvedTypes = [];
-            if (t == 'ALL_WILD') {
-                if (n.length == 1) resolvedTypes = ['A', 'B', 'C'];
-                else if (n.length == 2) resolvedTypes = ['AB', 'BC', 'AC'];
-            } else {
-                resolvedTypes = [t];
-            }
-            
-            for (String rt in resolvedTypes) {
-                if (['A','B','C'].contains(rt) && n.length != 1) continue;
-                if (['AB','BC','AC'].contains(rt) && n.length != 2) continue;
-                
-                String finalRt = rt;
-                if (n.length == 1 && !['A','B','C'].contains(rt)) finalRt = 'A';
-                if (n.length == 2 && !['AB','BC','AC'].contains(rt)) finalRt = 'AB';
-                if (n.length == 3 && !['3D-10','3D-25','3D-30','3D-60'].contains(rt)) finalRt = '3D-10';
-                if (n.length == 4 && !['4D-110','4D-55','4D-20'].contains(rt)) finalRt = '4D-110';
-                
-                handleProcessed(n, finalRt, count);
-            }
+          List<String> resolvedTypes = [];
+          if (t == 'ALL_WILD') {
+            if (n.length == 1)
+              resolvedTypes = ['A', 'B', 'C'];
+            else if (n.length == 2) resolvedTypes = ['AB', 'BC', 'AC'];
+          } else {
+            resolvedTypes = [t];
+          }
+
+          for (String rt in resolvedTypes) {
+            if (['A', 'B', 'C'].contains(rt) && n.length != 1) continue;
+            if (['AB', 'BC', 'AC'].contains(rt) && n.length != 2) continue;
+
+            String finalRt = rt;
+            if (n.length == 1 && !['A', 'B', 'C'].contains(rt)) finalRt = 'A';
+            if (n.length == 2 && !['AB', 'BC', 'AC'].contains(rt))
+              finalRt = 'AB';
+            if (n.length == 3 &&
+                !['3D-10', '3D-25', '3D-30', '3D-60'].contains(rt))
+              finalRt = '3D-10';
+            if (n.length == 4 && !['4D-110', '4D-55', '4D-20'].contains(rt))
+              finalRt = '4D-110';
+
+            handleProcessed(n, finalRt, count);
+          }
         }
       }
 
       void flushBlockLinesWithoutEach() {
-          if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
-          for (var lineNums in blockLines) {
-              if (lineNums.isEmpty) continue;
-              int count = 1;
-              List<String> targetNums = [];
-              if (lineNums.length > 1) {
-                  count = int.tryParse(lineNums.last) ?? 1;
-                  targetNums = lineNums.sublist(0, lineNums.length - 1);
-              } else {
-                  count = 1;
-                  targetNums = lineNums;
-              }
-              if (count == 0) continue;
-              for (String num in targetNums) {
-                  processNumber(num, count, currentTnTypes);
-              }
+        if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
+        for (var lineNums in blockLines) {
+          if (lineNums.isEmpty) continue;
+          int count = 1;
+          List<String> targetNums = [];
+          if (lineNums.length > 1) {
+            count = int.tryParse(lineNums.last) ?? 1;
+            targetNums = lineNums.sublist(0, lineNums.length - 1);
+          } else {
+            count = 1;
+            targetNums = lineNums;
           }
-          blockLines.clear();
+          if (count == 0) continue;
+          for (String num in targetNums) {
+            processNumber(num, count, currentTnTypes);
+          }
+        }
+        blockLines.clear();
       }
 
       for (var line in lines) {
         String originalLine = line.trim();
         if (originalLine.isEmpty) continue;
 
-        String cleanLine = originalLine.replaceAll(RegExp(r'[\*\.\#\,\-\+\/\:\;xX\s\=\%\!]+'), ' ');
+        String cleanLine = originalLine.replaceAll(
+            RegExp(r'[\*\.\#\,\-\+\/\:\;xX\s\=\%\!]+'), ' ');
         cleanLine = cleanLine.toUpperCase();
-        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d+)([A-Z]+)'), (m) => '${m[1]} ${m[2]}');
-        cleanLine = cleanLine.replaceAllMapped(RegExp(r'([A-Z]+)(\d+)'), (m) => '${m[1]} ${m[2]}');
+        cleanLine = cleanLine.replaceAllMapped(
+            RegExp(r'(\d+)([A-Z]+)'), (m) => '${m[1]} ${m[2]}');
+        cleanLine = cleanLine.replaceAllMapped(
+            RegExp(r'([A-Z]+)(\d+)'), (m) => '${m[1]} ${m[2]}');
 
-        List<String> tokens = cleanLine.trim().split(' ').where((t) => t.isNotEmpty).toList();
+        List<String> tokens =
+            cleanLine.trim().split(' ').where((t) => t.isNotEmpty).toList();
         if (tokens.isEmpty) continue;
 
         int eachIdx = tokens.indexOf('EACH');
         if (eachIdx != -1) {
-            int count = 1;
-            if (eachIdx + 1 < tokens.length) {
-                count = int.tryParse(tokens[eachIdx + 1]) ?? 1;
+          int count = 1;
+          if (eachIdx + 1 < tokens.length) {
+            count = int.tryParse(tokens[eachIdx + 1]) ?? 1;
+          }
+          List<String> numsBeforeEach = [];
+          for (int i = 0; i < eachIdx; i++) {
+            if (RegExp(r'^\d+$').hasMatch(tokens[i]))
+              numsBeforeEach.add(tokens[i]);
+          }
+          if (numsBeforeEach.isNotEmpty) blockLines.add(numsBeforeEach);
+
+          if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
+          for (var lineNums in blockLines) {
+            for (String num in lineNums) {
+              processNumber(num, count, currentTnTypes);
             }
-            List<String> numsBeforeEach = [];
-            for (int i = 0; i < eachIdx; i++) {
-                if (RegExp(r'^\d+$').hasMatch(tokens[i])) numsBeforeEach.add(tokens[i]);
-            }
-            if (numsBeforeEach.isNotEmpty) blockLines.add(numsBeforeEach);
-            
-            if (currentTnTypes.isEmpty) currentTnTypes = [_selectedType ?? 'A'];
-            for (var lineNums in blockLines) {
-                for (String num in lineNums) {
-                    processNumber(num, count, currentTnTypes);
-                }
-            }
-            blockLines.clear();
-            continue;
+          }
+          blockLines.clear();
+          continue;
         }
 
         bool hasType = false;
         List<String> typesOnLine = [];
         for (String t in tokens) {
-            if (t == 'AB' || t == 'BC' || t == 'AC') { typesOnLine.add(t); hasType = true; }
-            else if (t == 'ABC' || t == 'ALL' || t == 'ALLBOARD') { typesOnLine.add('ALL_WILD'); hasType = true; }
+          if (t == 'AB' || t == 'BC' || t == 'AC') {
+            typesOnLine.add(t);
+            hasType = true;
+          } else if (t == 'ABC' || t == 'ALL' || t == 'ALLBOARD') {
+            typesOnLine.add('ALL_WILD');
+            hasType = true;
+          }
         }
-        
-        String combined = tokens.join('');
-        if (combined.contains('RS10') || combined.contains('3D10')) { typesOnLine.add('3D-10'); hasType = true; }
-        else if (combined.contains('RS25') || combined.contains('3D25')) { typesOnLine.add('3D-25'); hasType = true; }
-        else if (combined.contains('RS30') || combined.contains('3D30')) { typesOnLine.add('3D-30'); hasType = true; }
-        else if (combined.contains('RS60') || combined.contains('3D60')) { typesOnLine.add('3D-60'); hasType = true; }
-        else if (combined.contains('RS110') || combined.contains('4D110')) { typesOnLine.add('4D-110'); hasType = true; }
-        else if (combined.contains('RS55') || combined.contains('4D55')) { typesOnLine.add('4D-55'); hasType = true; }
-        else if (combined.contains('RS20') || combined.contains('4D20')) { typesOnLine.add('4D-20'); hasType = true; }
 
-        List<String> numTokens = tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
+        String combined = tokens.join('');
+        if (combined.contains('RS10') || combined.contains('3D10')) {
+          typesOnLine.add('3D-10');
+          hasType = true;
+        } else if (combined.contains('RS25') || combined.contains('3D25')) {
+          typesOnLine.add('3D-25');
+          hasType = true;
+        } else if (combined.contains('RS30') || combined.contains('3D30')) {
+          typesOnLine.add('3D-30');
+          hasType = true;
+        } else if (combined.contains('RS60') || combined.contains('3D60')) {
+          typesOnLine.add('3D-60');
+          hasType = true;
+        } else if (combined.contains('RS110') || combined.contains('4D110')) {
+          typesOnLine.add('4D-110');
+          hasType = true;
+        } else if (combined.contains('RS55') || combined.contains('4D55')) {
+          typesOnLine.add('4D-55');
+          hasType = true;
+        } else if (combined.contains('RS20') || combined.contains('4D20')) {
+          typesOnLine.add('4D-20');
+          hasType = true;
+        }
+
+        List<String> numTokens =
+            tokens.where((t) => RegExp(r'^\d+$').hasMatch(t)).toList();
         if (hasType && combined.contains('RS')) {
-            numTokens.removeWhere((n) => ['10','25','30','60','110','55','20'].contains(n));
+          numTokens.removeWhere(
+              (n) => ['10', '25', '30', '60', '110', '55', '20'].contains(n));
         }
 
         if (hasType) {
-            if (blockLines.isNotEmpty) {
-                flushBlockLinesWithoutEach();
-            }
-            if (numTokens.isNotEmpty) {
-                currentTnTypes = typesOnLine.toSet().toList();
-            } else {
-                currentTnTypes.addAll(typesOnLine);
-                currentTnTypes = currentTnTypes.toSet().toList();
-            }
+          if (blockLines.isNotEmpty) {
+            flushBlockLinesWithoutEach();
+          }
+          if (numTokens.isNotEmpty) {
+            currentTnTypes = typesOnLine.toSet().toList();
+          } else {
+            currentTnTypes.addAll(typesOnLine);
+            currentTnTypes = currentTnTypes.toSet().toList();
+          }
         }
-        
+
         if (numTokens.isNotEmpty) {
-             blockLines.add(numTokens);
+          blockLines.add(numTokens);
         }
       }
-      
+
       if (blockLines.isNotEmpty) {
-          flushBlockLinesWithoutEach();
+        flushBlockLinesWithoutEach();
       }
     });
 
@@ -979,6 +1098,7 @@ class _BettingScreenState extends State<BettingScreen>
       );
     }
   }
+
   void _processPasteText(String text, {bool isRemoval = false}) {
     if (text.trim().isEmpty) return;
 
@@ -994,27 +1114,28 @@ class _BettingScreenState extends State<BettingScreen>
     }
 
     // If it looks like TN paste, force it to TN!
-    bool looksLikeTN = text.toLowerCase().contains('rs30') || 
-                       text.toLowerCase().contains('rs10') ||
-                       text.toLowerCase().contains('rs25') ||
-                       text.toLowerCase().contains('rs60') ||
-                       text.toLowerCase().contains('all board') ||
-                       text.toLowerCase().contains('all.5') ||
-                       text.toLowerCase().contains('each') ||
-                       text.toUpperCase().contains('ABC') ||
-                       text.toUpperCase().contains('AB') ||
-                       text.toUpperCase().contains('BC') ||
-                       text.toUpperCase().contains('AC');
-                       
+    bool looksLikeTN = text.toLowerCase().contains('rs30') ||
+        text.toLowerCase().contains('rs10') ||
+        text.toLowerCase().contains('rs25') ||
+        text.toLowerCase().contains('rs60') ||
+        text.toLowerCase().contains('all board') ||
+        text.toLowerCase().contains('all.5') ||
+        text.toLowerCase().contains('each') ||
+        text.toUpperCase().contains('ABC') ||
+        text.toUpperCase().contains('AB') ||
+        text.toUpperCase().contains('BC') ||
+        text.toUpperCase().contains('AC');
+
     if (_selectedStateCode == 'TN' || looksLikeTN) {
       if (_selectedStateCode != 'TN') {
-         setState(() {
-            _selectedStateCode = 'TN';
-            _tabController.removeListener(_tabListener);
-            _tabController.dispose();
-            _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
-            _tabController.addListener(_tabListener);
-         });
+        setState(() {
+          _selectedStateCode = 'TN';
+          _tabController.removeListener(_tabListener);
+          _tabController.dispose();
+          _tabController =
+              TabController(length: 4, vsync: this, initialIndex: 0);
+          _tabController.addListener(_tabListener);
+        });
       }
       _processTNPasteText(text, isRemoval, selectedUser);
       return;
@@ -1192,21 +1313,41 @@ class _BettingScreenState extends State<BettingScreen>
     if (user != null) {
       bool isTN = _selectedStateCode == 'TN';
       if (isTN) {
-        if (type == '3D-10') { unitPrice = user.tnPrice3d10; commRate = user.tnSalesComm3d10; }
-        else if (type == '3D-25') { unitPrice = user.tnPrice3d25; commRate = user.tnSalesComm3d25; }
-        else if (type == '3D-30') { unitPrice = user.tnPrice3d30; commRate = user.tnSalesComm3d30; }
-        else if (type == '3D-60') { unitPrice = user.tnPrice3d60; commRate = user.tnSalesComm3d60; }
-        else if (type == '4D-110') { unitPrice = user.tnPrice4d110; commRate = user.tnSalesComm4d110; }
-        else if (type == '4D-55') { unitPrice = user.tnPrice4d55; commRate = user.tnSalesComm4d55; }
-        else if (type == '4D-20') { unitPrice = user.tnPrice4d20; commRate = user.tnSalesComm4d20; }
-        else if (['A', 'B', 'C'].contains(type)) {
-          unitPrice = user.tnPriceAbc; commRate = user.tnSalesCommAbc;
+        if (type == '3D-10') {
+          unitPrice = user.tnPrice3d10;
+          commRate = user.tnSalesComm3d10;
+        } else if (type == '3D-25') {
+          unitPrice = user.tnPrice3d25;
+          commRate = user.tnSalesComm3d25;
+        } else if (type == '3D-30') {
+          unitPrice = user.tnPrice3d30;
+          commRate = user.tnSalesComm3d30;
+        } else if (type == '3D-60') {
+          unitPrice = user.tnPrice3d60;
+          commRate = user.tnSalesComm3d60;
+        } else if (type == '4D-110') {
+          unitPrice = user.tnPrice4d110;
+          commRate = user.tnSalesComm4d110;
+        } else if (type == '4D-55') {
+          unitPrice = user.tnPrice4d55;
+          commRate = user.tnSalesComm4d55;
+        } else if (type == '4D-20') {
+          unitPrice = user.tnPrice4d20;
+          commRate = user.tnSalesComm4d20;
+        } else if (['A', 'B', 'C'].contains(type)) {
+          unitPrice = user.tnPriceAbc;
+          commRate = user.tnSalesCommAbc;
+          type = 'TN-$type'; // Save as TN-A, TN-B, TN-C
         } else if (['AB', 'BC', 'AC'].contains(type)) {
-          unitPrice = user.tnPriceAbBcAc; commRate = user.tnSalesCommAbBcAc;
+          unitPrice = user.tnPriceAbBcAc;
+          commRate = user.tnSalesCommAbBcAc;
+          type = 'TN-$type'; // Save as TN-AB, TN-BC, TN-AC
         } else if (type == 'SUPER') {
-          unitPrice = user.priceSuper; commRate = user.salesCommSuper;
+          unitPrice = user.priceSuper;
+          commRate = user.salesCommSuper;
         } else if (type == 'BOX') {
-          unitPrice = user.priceBox; commRate = user.salesCommBox;
+          unitPrice = user.priceBox;
+          commRate = user.salesCommBox;
         }
       } else {
         if (['A', 'B', 'C'].contains(type)) {
@@ -1250,7 +1391,8 @@ class _BettingScreenState extends State<BettingScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFF9EACB0), // Casio LCD pale green/grey background
+                color: const Color(
+                    0xFF9EACB0), // Casio LCD pale green/grey background
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: Colors.black54, width: 1.5),
                 boxShadow: const [
@@ -1328,10 +1470,13 @@ class _BettingScreenState extends State<BettingScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF'))),
-                          border: const Border(bottom: BorderSide(color: Colors.black12)),
+                          color: Color(int.parse(widget.game.optionsBgColor
+                              .replaceFirst('#', '0xFF'))),
+                          border: const Border(
+                              bottom: BorderSide(color: Colors.black12)),
                         ),
                         child: _buildInputSection(),
                       ),
@@ -1342,58 +1487,58 @@ class _BettingScreenState extends State<BettingScreen>
                     ],
                   ),
                 ),
-                Builder(
-                  builder: (context) {
-                    return Positioned(
-                      right: 0,
-                      top: MediaQuery.of(context).size.height / 3.5,
-                      child: GestureDetector(
-                        onTap: () => Scaffold.of(context).openEndDrawer(),
-                        onHorizontalDragUpdate: (details) {
-                          if (details.primaryDelta! < -2) {
-                            Scaffold.of(context).openEndDrawer();
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: gameColor,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              bottomLeft: Radius.circular(8),
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black38,
-                                offset: Offset(-2, 2),
-                                blurRadius: 4,
-                              )
-                            ],
+                Builder(builder: (context) {
+                  return Positioned(
+                    right: 0,
+                    top: MediaQuery.of(context).size.height / 3.5,
+                    child: GestureDetector(
+                      onTap: () => Scaffold.of(context).openEndDrawer(),
+                      onHorizontalDragUpdate: (details) {
+                        if (details.primaryDelta! < -2) {
+                          Scaffold.of(context).openEndDrawer();
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 2, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: gameColor,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            bottomLeft: Radius.circular(8),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.arrow_back_ios_rounded, color: Colors.yellow, size: 10),
-                              RotatedBox(
-                                quarterTurns: 3,
-                                child: Text(
-                                  _selectedStateCode,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    letterSpacing: 1,
-                                  ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black38,
+                              offset: Offset(-2, 2),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.arrow_back_ios_rounded,
+                                color: Colors.yellow, size: 10),
+                            RotatedBox(
+                              quarterTurns: 3,
+                              child: Text(
+                                _selectedStateCode,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 1,
                                 ),
                               ),
-                              const SizedBox(width: 2),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 2),
+                          ],
                         ),
                       ),
-                    );
-                  }
-                ),
+                    ),
+                  );
+                }),
               ],
             ),
     );
@@ -1430,7 +1575,9 @@ class _BettingScreenState extends State<BettingScreen>
                             child: Text(u.id == _user?.id ? 'SELF' : u.username,
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: u.id == _user?.id ? Colors.blue : null)),
+                                    color: u.id == _user?.id
+                                        ? Colors.blue
+                                        : null)),
                           ))
                       .toList(),
                   onChanged: (val) {
@@ -1449,21 +1596,47 @@ class _BettingScreenState extends State<BettingScreen>
 
                             bool isTN = _selectedStateCode == 'TN';
                             if (isTN) {
-                              if (t == '3D-10') { uPrice = selectedUser.tnPrice3d10; cRate = selectedUser.tnSalesComm3d10; }
-                              else if (t == '3D-25') { uPrice = selectedUser.tnPrice3d25; cRate = selectedUser.tnSalesComm3d25; }
-                              else if (t == '3D-30') { uPrice = selectedUser.tnPrice3d30; cRate = selectedUser.tnSalesComm3d30; }
-                              else if (t == '3D-60') { uPrice = selectedUser.tnPrice3d60; cRate = selectedUser.tnSalesComm3d60; }
-                              else if (t == '4D-110') { uPrice = selectedUser.tnPrice4d110; cRate = selectedUser.tnSalesComm4d110; }
-                              else if (t == '4D-55') { uPrice = selectedUser.tnPrice4d55; cRate = selectedUser.tnSalesComm4d55; }
-                              else if (t == '4D-20') { uPrice = selectedUser.tnPrice4d20; cRate = selectedUser.tnSalesComm4d20; }
-                              else if (['A', 'B', 'C'].contains(t)) {
-                                uPrice = selectedUser.tnPriceAbc; cRate = selectedUser.tnSalesCommAbc;
-                              } else if (['AB', 'BC', 'AC'].contains(t)) {
-                                uPrice = selectedUser.tnPriceAbBcAc; cRate = selectedUser.tnSalesCommAbBcAc;
+                              if (t == '3D-10') {
+                                uPrice = selectedUser.tnPrice3d10;
+                                cRate = selectedUser.tnSalesComm3d10;
+                              } else if (t == '3D-25') {
+                                uPrice = selectedUser.tnPrice3d25;
+                                cRate = selectedUser.tnSalesComm3d25;
+                              } else if (t == '3D-30') {
+                                uPrice = selectedUser.tnPrice3d30;
+                                cRate = selectedUser.tnSalesComm3d30;
+                              } else if (t == '3D-60') {
+                                uPrice = selectedUser.tnPrice3d60;
+                                cRate = selectedUser.tnSalesComm3d60;
+                              } else if (t == '4D-110') {
+                                uPrice = selectedUser.tnPrice4d110;
+                                cRate = selectedUser.tnSalesComm4d110;
+                              } else if (t == '4D-55') {
+                                uPrice = selectedUser.tnPrice4d55;
+                                cRate = selectedUser.tnSalesComm4d55;
+                              } else if (t == '4D-20') {
+                                uPrice = selectedUser.tnPrice4d20;
+                                cRate = selectedUser.tnSalesComm4d20;
+                              } else if (['A', 'B', 'C', 'TN-A', 'TN-B', 'TN-C']
+                                  .contains(t)) {
+                                uPrice = selectedUser.tnPriceAbc;
+                                cRate = selectedUser.tnSalesCommAbc;
+                              } else if ([
+                                'AB',
+                                'BC',
+                                'AC',
+                                'TN-AB',
+                                'TN-BC',
+                                'TN-AC'
+                              ].contains(t)) {
+                                uPrice = selectedUser.tnPriceAbBcAc;
+                                cRate = selectedUser.tnSalesCommAbBcAc;
                               } else if (t == 'SUPER') {
-                                uPrice = selectedUser.priceSuper; cRate = selectedUser.salesCommSuper;
+                                uPrice = selectedUser.priceSuper;
+                                cRate = selectedUser.salesCommSuper;
                               } else if (t == 'BOX') {
-                                uPrice = selectedUser.priceBox; cRate = selectedUser.salesCommBox;
+                                uPrice = selectedUser.priceBox;
+                                cRate = selectedUser.salesCommBox;
                               }
                             } else {
                               if (['A', 'B', 'C'].contains(t)) {
@@ -1512,115 +1685,128 @@ class _BettingScreenState extends State<BettingScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                    Transform.scale(
-                  scale: 0.9,
-                  child: Checkbox(
-                    value: _is100Enabled,
-                    activeColor: themeColor,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _is100Enabled = true;
-                          _is111Enabled = false;
-                          _isRangeEnabled = false;
-                          _isTnSetChecked = false;
-                        } else {
-                          _is100Enabled = false;
-                        }
-                      });
-                    },
-                  ),
-                ),
-                Text((_selectedStateCode == 'TN' && _tabController.index == 3) ? '1000' : '100',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w900)),
-                const SizedBox(width: 12),
-                Transform.scale(
-                  scale: 0.9,
-                  child: Checkbox(
-                    value: _is111Enabled,
-                    activeColor: themeColor,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _is111Enabled = true;
-                          _is100Enabled = false;
-                          _isRangeEnabled = false;
-                          _isTnSetChecked = false;
-                        } else {
-                          _is111Enabled = false;
-                        }
-                      });
-                    },
-                  ),
-                ),
-                Text((_selectedStateCode == 'TN' && _tabController.index == 3) ? '1111' : '111',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w900)),
-                const SizedBox(width: 12),
-                Transform.scale(
-                  scale: 0.9,
-                  child: Checkbox(
-                    value: _isRangeEnabled,
-                    activeColor: themeColor,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _isRangeEnabled = true;
-                          _is100Enabled = false;
-                          _is111Enabled = false;
-                          _isTnSetChecked = false;
-                        } else {
-                          _isRangeEnabled = false;
-                        }
-                      });
-                    },
-                  ),
-                ),
-                const Text('R',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w900)),
-                if (_selectedStateCode == 'TN' && _tabController.index >= 2) ...[
-                  const SizedBox(width: 12),
-                  Transform.scale(
-                    scale: 0.9,
-                    child: Checkbox(
-                      value: _isTnSetChecked,
-                      activeColor: themeColor,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4)),
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            _isTnSetChecked = true;
-                            _is100Enabled = false;
-                            _is111Enabled = false;
-                            _isRangeEnabled = false;
-                          } else {
-                            _isTnSetChecked = false;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                  const Text('SET',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w900)),
-                ],
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Checkbox(
+                            value: _is100Enabled,
+                            activeColor: themeColor,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4)),
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _is100Enabled = true;
+                                  _is111Enabled = false;
+                                  _isRangeEnabled = false;
+                                  _isTnSetChecked = false;
+                                } else {
+                                  _is100Enabled = false;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        Text(
+                            (_selectedStateCode == 'TN' &&
+                                    _tabController.index == 3)
+                                ? '1000'
+                                : '100',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w900)),
+                        const SizedBox(width: 12),
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Checkbox(
+                            value: _is111Enabled,
+                            activeColor: themeColor,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4)),
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _is111Enabled = true;
+                                  _is100Enabled = false;
+                                  _isRangeEnabled = false;
+                                  _isTnSetChecked = false;
+                                } else {
+                                  _is111Enabled = false;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        Text(
+                            (_selectedStateCode == 'TN' &&
+                                    _tabController.index == 3)
+                                ? '1111'
+                                : '111',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w900)),
+                        const SizedBox(width: 12),
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Checkbox(
+                            value: _isRangeEnabled,
+                            activeColor: themeColor,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4)),
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _isRangeEnabled = true;
+                                  _is100Enabled = false;
+                                  _is111Enabled = false;
+                                  _isTnSetChecked = false;
+                                } else {
+                                  _isRangeEnabled = false;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        const Text('R',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w900)),
+                        if (_selectedStateCode == 'TN' &&
+                            _tabController.index >= 2) ...[
+                          const SizedBox(width: 12),
+                          Transform.scale(
+                            scale: 0.9,
+                            child: Checkbox(
+                              value: _isTnSetChecked,
+                              activeColor: themeColor,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                              onChanged: (val) {
+                                setState(() {
+                                  if (val == true) {
+                                    _isTnSetChecked = true;
+                                    _is100Enabled = false;
+                                    _is111Enabled = false;
+                                    _isRangeEnabled = false;
+                                  } else {
+                                    _isTnSetChecked = false;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const Text('SET',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w900)),
+                        ],
                       ],
                     ),
                   ),
@@ -1628,8 +1814,7 @@ class _BettingScreenState extends State<BettingScreen>
             ],
           ),
         ),
-        if (_isRangeEnabled &&
-            (_tabController.index >= 1))
+        if (_isRangeEnabled && (_tabController.index >= 1))
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1697,8 +1882,8 @@ class _BettingScreenState extends State<BettingScreen>
                     controller: _boxCountController,
                     focusNode: _boxCountFocusNode,
                     keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  maxLength: 3,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    maxLength: 3,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -1751,8 +1936,8 @@ class _BettingScreenState extends State<BettingScreen>
                     controller: _boxCountController,
                     focusNode: _boxCountFocusNode,
                     keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  maxLength: 3,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    maxLength: 3,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -1764,7 +1949,6 @@ class _BettingScreenState extends State<BettingScreen>
               ],
             ],
           ),
-
         const SizedBox(height: 20),
         Row(
           children: _getButtonsForTab(_tabController.index)
@@ -1918,88 +2102,90 @@ class _BettingScreenState extends State<BettingScreen>
               child: ListView.builder(
                 padding: EdgeInsets.zero,
                 itemCount: _draftBets.length,
-              itemBuilder: (context, index) {
-                final draft = _draftBets[index];
-                final isEven = index % 2 == 0;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: isEven ? Colors.white : gameColor.withOpacity(0.04),
-                    border: Border(
-                      bottom: BorderSide(
-                          color: gameColor.withOpacity(0.1), width: 0.5),
+                itemBuilder: (context, index) {
+                  final draft = _draftBets[index];
+                  final isEven = index % 2 == 0;
+                  return Container(
+                    decoration: BoxDecoration(
+                      color:
+                          isEven ? Colors.white : gameColor.withOpacity(0.04),
+                      border: Border(
+                        bottom: BorderSide(
+                            color: gameColor.withOpacity(0.1), width: 0.5),
+                      ),
                     ),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          _formatTypeName(draft['type']),
-                          style: TextStyle(
-                            color: gameColor.withOpacity(0.8),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            _formatTypeName(draft['type']),
+                            style: TextStyle(
+                              color: gameColor.withOpacity(0.8),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          draft['number'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black,
-                            fontFamily: 'monospace',
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            draft['number'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          draft['count'].toString(),
-                          style: TextStyle(
-                            color: gameColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            draft['count'].toString(),
+                            style: TextStyle(
+                              color: gameColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          (draft['net_price'] ?? draft['price'])
-                              .toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      // Delete Button
-                      Container(
-                        width: 40,
-                        alignment: Alignment.centerRight,
-                        child: InkWell(
-                          onTap: () => setState(() => _draftBets.removeAt(index)),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Icon(Icons.remove_circle_outline_rounded,
-                                color: Colors.red[300], size: 20),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            (draft['net_price'] ?? draft['price'])
+                                .toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.right,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                        // Delete Button
+                        Container(
+                          width: 40,
+                          alignment: Alignment.centerRight,
+                          child: InkWell(
+                            onTap: () =>
+                                setState(() => _draftBets.removeAt(index)),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Icon(Icons.remove_circle_outline_rounded,
+                                  color: Colors.red[300], size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -2036,10 +2222,14 @@ class _BettingScreenState extends State<BettingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Qty', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Text('Qty',
+                        style: TextStyle(color: Colors.white70, fontSize: 12)),
                     Text(
                       '${_draftBets.fold<int>(0, (sum, item) => sum + (item['count'] as int))}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -2047,10 +2237,14 @@ class _BettingScreenState extends State<BettingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Total', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Text('Total',
+                        style: TextStyle(color: Colors.white70, fontSize: 12)),
                     Text(
                       '₹${_draftBets.fold<double>(0, (sum, item) => sum + item['price']).toStringAsFixed(0)}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -2058,10 +2252,14 @@ class _BettingScreenState extends State<BettingScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Net', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Text('Net',
+                        style: TextStyle(color: Colors.white70, fontSize: 12)),
                     Text(
                       '₹${_draftBets.fold<double>(0, (sum, item) => sum + (item['net_price'] ?? item['price'])).toStringAsFixed(0)}',
-                      style: const TextStyle(color: Colors.yellowAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.yellowAccent,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -2084,16 +2282,20 @@ class _BettingScreenState extends State<BettingScreen>
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(_selectedStateCode == 'TN' ? 4 : 3, (i) => i).map((index) {
+            children:
+                List.generate(_selectedStateCode == 'TN' ? 4 : 3, (i) => i)
+                    .map((index) {
               final isSelected = _tabController.index == index;
               return GestureDetector(
                 onTap: () {
                   _tabController.animateTo(index);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.yellowAccent : Colors.transparent,
+                    color:
+                        isSelected ? Colors.yellowAccent : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -2156,10 +2358,11 @@ class _BettingScreenState extends State<BettingScreen>
       int length = stateCode == 'TN' ? 4 : 3;
       int newIndex = _tabController.index;
       if (newIndex >= length) newIndex = length - 1;
-      
+
       _tabController.removeListener(_tabListener);
       _tabController.dispose();
-      _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
+      _tabController =
+          TabController(length: length, vsync: this, initialIndex: newIndex);
       _tabController.addListener(_tabListener);
       if (stateCode == 'TN') {
         _selectedType = ['3D-10', '3D-25', '3D-30', '3D-60'][newIndex];
@@ -2169,28 +2372,47 @@ class _BettingScreenState extends State<BettingScreen>
     });
   }
 
-
   Map<String, double> _getPriceAndComm(UserModel? user, String type) {
     double unitPrice = ['A', 'B', 'C'].contains(type) ? 12.0 : 10.0;
     double commRate = 0.0;
     if (user != null) {
       bool isTN = _selectedStateCode == 'TN';
       if (isTN) {
-        if (type == '3D-10') { unitPrice = user.tnPrice3d10; commRate = user.tnSalesComm3d10; }
-        else if (type == '3D-25') { unitPrice = user.tnPrice3d25; commRate = user.tnSalesComm3d25; }
-        else if (type == '3D-30') { unitPrice = user.tnPrice3d30; commRate = user.tnSalesComm3d30; }
-        else if (type == '3D-60') { unitPrice = user.tnPrice3d60; commRate = user.tnSalesComm3d60; }
-        else if (type == '4D-110') { unitPrice = user.tnPrice4d110; commRate = user.tnSalesComm4d110; }
-        else if (type == '4D-55') { unitPrice = user.tnPrice4d55; commRate = user.tnSalesComm4d55; }
-        else if (type == '4D-20') { unitPrice = user.tnPrice4d20; commRate = user.tnSalesComm4d20; }
-        else if (['A', 'B', 'C'].contains(type)) {
-          unitPrice = user.tnPriceAbc; commRate = user.tnSalesCommAbc;
+        if (type == '3D-10') {
+          unitPrice = user.tnPrice3d10;
+          commRate = user.tnSalesComm3d10;
+        } else if (type == '3D-25') {
+          unitPrice = user.tnPrice3d25;
+          commRate = user.tnSalesComm3d25;
+        } else if (type == '3D-30') {
+          unitPrice = user.tnPrice3d30;
+          commRate = user.tnSalesComm3d30;
+        } else if (type == '3D-60') {
+          unitPrice = user.tnPrice3d60;
+          commRate = user.tnSalesComm3d60;
+        } else if (type == '4D-110') {
+          unitPrice = user.tnPrice4d110;
+          commRate = user.tnSalesComm4d110;
+        } else if (type == '4D-55') {
+          unitPrice = user.tnPrice4d55;
+          commRate = user.tnSalesComm4d55;
+        } else if (type == '4D-20') {
+          unitPrice = user.tnPrice4d20;
+          commRate = user.tnSalesComm4d20;
+        } else if (['A', 'B', 'C'].contains(type)) {
+          unitPrice = user.tnPriceAbc;
+          commRate = user.tnSalesCommAbc;
+          type = 'TN-$type'; // Save as TN-A, TN-B, TN-C
         } else if (['AB', 'BC', 'AC'].contains(type)) {
-          unitPrice = user.tnPriceAbBcAc; commRate = user.tnSalesCommAbBcAc;
+          unitPrice = user.tnPriceAbBcAc;
+          commRate = user.tnSalesCommAbBcAc;
+          type = 'TN-$type'; // Save as TN-AB, TN-BC, TN-AC
         } else if (type == 'SUPER') {
-          unitPrice = user.priceSuper; commRate = user.salesCommSuper;
+          unitPrice = user.priceSuper;
+          commRate = user.salesCommSuper;
         } else if (type == 'BOX') {
-          unitPrice = user.priceBox; commRate = user.salesCommBox;
+          unitPrice = user.priceBox;
+          commRate = user.salesCommBox;
         }
       } else {
         if (['A', 'B', 'C'].contains(type)) {
@@ -2211,10 +2433,9 @@ class _BettingScreenState extends State<BettingScreen>
     return {'price': unitPrice, 'comm': commRate};
   }
 
-
-
   Widget _buildEndDrawer() {
-    final gameColor = Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
+    final gameColor =
+        Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
     return Drawer(
       width: 250,
       child: Container(
@@ -2228,13 +2449,20 @@ class _BettingScreenState extends State<BettingScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: const [
-                  Text('Select State', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text('Select State',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
             ListTile(
-              title: const Text('KL (Kerala)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: _selectedStateCode == 'KL' ? const Icon(Icons.check_circle, color: Colors.green) : null,
+              title: const Text('KL (Kerala)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              trailing: _selectedStateCode == 'KL'
+                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  : null,
               onTap: () {
                 _changeState('KL');
                 Navigator.pop(context);
@@ -2242,8 +2470,11 @@ class _BettingScreenState extends State<BettingScreen>
             ),
             const Divider(),
             ListTile(
-              title: const Text('TN (Tamil Nadu)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: _selectedStateCode == 'TN' ? const Icon(Icons.check_circle, color: Colors.green) : null,
+              title: const Text('TN (Tamil Nadu)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              trailing: _selectedStateCode == 'TN'
+                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  : null,
               onTap: () {
                 _changeState('TN');
                 Navigator.pop(context);
@@ -2274,10 +2505,11 @@ class _BettingScreenState extends State<BettingScreen>
                 int length = stateCode == 'TN' ? 4 : 3;
                 int newIndex = _tabController.index;
                 if (newIndex >= length) newIndex = length - 1;
-                
+
                 _tabController.removeListener(_tabListener);
                 _tabController.dispose();
-                _tabController = TabController(length: length, vsync: this, initialIndex: newIndex);
+                _tabController = TabController(
+                    length: length, vsync: this, initialIndex: newIndex);
                 _tabController.addListener(_tabListener);
                 _boxCountController.clear();
               });
