@@ -17,6 +17,7 @@ class WinningReportFilterScreen extends StatefulWidget {
 }
 
 class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
+  String _selectedState = 'ALL';
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   int? _selectedGameId;
@@ -83,7 +84,24 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStateRadio('ALL'),
+                        _buildStateRadio('KL'),
+                        _buildStateRadio('TN'),
+                      ],
+                    ),
+                  ),
                   Row(
                     children: [
                       Expanded(
@@ -103,7 +121,6 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       ),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdown<int?>(
                     label: 'Select Game',
@@ -151,7 +168,8 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                       filled: true,
                       fillColor: Colors.white,
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(6),
                         borderSide: BorderSide(color: Colors.grey.shade300),
@@ -169,7 +187,8 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 4, horizontal: 16),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
                           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -205,7 +224,6 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                         ],
                       ),
                     ),
-
                   const SizedBox(height: 48),
                   SizedBox(
                     width: double.infinity,
@@ -216,6 +234,7 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => WinningReportScreen(
+                              initialState: _selectedState,
                               initialFromDate: _fromDate,
                               initialToDate: _toDate,
                               initialGameId: _selectedGameId,
@@ -247,7 +266,34 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
     );
   }
 
-  
+  Widget _buildStateRadio(String state) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<String>(
+          value: state,
+          groupValue: _selectedState,
+          activeColor: AppColors.primary,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                _selectedState = val;
+              });
+            }
+          },
+        ),
+        Text(
+          state,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            color: _selectedState == state ? AppColors.primary : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildDatePicker(
       String label, DateTime date, Function(DateTime) onPicked) {
@@ -267,7 +313,8 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -302,7 +349,8 @@ class _WinningReportFilterScreenState extends State<WinningReportFilterScreen> {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),

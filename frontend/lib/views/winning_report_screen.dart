@@ -17,6 +17,7 @@ class WinningReportScreen extends StatefulWidget {
   final int? initialAgentId;
   final bool initialAgentRate;
   final String? initialNumber;
+  final String initialState;
 
   const WinningReportScreen({
     super.key,
@@ -26,6 +27,7 @@ class WinningReportScreen extends StatefulWidget {
     this.initialAgentId,
     this.initialAgentRate = false,
     this.initialNumber,
+    this.initialState = 'ALL',
   });
 
   @override
@@ -54,6 +56,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedState = widget.initialState;
     if (widget.initialFromDate != null) _fromDate = widget.initialFromDate!;
     if (widget.initialToDate != null) _toDate = widget.initialToDate!;
     _agentRate = widget.initialAgentRate;
@@ -90,8 +93,6 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
       _currentUser = profile;
       _userRole = role;
 
-
-
       if (role == 'SUB_DEALER' && profile != null) {
         _selectedAgent = profile;
       }
@@ -103,7 +104,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getWinningReport(
-          state: _selectedState,
+        state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGame?.id,
@@ -296,8 +297,8 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
   }
 
   @override
-  
-  Widget _buildStateRadio(String state, void Function(void Function()) setSheetState) {
+  Widget _buildStateRadio(
+      String state, void Function(void Function()) setSheetState) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -316,7 +317,8 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
           state,
           style: TextStyle(
             fontSize: 15,
-            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
             color: _selectedState == state ? AppColors.primary : Colors.black87,
           ),
         ),
@@ -324,7 +326,7 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
     );
   }
 
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -345,7 +347,8 @@ Widget build(BuildContext context) {
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+              icon:
+                  const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
               onPressed: _sharePDF,
               tooltip: 'Share PDF',
             ),
@@ -521,9 +524,7 @@ Widget build(BuildContext context) {
                   ],
                 ),
                 const SizedBox(height: 16),
-                
-                
-Row(
+                Row(
                   children: [
                     Expanded(
                         child: _buildDatePicker('START DATE', _fromDate, (d) {
@@ -617,11 +618,15 @@ Row(
                       ],
                     ),
                   ),
-                
-                Text('STATE FILTER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.grey[600])),
+                Text('STATE FILTER',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.grey[600])),
                 Container(
                   margin: const EdgeInsets.only(top: 12, bottom: 24),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -636,7 +641,7 @@ Row(
                     ],
                   ),
                 ),
-const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1120,7 +1125,8 @@ const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final win = users[index];
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(16),
@@ -1155,7 +1161,8 @@ const SizedBox(height: 16),
                                     style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.primary.withOpacity(0.7)),
+                                        color:
+                                            AppColors.primary.withOpacity(0.7)),
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
