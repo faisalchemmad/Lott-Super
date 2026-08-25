@@ -160,34 +160,56 @@ class _GlobalCountLimitDetailScreenState
                 children: [
                   _buildSectionTitle('Single Digit Limits'),
                   const SizedBox(height: 12),
-                  _buildGrid([
-                    _buildLimitField(
-                        'A Count', _countA, Icons.looks_one_rounded),
-                    _buildLimitField(
-                        'B Count', _countB, Icons.looks_two_rounded),
-                    _buildLimitField('C Count', _countC, Icons.looks_3_rounded),
-                  ]),
-                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildLimitField(
+                              'A Count', _countA, Icons.looks_one_rounded)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: _buildLimitField(
+                              'B Count', _countB, Icons.looks_two_rounded)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: _buildLimitField(
+                              'C Count', _countC, Icons.looks_3_rounded)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   _buildSectionTitle('Double Digit Limits'),
                   const SizedBox(height: 12),
-                  _buildGrid([
-                    _buildLimitField(
-                        'AB Count', _countAB, Icons.filter_2_rounded),
-                    _buildLimitField(
-                        'BC Count', _countBC, Icons.filter_2_rounded),
-                    _buildLimitField(
-                        'AC Count', _countAC, Icons.filter_2_rounded),
-                  ]),
-                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildLimitField(
+                              'AB Count', _countAB, Icons.filter_2_rounded)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: _buildLimitField(
+                              'BC Count', _countBC, Icons.filter_2_rounded)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: _buildLimitField(
+                              'AC Count', _countAC, Icons.filter_2_rounded)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   _buildSectionTitle('Three Digit Limits'),
                   const SizedBox(height: 12),
-                  _buildGrid([
-                    _buildLimitField(
-                        'SUPER Count', _countSuper, Icons.star_rounded),
-                    _buildLimitField(
-                        'BOX Count', _countBox, Icons.inventory_2_rounded),
-                  ]),
-                  const SizedBox(height: 40),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildLimitField(
+                              'SUPER Count', _countSuper, Icons.star_rounded)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: _buildLimitField('BOX Count', _countBox,
+                              Icons.inventory_2_rounded)),
+                      const SizedBox(width: 8),
+                      const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                  const SizedBox(height: 36),
                   _buildUpdateButton(),
                   const SizedBox(height: 20),
                 ],
@@ -486,38 +508,31 @@ class _GlobalCountLimitDetailScreenState
     );
   }
 
-  Widget _buildGrid(List<Widget> children) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 2.3,
-      children: children,
-    );
-  }
-
-  Widget _buildLimitField(
-      String label, TextEditingController controller, IconData icon) {
+  Widget _buildLimitField(String label, TextEditingController controller,
+      [IconData? icon]) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
       style: const TextStyle(
-          fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black87),
+          fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         labelText: label.toUpperCase(),
         labelStyle: const TextStyle(
             color: AppColors.primary,
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
-            letterSpacing: 0.3),
+            letterSpacing: 0.2),
         floatingLabelBehavior: FloatingLabelBehavior.always,
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        prefixIcon: Icon(icon, size: 16, color: AppColors.primary),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        prefixIcon: icon != null
+            ? Icon(icon, size: 14, color: AppColors.primary)
+            : null,
+        prefixIconConstraints: icon != null
+            ? const BoxConstraints(minWidth: 24, minHeight: 24)
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),
