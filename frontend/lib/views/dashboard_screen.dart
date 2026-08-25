@@ -21,7 +21,6 @@ import 'system_settings_screen.dart';
 import 'manage_forward_limits_screen.dart';
 import 'manual_forwarding_screen.dart';
 
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -155,17 +154,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final double wins =
         double.tryParse(_stats?['global_daily_wins']?.toString() ?? '0') ?? 0;
     final double profit =
-        double.tryParse(_stats?['global_daily_profit']?.toString() ?? '0') ??
-            0;
+        double.tryParse(_stats?['global_daily_profit']?.toString() ?? '0') ?? 0;
 
     return Row(
       children: [
         _buildStatCard('Total Sales', '₹${sales.toStringAsFixed(0)}',
             Colors.blue, Icons.trending_up),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         _buildStatCard('Total Win', '₹${wins.toStringAsFixed(0)}',
             Colors.orange, Icons.emoji_events),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         _buildStatCard(
             'Profit/Loss',
             '₹${profit.toStringAsFixed(0)}',
@@ -179,27 +177,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       String title, String value, Color color, IconData icon) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
             Text(
               value,
               style: TextStyle(
-                  color: color, fontSize: 16, fontWeight: FontWeight.bold),
+                  color: color, fontSize: 13, fontWeight: FontWeight.w900),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               title,
-              style: TextStyle(color: color.withOpacity(0.8), fontSize: 10),
+              style: TextStyle(
+                  color: color.withOpacity(0.85),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           ],
@@ -209,80 +217,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildProfileCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.secondary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _stats?['username'] ?? 'User',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    Text(
-                      _stats?['role']?.replaceAll('_', ' ') ?? 'ROLE',
-                      style:
-                          const TextStyle(color: Colors.white70, fontSize: 16),
-                    ),
-                  ],
-                ),
-                const Icon(Icons.account_balance,
-                    color: Colors.white, size: 40),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Flexible(
-                  child: Text(
-                    'Remaining Credit',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(Icons.person_outline_rounded,
+                        color: Colors.white, size: 18),
                   ),
-                ),
-                Flexible(
-                  child: Text(
-                    'Limit: ₹${_stats?['weekly_credit_limit'] ?? '0.00'}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _stats?['username'] ?? 'User',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _stats?['role']?.replaceAll('_', ' ') ?? 'ROLE',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ],
                   ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              ],
-            ),
-            Text(
-              '₹${_stats?['remaining_credit'] ?? '0.00'}',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Weekly Sale: ₹${_stats?['weekly_sales'] ?? '0.00'} | Win: ₹${_stats?['weekly_wins'] ?? '0.00'}',
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ],
-        ),
+                child: Text(
+                  'Limit: ₹${_stats?['weekly_credit_limit'] ?? '0.00'}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Colors.white24),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'REMAINING CREDIT',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.75),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '₹${_stats?['remaining_credit'] ?? '0.00'}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              Text(
+                'Sale: ₹${_stats?['weekly_sales'] ?? '0'} | Win: ₹${_stats?['weekly_wins'] ?? '0'}',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -296,14 +336,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Anyone who is not a SUB_DEALER can manage others
     bool canManage = isSuperAdmin || isAdmin || isAgent || isDealer;
 
-    print("User Role: ${_stats?['role']}");
     double screenWidth = MediaQuery.of(context).size.width;
-    int crossAxisCount = screenWidth > 1200 ? 5 : (screenWidth > 800 ? 3 : 2);
+    int crossAxisCount = screenWidth > 1200 ? 6 : (screenWidth > 800 ? 4 : 3);
 
     return GridView.count(
       crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      childAspectRatio: 1.05,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
@@ -490,21 +530,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildActionCard(
       String title, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.09),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(icon, size: 22, color: color),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
