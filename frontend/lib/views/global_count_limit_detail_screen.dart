@@ -218,10 +218,8 @@ class _GlobalCountLimitDetailScreenState
   Widget _buildNumberCountTab() {
     return Column(
       children: [
-        _buildInfoCard(
-            'Set system-wide limits for specific numbers (e.g., number 123 restricted to 50 counts total).'),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -239,8 +237,9 @@ class _GlobalCountLimitDetailScreenState
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
+                  elevation: 2,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(6)),
                 ),
               ),
             ],
@@ -266,22 +265,23 @@ class _GlobalCountLimitDetailScreenState
 
   Widget _buildNumberLimitCard(dynamic limit) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
               offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         children: [
           _buildTypeBadge(limit['type']),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,23 +289,28 @@ class _GlobalCountLimitDetailScreenState
                 Text(
                   'Number: ${limit['number']}',
                   style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50)),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'System Max: ${limit['max_count']} counts',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+            icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
             onPressed: () => _showAddNumberLimitDialog(limit: limit),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+            icon: const Icon(Icons.delete_outline_rounded,
+                color: Colors.red, size: 20),
             onPressed: () => _confirmDeleteNumberLimit(limit['id']),
           ),
         ],
@@ -468,27 +473,6 @@ class _GlobalCountLimitDetailScreenState
       final success = await apiService.deleteGlobalNumberLimit(id);
       if (success) _loadGlobalNumberLimits();
     }
-  }
-
-  Widget _buildInfoCard(String text) {
-    return Container(
-      width: double.infinity,
-      color: AppColors.primary,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style:
-                  TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSectionTitle(String title) {

@@ -36,8 +36,9 @@ class _ManageUserNumberLimitsScreenState
 
     try {
       final allLimits = await apiService.getNumberLimits(widget.game?.id);
-      final userLimits =
-          allLimits.where((l) => l.userUsername == widget.user.username).toList();
+      final userLimits = allLimits
+          .where((l) => l.userUsername == widget.user.username)
+          .toList();
 
       final games = await apiService.getGames();
 
@@ -55,12 +56,13 @@ class _ManageUserNumberLimitsScreenState
     final bool isEditing = limit != null;
     final numController =
         TextEditingController(text: isEditing ? limit.number : '');
-    final countController = TextEditingController(
-        text: isEditing ? limit.maxCount.toString() : '');
+    final countController =
+        TextEditingController(text: isEditing ? limit.maxCount.toString() : '');
     String selectedType = isEditing ? limit.type : 'SUPER';
     final types = ['A', 'B', 'C', 'AB', 'BC', 'AC', 'SUPER', 'BOX'];
     bool allGame = false;
-    int? selectedGameId = widget.game?.id ?? (_games.isNotEmpty ? _games.first.id : null);
+    int? selectedGameId =
+        widget.game?.id ?? (_games.isNotEmpty ? _games.first.id : null);
 
     showDialog(
       context: context,
@@ -69,9 +71,7 @@ class _ManageUserNumberLimitsScreenState
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-              isEditing
-                  ? 'Edit User Number Limit'
-                  : 'Add User Number Limit',
+              isEditing ? 'Edit User Number Limit' : 'Add User Number Limit',
               style: const TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
@@ -94,8 +94,7 @@ class _ManageUserNumberLimitsScreenState
                 ),
                 TextField(
                   controller: countController,
-                  decoration:
-                      const InputDecoration(labelText: 'Max Count'),
+                  decoration: const InputDecoration(labelText: 'Max Count'),
                   keyboardType: TextInputType.number,
                 ),
                 if (!isEditing && _games.isNotEmpty) ...[
@@ -104,7 +103,8 @@ class _ManageUserNumberLimitsScreenState
                     children: [
                       Checkbox(
                         value: allGame,
-                        onChanged: (val) => setDialogState(() => allGame = val!),
+                        onChanged: (val) =>
+                            setDialogState(() => allGame = val!),
                       ),
                       const Text('ALL Game'),
                     ],
@@ -112,11 +112,14 @@ class _ManageUserNumberLimitsScreenState
                   if (!allGame)
                     DropdownButtonFormField<int>(
                       value: selectedGameId,
-                      decoration: const InputDecoration(labelText: 'Select Game'),
+                      decoration:
+                          const InputDecoration(labelText: 'Select Game'),
                       items: _games
-                          .map((g) => DropdownMenuItem(value: g.id, child: Text(g.name)))
+                          .map((g) => DropdownMenuItem(
+                              value: g.id, child: Text(g.name)))
                           .toList(),
-                      onChanged: (val) => setDialogState(() => selectedGameId = val!),
+                      onChanged: (val) =>
+                          setDialogState(() => selectedGameId = val!),
                     ),
                 ],
               ],
@@ -147,7 +150,8 @@ class _ManageUserNumberLimitsScreenState
                   return;
                 }
 
-                final apiService = Provider.of<ApiService>(context, listen: false);
+                final apiService =
+                    Provider.of<ApiService>(context, listen: false);
                 try {
                   if (isEditing) {
                     await apiService.updateNumberLimit(limit.id, {
@@ -176,7 +180,8 @@ class _ManageUserNumberLimitsScreenState
                   );
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
               child: Text(isEditing ? 'UPDATE' : 'ADD',
                   style: const TextStyle(color: Colors.white)),
             ),
@@ -191,7 +196,8 @@ class _ManageUserNumberLimitsScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Limit?'),
-        content: const Text('Are you sure you want to remove this number limit?'),
+        content:
+            const Text('Are you sure you want to remove this number limit?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -212,7 +218,8 @@ class _ManageUserNumberLimitsScreenState
 
   @override
   Widget build(BuildContext context) {
-    String title = widget.isReadOnly ? 'My Number Limits' : 'Number Count Limit';
+    String title =
+        widget.isReadOnly ? 'My Number Limits' : 'Number Count Limit';
     if (widget.game != null) {
       title += ' (${widget.game!.name})';
     }
@@ -220,15 +227,14 @@ class _ManageUserNumberLimitsScreenState
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
-          _buildInfoCard('Set specific limits for numbers and bet types for ${widget.user.username}${widget.game != null ? " in ${widget.game!.name}" : ""}.'),
           if (!widget.isReadOnly)
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -247,8 +253,9 @@ class _ManageUserNumberLimitsScreenState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
+                      elevation: 2,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(6)),
                     ),
                   ),
                 ],
@@ -275,22 +282,23 @@ class _ManageUserNumberLimitsScreenState
 
   Widget _buildNumberLimitCard(NumberLimitModel limit) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
               offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         children: [
           _buildTypeBadge(limit.type),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,24 +306,30 @@ class _ManageUserNumberLimitsScreenState
                 Text(
                   'Number: ${limit.number}',
                   style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50)),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'Max: ${limit.maxCount} | Game: ${limit.gameName}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
           if (!widget.isReadOnly) ...[
             IconButton(
-              icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+              icon:
+                  const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
               onPressed: () => _showAddNumberLimitDialog(limit: limit),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: Colors.red, size: 20),
               onPressed: () => _confirmDelete(limit.id),
             ),
           ],
@@ -326,10 +340,10 @@ class _ManageUserNumberLimitsScreenState
 
   Widget _buildTypeBadge(String type) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         type,
@@ -337,27 +351,6 @@ class _ManageUserNumberLimitsScreenState
             color: AppColors.primary,
             fontWeight: FontWeight.bold,
             fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(String text) {
-    return Container(
-      width: double.infinity,
-      color: AppColors.primary,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style:
-                  TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
-            ),
-          ),
-        ],
       ),
     );
   }
