@@ -149,76 +149,105 @@ class _ManageUserGameTimingsScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               itemCount: _games.length,
               itemBuilder: (context, index) {
                 final game = _games[index];
                 final override = _overrides[game.id];
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(game.name,
-                                style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary)),
-                            if (override != null)
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    color: Colors.red),
-                                onPressed: () => _deleteTiming(override['id']),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey.shade300),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  game.name,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
                               ),
-                          ],
-                        ),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildTimeTile(
-                                label: 'Start Time',
-                                time: override != null
-                                    ? override['start_time']
-                                    : game.startTime,
-                                isOverride: override != null,
-                                onTap: () => _pickTime(game.id, true),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildTimeTile(
-                                label: 'End Time',
-                                time: override != null
-                                    ? override['end_time']
-                                    : game.endTime,
-                                isOverride: override != null,
-                                onTap: () => _pickTime(game.id, false),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (override == null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text('Using global game settings',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[500],
-                                    fontStyle: FontStyle.italic)),
+                              if (override == null)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Text('Global Default',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[500])),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
+                          if (override != null)
+                            InkWell(
+                              onTap: () => _deleteTiming(override['id']),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.red, size: 18),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTimeTile(
+                              label: 'Start Time',
+                              time: override != null
+                                  ? override['start_time']
+                                  : game.startTime,
+                              isOverride: override != null,
+                              onTap: () => _pickTime(game.id, true),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildTimeTile(
+                              label: 'End Time',
+                              time: override != null
+                                  ? override['end_time']
+                                  : game.endTime,
+                              isOverride: override != null,
+                              onTap: () => _pickTime(game.id, false),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -245,31 +274,46 @@ class _ManageUserGameTimingsScreenState
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isOverride
-              ? AppColors.primary.withOpacity(0.05)
-              : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: isOverride
-                  ? AppColors.primary.withOpacity(0.3)
-                  : Colors.transparent),
+      borderRadius: BorderRadius.circular(6),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label.toUpperCase(),
+          labelStyle: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.3),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          filled: true,
+          fillColor:
+              isOverride ? AppColors.primary.withOpacity(0.04) : Colors.white,
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          prefixIcon: const Icon(Icons.access_time_rounded,
+              size: 16, color: AppColors.primary),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+                color: isOverride
+                    ? AppColors.primary.withOpacity(0.5)
+                    : Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+                color: isOverride
+                    ? AppColors.primary.withOpacity(0.5)
+                    : Colors.grey.shade300),
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 4),
-            Text(displayTime,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isOverride ? AppColors.primary : Colors.black87)),
-          ],
+        child: Text(
+          displayTime,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: isOverride ? AppColors.primary : Colors.black87,
+          ),
         ),
       ),
     );
