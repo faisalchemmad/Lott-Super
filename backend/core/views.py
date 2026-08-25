@@ -1862,16 +1862,32 @@ def calculate_bet_win_prize_and_comm(bet, user, specific_prize_type=None):
             c = count * float(user.comm_abc_1)
 
         elif btype in ['3D-10']:
-            p = count * float(getattr(user, 'tn_prize_3d_10', 0))
+            if 'BC' in pt:
+                p = count * float(getattr(user, 'tn_prize_3d_10_bc', 0))
+            else:
+                p = count * float(getattr(user, 'tn_prize_3d_10', 0))
             c = 0.0
         elif btype in ['3D-25']:
-            p = count * float(getattr(user, 'tn_prize_3d_25', 0))
+            if 'BC' in pt:
+                p = count * float(getattr(user, 'tn_prize_3d_25_bc', 0))
+            else:
+                p = count * float(getattr(user, 'tn_prize_3d_25', 0))
             c = 0.0
         elif btype in ['3D-30']:
-            p = count * float(getattr(user, 'tn_prize_3d_30', 0))
+            if 'BC' in pt:
+                p = count * float(getattr(user, 'tn_prize_3d_30_bc', 0))
+            elif 'C MATCH' in pt or pt.endswith(' C') or pt.endswith('(C)'):
+                p = count * float(getattr(user, 'tn_prize_3d_30_c', 0))
+            else:
+                p = count * float(getattr(user, 'tn_prize_3d_30', 0))
             c = 0.0
         elif btype in ['3D-60']:
-            p = count * float(getattr(user, 'tn_prize_3d_60', 0))
+            if 'BC' in pt:
+                p = count * float(getattr(user, 'tn_prize_3d_60_bc', 0))
+            elif 'C MATCH' in pt or pt.endswith(' C') or pt.endswith('(C)'):
+                p = count * float(getattr(user, 'tn_prize_3d_60_c', 0))
+            else:
+                p = count * float(getattr(user, 'tn_prize_3d_60', 0))
             c = 0.0
         elif btype in ['4D-110']:
             if '1ST' in pt: p = count * float(getattr(user, 'tn_prize_4d_110_1', 0))
@@ -2936,6 +2952,26 @@ class GameResultViewSet(viewsets.ModelViewSet):
                         # permutation match → BOX2 (1ND PRIZE)
                         is_exact_match = (b_num == win_num)
                         display_name = "BOX (1ST PRIZE) EXACT" if is_exact_match else "BOX2 (1ND PRIZE)"
+                    elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
+                        if b_num == win_num:
+                            display_name = f"2ND PRIZE ({b_type}) EXACT"
+                        elif len(b_num) >= 2 and b_num[-2:] == win_num[-2:]:
+                            display_name = f"2ND PRIZE ({b_type}) BC MATCH"
+                        elif len(b_num) >= 1 and b_num[-1:] == win_num[-1:]:
+                            display_name = f"2ND PRIZE ({b_type}) C MATCH"
+                        else:
+                            display_name = f"2ND PRIZE ({b_type})"
+                    elif b_type in ['4D-110', '4D-55']:
+                        if b_num == win_num:
+                            display_name = f"1ST PRIZE ({b_type})"
+                        elif b_num[-3:] == win_num[-3:]:
+                            display_name = f"2ND PRIZE ({b_type})"
+                        elif b_num[-2:] == win_num[-2:]:
+                            display_name = f"3RD PRIZE ({b_type})"
+                        elif b_num[-1:] == win_num[-1:]:
+                            display_name = f"4TH PRIZE ({b_type})"
+                        else:
+                            display_name = f"1ST PRIZE ({b_type})"
                     else:
                         display_name = f"{tier_name} ({b_type})"
                     
