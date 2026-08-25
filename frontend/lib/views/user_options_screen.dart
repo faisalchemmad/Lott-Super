@@ -99,7 +99,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                   if (result == true) Navigator.pop(context, true);
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildOption(
                 context,
                 icon: Icons.account_balance_wallet_rounded,
@@ -108,7 +108,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                   _showCreditLimitDialog(context, userToShow);
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
             ],
             _buildOption(
               context,
@@ -126,7 +126,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 }
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildOption(
               context,
               icon: Icons.percent_rounded,
@@ -143,7 +143,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 }
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildOption(
               context,
               icon: Icons.format_list_numbered_rounded,
@@ -157,7 +157,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildOption(
               context,
               icon: Icons.settings_suggest_rounded,
@@ -171,7 +171,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildOption(
               context,
               icon: Icons.timer_rounded,
@@ -185,7 +185,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildOption(
               context,
               icon: Icons.videogame_asset_rounded,
@@ -202,7 +202,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 }
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             if (canEdit)
               _buildOption(
                 context,
@@ -252,47 +252,48 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
   Widget _buildProfileHeader(UserModel user) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           )
         ],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary, width: 2),
             ),
             child: const CircleAvatar(
-              radius: 40,
+              radius: 32,
               backgroundColor: AppColors.primary,
-              child: Icon(Icons.person, color: Colors.white, size: 40),
+              child: Icon(Icons.person, color: Colors.white, size: 32),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Text(
             user.username.toUpperCase(),
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+              letterSpacing: 1.1,
             ),
           ),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               user.role,
@@ -321,7 +322,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
             title: const Text('Weekly Credit Limit',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -331,7 +332,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                   decoration: InputDecoration(
                     labelText: 'Limit Amount',
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(6)),
                     prefixIcon: const Icon(Icons.currency_rupee_rounded),
                   ),
                 ),
@@ -354,7 +355,8 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                         try {
                           final double newLimit =
                               double.tryParse(_controller.text) ?? 0.0;
-                          final success = await apiService.updateUser(userToShow.id, {
+                          final success =
+                              await apiService.updateUser(userToShow.id, {
                             'weekly_credit_limit': newLimit,
                           });
                           if (success) {
@@ -368,26 +370,24 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                               Navigator.pop(context);
                             }
                             _loadUserData();
-                          } else {
-                            throw Exception('Failed to update limit');
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Error: $e'),
-                                backgroundColor: Colors.red));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Error: $e'),
+                                  backgroundColor: Colors.red),
+                            );
                           }
                         } finally {
-                          if (context.mounted) {
-                            setDialogState(() => isSubmitting = false);
-                          }
+                          setDialogState(() => isSubmitting = false);
                         }
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(6)),
                 ),
                 child: isSubmitting
                     ? const SizedBox(
@@ -415,12 +415,13 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -428,33 +429,32 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(6),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: textColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(icon, color: textColor, size: 24),
+                  child: Icon(icon, color: textColor, size: 20),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
                       color: Colors.grey[800],
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
                     ),
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded,
-                    size: 16, color: Colors.grey[400]),
+                    size: 14, color: Colors.grey[400]),
               ],
             ),
           ),
