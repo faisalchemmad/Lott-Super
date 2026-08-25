@@ -14,13 +14,13 @@ class SalesCommissionScreen extends StatefulWidget {
 
 class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // KL Controllers
   late TextEditingController _superController;
   late TextEditingController _abcController;
   late TextEditingController _abBcAcController;
   late TextEditingController _boxController;
-  
+
   // TN Controllers
   late TextEditingController _tnAbcController;
   late TextEditingController _tnAbBcAcController;
@@ -31,26 +31,39 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
   late TextEditingController _tn4d110Controller;
   late TextEditingController _tn4d55Controller;
   late TextEditingController _tn4d20Controller;
-  
+
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _superController = TextEditingController(text: widget.user.salesCommSuper.toString());
-    _abcController = TextEditingController(text: widget.user.salesCommAbc.toString());
-    _abBcAcController = TextEditingController(text: widget.user.salesCommAbBcAc.toString());
-    _boxController = TextEditingController(text: widget.user.salesCommBox.toString());
-    
-    _tnAbcController = TextEditingController(text: widget.user.tnSalesCommAbc.toString());
-    _tnAbBcAcController = TextEditingController(text: widget.user.tnSalesCommAbBcAc.toString());
-    _tn3d10Controller = TextEditingController(text: widget.user.tnSalesComm3d10.toString());
-    _tn3d25Controller = TextEditingController(text: widget.user.tnSalesComm3d25.toString());
-    _tn3d30Controller = TextEditingController(text: widget.user.tnSalesComm3d30.toString());
-    _tn3d60Controller = TextEditingController(text: widget.user.tnSalesComm3d60.toString());
-    _tn4d110Controller = TextEditingController(text: widget.user.tnSalesComm4d110.toString());
-    _tn4d55Controller = TextEditingController(text: widget.user.tnSalesComm4d55.toString());
-    _tn4d20Controller = TextEditingController(text: widget.user.tnSalesComm4d20.toString());
+    _superController =
+        TextEditingController(text: widget.user.salesCommSuper.toString());
+    _abcController =
+        TextEditingController(text: widget.user.salesCommAbc.toString());
+    _abBcAcController =
+        TextEditingController(text: widget.user.salesCommAbBcAc.toString());
+    _boxController =
+        TextEditingController(text: widget.user.salesCommBox.toString());
+
+    _tnAbcController =
+        TextEditingController(text: widget.user.tnSalesCommAbc.toString());
+    _tnAbBcAcController =
+        TextEditingController(text: widget.user.tnSalesCommAbBcAc.toString());
+    _tn3d10Controller =
+        TextEditingController(text: widget.user.tnSalesComm3d10.toString());
+    _tn3d25Controller =
+        TextEditingController(text: widget.user.tnSalesComm3d25.toString());
+    _tn3d30Controller =
+        TextEditingController(text: widget.user.tnSalesComm3d30.toString());
+    _tn3d60Controller =
+        TextEditingController(text: widget.user.tnSalesComm3d60.toString());
+    _tn4d110Controller =
+        TextEditingController(text: widget.user.tnSalesComm4d110.toString());
+    _tn4d55Controller =
+        TextEditingController(text: widget.user.tnSalesComm4d55.toString());
+    _tn4d20Controller =
+        TextEditingController(text: widget.user.tnSalesComm4d20.toString());
   }
 
   @override
@@ -59,7 +72,7 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
     _abcController.dispose();
     _abBcAcController.dispose();
     _boxController.dispose();
-    
+
     _tnAbcController.dispose();
     _tnAbBcAcController.dispose();
     _tn3d10Controller.dispose();
@@ -83,9 +96,9 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
       'sales_comm_abc': double.tryParse(_abcController.text) ?? 0.0,
       'sales_comm_ab_bc_ac': double.tryParse(_abBcAcController.text) ?? 0.0,
       'sales_comm_box': double.tryParse(_boxController.text) ?? 0.0,
-      
       'tn_sales_comm_abc': double.tryParse(_tnAbcController.text) ?? 0.0,
-      'tn_sales_comm_ab_bc_ac': double.tryParse(_tnAbBcAcController.text) ?? 0.0,
+      'tn_sales_comm_ab_bc_ac':
+          double.tryParse(_tnAbBcAcController.text) ?? 0.0,
       'tn_sales_comm_3d_10': double.tryParse(_tn3d10Controller.text) ?? 0.0,
       'tn_sales_comm_3d_25': double.tryParse(_tn3d25Controller.text) ?? 0.0,
       'tn_sales_comm_3d_30': double.tryParse(_tn3d30Controller.text) ?? 0.0,
@@ -144,15 +157,16 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(28),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -162,15 +176,15 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Icon(Icons.percent_rounded,
-                              color: AppColors.primary, size: 24),
+                              color: AppColors.primary, size: 20),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -189,12 +203,13 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     _buildCommissionField('KL LSK SUPER', _superController),
                     _buildCommissionField('KL A/B/C', _abcController),
                     _buildCommissionField('KL AB/BC/AC', _abBcAcController),
                     _buildCommissionField('KL Box', _boxController),
-                    const Divider(height: 48, thickness: 1, color: Colors.black12),
+                    const Divider(
+                        height: 32, thickness: 1, color: Colors.black12),
                     _buildCommissionField('TN A/B/C', _tnAbcController),
                     _buildCommissionField('TN AB/BC/AC', _tnAbBcAcController),
                     _buildCommissionField('TN 3D-10', _tn3d10Controller),
@@ -207,19 +222,19 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                height: 58,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    elevation: 8,
+                    elevation: 4,
                     shadowColor: AppColors.primary.withOpacity(0.4),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18)),
+                        borderRadius: BorderRadius.circular(6)),
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
@@ -238,46 +253,40 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
   }
 
   Widget _buildCommissionField(String label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        style: const TextStyle(
+            fontSize: 15, fontWeight: FontWeight.w900, color: Colors.black87),
+        decoration: InputDecoration(
+          labelText: label.toUpperCase(),
+          labelStyle: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              letterSpacing: 0.3),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          filled: true,
+          fillColor: Colors.white,
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87),
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: TextStyle(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
-      ],
+      ),
     );
   }
 }
