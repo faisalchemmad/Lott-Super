@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,22 +16,33 @@ class ResultViewScreen extends StatefulWidget {
   State<ResultViewScreen> createState() => _ResultViewScreenState();
 }
 
-class _ResultViewScreenState extends State<ResultViewScreen> {
+class _ResultViewScreenState extends State<ResultViewScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   DateTime _selectedDate = DateTime.now();
   int? _selectedGameId;
   List<GameModel> _games = [];
   List<dynamic> _results = [];
   bool _isLoading = true;
-  bool _isLoadingGames = true;
   bool _isAdmin = false;
   final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _checkAdmin();
     _fetchGames();
     _fetchResults();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkAdmin() async {
@@ -49,12 +58,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     final games = await apiService.getGames();
     setState(() {
       _games = games;
-      if (_games.isNotEmpty && _selectedGameId == null) {
-        _selectedGameId = _games[0].id; // Default to first game
-      }
-      _isLoadingGames = false;
     });
-    _fetchResults();
   }
 
   Future<void> _fetchResults() async {
@@ -78,6 +82,19 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     }
   }
 
+  List<dynamic> get _klResults => _results.where((res) {
+        final winNum = (res['winning_number'] ?? '').toString().trim();
+        return winNum.length != 4;
+      }).toList();
+
+  List<dynamic> get _tnResults => _results.where((res) {
+        final winNum = (res['winning_number'] ?? '').toString().trim();
+        return winNum.length == 4;
+      }).toList();
+
+  List<dynamic> get _currentTabResults =>
+      _tabController.index == 0 ? _klResults : _tnResults;
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -91,17 +108,26 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     }
   }
 
-  void _shareAsText(Map<String, dynamic> res) {
+  void _shareAsText(Map<String, dynamic> res, {required bool isTN}) {
     String formattedDate = DateFormat('dd-MM-yyyy').format(_selectedDate);
-    String text = "Mango - RESULT REPORT\n";
+    String stateTag = isTN ? "TN" : "KL";
+    String text = "Mango - $stateTag RESULT REPORT\n";
     text += "Date: $formattedDate\n";
     text += "Game: ${res['game_name']}\n\n";
-    text += "1st Prize : ${res['winning_number']}\n";
-    text += "2nd Prize : ${res['second_prize'] ?? '---'}\n";
-    text += "3rd Prize : ${res['third_prize'] ?? '---'}\n";
-    text += "4th Prize : ${res['fourth_prize'] ?? '---'}\n";
-    text += "5th Prize : ${res['fifth_prize'] ?? '---'}\n\n";
-    text += "COMPLIMENTS:\n${res['complimentary_numbers'] ?? 'None'}";
+
+    if (isTN) {
+      text += "1st Prize (4D) : ${res['winning_number']}\n";
+      text += "2nd Prize (3D) : ${res['second_prize'] ?? '---'}\n";
+      text += "3rd Prize (2D) : ${res['third_prize'] ?? '---'}\n";
+      text += "4th Prize (1D) : ${res['fourth_prize'] ?? '---'}\n";
+    } else {
+      text += "1st Prize : ${res['winning_number']}\n";
+      text += "2nd Prize : ${res['second_prize'] ?? '---'}\n";
+      text += "3rd Prize : ${res['third_prize'] ?? '---'}\n";
+      text += "4th Prize : ${res['fourth_prize'] ?? '---'}\n";
+      text += "5th Prize : ${res['fifth_prize'] ?? '---'}\n\n";
+      text += "COMPLIMENTS:\n${res['complimentary_numbers'] ?? 'None'}";
+    }
 
     Share.share(text);
   }
@@ -163,6 +189,9 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentResults = _currentTabResults;
+    final isTNTab = _tabController.index == 1;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -172,41 +201,31 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3.5,
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          unselectedLabelStyle: const TextStyle(fontSize: 15),
+          tabs: const [
+            Tab(text: 'KL'),
+            Tab(text: 'TN'),
+          ],
+        ),
         actions: [
-          if (_results.isNotEmpty)
+          if (currentResults.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.share_rounded, color: Colors.white),
-              onPressed: () => _shareAsText(_results[0]),
+              onPressed: () => _shareAsText(currentResults[0], isTN: isTNTab),
               tooltip: "Share as Text",
             ),
-          if (_results.isNotEmpty)
+          if (currentResults.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.image_rounded, color: Colors.white),
               onPressed: _shareAsImage,
               tooltip: "Share as Image",
             ),
-          if (_results.isNotEmpty && _isAdmin) ...[
-            IconButton(
-              icon: const Icon(Icons.edit_rounded, color: Colors.white),
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        PublishResultScreen(resultData: _results[0]),
-                  ),
-                );
-                _fetchResults(); // Refresh after edit
-              },
-              tooltip: "Edit Result",
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded,
-                  color: Colors.white),
-              onPressed: () => _deleteResult(_results[0]['id']),
-              tooltip: "Delete Result",
-            ),
-          ],
         ],
       ),
       body: Column(
@@ -215,20 +234,13 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _results.isEmpty
-                    ? _buildNoResults()
-                    : Screenshot(
-                        controller: _screenshotController,
-                        child: Container(
-                          color: Colors.white,
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: _results.length,
-                            itemBuilder: (context, index) =>
-                                _buildStyledResultBlock(_results[index]),
-                          ),
-                        ),
-                      ),
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildResultList(_klResults, isTN: false),
+                      _buildResultList(_tnResults, isTN: true),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -237,8 +249,11 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
 
   Widget _buildFilterHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -247,30 +262,43 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
             child: Text(
               DateFormat('dd-MM-yyyy').format(_selectedDate),
               style: const TextStyle(
-                color: Color(0xFFE67E22), // More orange-brown
-                fontSize: 18,
+                color: Color(0xFFE67E22),
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           if (_games.isNotEmpty)
             Expanded(
-              flex: 3,
+              flex: 4,
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<int?>(
                   value: _selectedGameId,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.blueAccent),
-                  items: _games
-                      .map((g) =>
-                          DropdownMenuItem(value: g.id, child: Text(g.name, overflow: TextOverflow.ellipsis)))
-                      .toList(),
+                  icon: const Icon(Icons.arrow_drop_down,
+                      color: Colors.blueAccent),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('ALL GAMES',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14)),
+                    ),
+                    ..._games.map((g) => DropdownMenuItem(
+                        value: g.id,
+                        child: Text(g.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 14)))),
+                  ],
                   onChanged: (val) {
                     setState(() => _selectedGameId = val);
                     _fetchResults();
                   },
                   style: const TextStyle(
-                      color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16),
+                      color: Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
                 ),
               ),
             ),
@@ -285,7 +313,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
               child: InkWell(
                 onTap: _selectDate,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 7),
                   child: Text(
                     'CHANGE DATE',
                     textAlign: TextAlign.center,
@@ -304,43 +332,126 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
     );
   }
 
-  Widget _buildNoResults() {
+  Widget _buildResultList(List<dynamic> results, {required bool isTN}) {
+    if (results.isEmpty) {
+      return _buildNoResults(isTN: isTN);
+    }
+
+    return Screenshot(
+      controller: _screenshotController,
+      child: Container(
+        color: Colors.white,
+        child: ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: results.length,
+          itemBuilder: (context, index) =>
+              _buildStyledResultBlock(results[index], isTN: isTN),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResults({required bool isTN}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.event_busy_rounded, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          const Text('No results found',
-              style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text('No ${isTN ? 'TN' : 'KL'} results found for this date',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         ],
       ),
     );
   }
 
-  Widget _buildStyledResultBlock(Map<String, dynamic> res) {
+  Widget _buildStyledResultBlock(Map<String, dynamic> res,
+      {required bool isTN}) {
     return Column(
       children: [
+        // Game Name Banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            border: Border(
+              bottom: BorderSide(color: Colors.grey.shade300, width: 0.5),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isTN ? Colors.orange[800] : AppColors.primary,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      isTN ? 'TN' : 'KL',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    res['game_name'] ?? 'GAME',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                DateFormat('dd-MM-yyyy').format(_selectedDate),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Prize Rows
         _buildPrizeRow("1", res['winning_number'], const Color(0xFF1D8740)),
         _buildPrizeRow("2", res['second_prize'], const Color(0xFF0E799F)),
         _buildPrizeRow("3", res['third_prize'], const Color(0xFFDE8D0C)),
         _buildPrizeRow("4", res['fourth_prize'], const Color(0xFF6E378E)),
-        _buildPrizeRow("5", res['fifth_prize'], const Color(0xFF104282)),
-        const SizedBox(height: 24),
-        const Text(
-          "COMPLIMENTS",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w400,
-            letterSpacing: 0.5,
+        if (!isTN)
+          _buildPrizeRow("5", res['fifth_prize'], const Color(0xFF104282)),
+
+        // Compliments for KL
+        if (!isTN &&
+            res['complimentary_numbers'] != null &&
+            res['complimentary_numbers'].toString().trim().isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const Text(
+            "COMPLIMENTS",
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Divider(height: 1, thickness: 1),
-        _buildComplimentsGrid(res['complimentary_numbers']),
+          const SizedBox(height: 8),
+          const Divider(height: 1, thickness: 1),
+          _buildComplimentsGrid(res['complimentary_numbers']),
+        ],
+
+        // Admin Action Buttons
         if (_isAdmin)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
               children: [
                 Expanded(
@@ -356,12 +467,12 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
                       _fetchResults();
                     },
                     icon: const Icon(Icons.edit_rounded, size: 18),
-                    label: const Text('EDIT RESULT DETAILS',
+                    label: const Text('EDIT RESULT',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: AppColors.primary.withOpacity(0.05),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      backgroundColor: AppColors.primary.withOpacity(0.08),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                     ),
@@ -372,12 +483,12 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
                   child: TextButton.icon(
                     onPressed: () => _deleteResult(res['id']),
                     icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    label: const Text('DELETE RESULT',
+                    label: const Text('DELETE',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: Colors.red.withOpacity(0.05),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      backgroundColor: Colors.red.withOpacity(0.08),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                     ),
@@ -386,7 +497,7 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
               ],
             ),
           ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -427,8 +538,9 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
   }
 
   Widget _buildComplimentsGrid(String? complimentsStr) {
-    if (complimentsStr == null || complimentsStr.isEmpty)
+    if (complimentsStr == null || complimentsStr.isEmpty) {
       return const SizedBox();
+    }
 
     List<String> nums = complimentsStr
         .split(RegExp(r'[,\s\n]+'))
@@ -445,7 +557,6 @@ class _ResultViewScreenState extends State<ResultViewScreen> {
       children: List.generate(rows, (rowIndex) {
         return TableRow(
           children: List.generate(columns, (colIndex) {
-            // Distribute numbers in columns like the image
             int index = rowIndex + (colIndex * rows);
             String text = index < nums.length ? nums[index] : "";
             return Padding(
