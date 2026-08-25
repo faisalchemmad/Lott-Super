@@ -156,73 +156,62 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(Icons.percent_rounded,
-                              color: AppColors.primary, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('COMMISSION SETTINGS',
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.black87,
-                                    letterSpacing: 0.5)),
-                            Text('Set sales commission rates',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[400])),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildCommissionField('KL LSK SUPER', _superController),
-                    _buildCommissionField('KL A/B/C', _abcController),
-                    _buildCommissionField('KL AB/BC/AC', _abBcAcController),
-                    _buildCommissionField('KL Box', _boxController),
-                    const Divider(
-                        height: 32, thickness: 1, color: Colors.black12),
-                    _buildCommissionField('TN A/B/C', _tnAbcController),
-                    _buildCommissionField('TN AB/BC/AC', _tnAbBcAcController),
-                    _buildCommissionField('TN 3D-10', _tn3d10Controller),
-                    _buildCommissionField('TN 3D-25', _tn3d25Controller),
-                    _buildCommissionField('TN 3D-30', _tn3d30Controller),
-                    _buildCommissionField('TN 3D-60', _tn3d60Controller),
-                    _buildCommissionField('TN 4D-110', _tn4d110Controller),
-                    _buildCommissionField('TN 4D-55', _tn4d55Controller),
-                    _buildCommissionField('TN 4D-20', _tn4d20Controller),
-                  ],
-                ),
+              // KL SECTION
+              _buildSectionCard(
+                stateLabel: 'KL',
+                title: 'KL COMMISSION RATES',
+                children: [
+                  _buildDoubleField(
+                    'LSK SUPER',
+                    _superController,
+                    'A/B/C',
+                    _abcController,
+                  ),
+                  _buildDoubleField(
+                    'AB/BC/AC',
+                    _abBcAcController,
+                    'BOX',
+                    _boxController,
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+              // TN SECTION
+              _buildSectionCard(
+                stateLabel: 'TN',
+                title: 'TN COMMISSION RATES',
+                children: [
+                  _buildDoubleField(
+                    'A/B/C',
+                    _tnAbcController,
+                    'AB/BC/AC',
+                    _tnAbBcAcController,
+                  ),
+                  _buildDoubleField(
+                    '3D-10',
+                    _tn3d10Controller,
+                    '3D-25',
+                    _tn3d25Controller,
+                  ),
+                  _buildDoubleField(
+                    '3D-30',
+                    _tn3d30Controller,
+                    '3D-60',
+                    _tn3d60Controller,
+                  ),
+                  _buildDoubleField(
+                    '4D-110',
+                    _tn4d110Controller,
+                    '4D-55',
+                    _tn4d55Controller,
+                  ),
+                  _buildSingleField(
+                    '4D-20',
+                    _tn4d20Controller,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -252,40 +241,123 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
     );
   }
 
-  Widget _buildCommissionField(String label, TextEditingController controller) {
+  Widget _buildSectionCard({
+    required String stateLabel,
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  stateLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black87,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoubleField(String label1, TextEditingController controller1,
+      String label2, TextEditingController controller2) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.w900, color: Colors.black87),
-        decoration: InputDecoration(
-          labelText: label.toUpperCase(),
-          labelStyle: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-              letterSpacing: 0.3),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          filled: true,
-          fillColor: Colors.white,
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(child: _buildCommissionField(label1, controller1)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildCommissionField(label2, controller2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Expanded(child: _buildCommissionField(label, controller)),
+          const SizedBox(width: 12),
+          const Expanded(child: SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommissionField(String label, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: const TextStyle(
+          fontSize: 15, fontWeight: FontWeight.w900, color: Colors.black87),
+      decoration: InputDecoration(
+        labelText: label.toUpperCase(),
+        labelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
     );
   }

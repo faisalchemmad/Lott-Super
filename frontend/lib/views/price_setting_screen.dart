@@ -174,88 +174,73 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Icon(
-                                    Icons.settings_suggest_rounded,
-                                    color: AppColors.primary,
-                                    size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('PRICE MANAGEMENT',
-                                      style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.black87,
-                                          letterSpacing: 0.5)),
-                                  Text('Set prices for all games',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey[400])),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          _buildPriceField(_abcController, 'KL ABC GAME PRICE',
-                              'Default: 12'),
-                          _buildPriceField(_abBcAcController,
-                              'KL AB-BC-AC PRICE', 'Default: 10'),
-                          _buildPriceField(_superController,
-                              'KL SUPER GAME PRICE', 'Default: 10'),
-                          _buildPriceField(_boxController, 'KL BOX GAME PRICE',
-                              'Default: 10'),
-                          const Divider(
-                              height: 32, thickness: 1, color: Colors.black12),
-                          _buildPriceField(_tnAbcController,
-                              'TN ABC GAME PRICE', 'Default: 12'),
-                          _buildPriceField(_tnAbBcAcController,
-                              'TN AB-BC-AC PRICE', 'Default: 10'),
-                          _buildPriceField(_tn3d10Controller, 'TN 3D-10 PRICE',
-                              'Default: 10'),
-                          _buildPriceField(_tn3d25Controller, 'TN 3D-25 PRICE',
-                              'Default: 25'),
-                          _buildPriceField(_tn3d30Controller, 'TN 3D-30 PRICE',
-                              'Default: 30'),
-                          _buildPriceField(_tn3d60Controller, 'TN 3D-60 PRICE',
-                              'Default: 60'),
-                          _buildPriceField(_tn4d110Controller,
-                              'TN 4D-110 PRICE', 'Default: 110'),
-                          _buildPriceField(_tn4d55Controller, 'TN 4D-55 PRICE',
-                              'Default: 55'),
-                          _buildPriceField(_tn4d20Controller, 'TN 4D-20 PRICE',
-                              'Default: 20'),
-                        ],
-                      ),
+                    _buildSectionCard(
+                      stateLabel: 'KL',
+                      title: 'KL GAME PRICES',
+                      children: [
+                        _buildDoubleField(
+                          'SUPER',
+                          _superController,
+                          'Default: 10',
+                          'BOX',
+                          _boxController,
+                          'Default: 10',
+                        ),
+                        _buildDoubleField(
+                          'A/B/C',
+                          _abcController,
+                          'Default: 12',
+                          'AB/BC/AC',
+                          _abBcAcController,
+                          'Default: 10',
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+                    _buildSectionCard(
+                      stateLabel: 'TN',
+                      title: 'TN GAME PRICES',
+                      children: [
+                        _buildDoubleField(
+                          'A/B/C',
+                          _tnAbcController,
+                          'Default: 12',
+                          'AB/BC/AC',
+                          _tnAbBcAcController,
+                          'Default: 10',
+                        ),
+                        _buildDoubleField(
+                          '3D-10',
+                          _tn3d10Controller,
+                          'Default: 10',
+                          '3D-25',
+                          _tn3d25Controller,
+                          'Default: 25',
+                        ),
+                        _buildDoubleField(
+                          '3D-30',
+                          _tn3d30Controller,
+                          'Default: 30',
+                          '3D-60',
+                          _tn3d60Controller,
+                          'Default: 60',
+                        ),
+                        _buildDoubleField(
+                          '4D-110',
+                          _tn4d110Controller,
+                          'Default: 110',
+                          '4D-55',
+                          _tn4d55Controller,
+                          'Default: 55',
+                        ),
+                        _buildSingleField(
+                          '4D-20',
+                          _tn4d20Controller,
+                          'Default: 20',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -283,46 +268,135 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
     );
   }
 
-  Widget _buildPriceField(
-      TextEditingController controller, String label, String hint) {
+  Widget _buildSectionCard({
+    required String stateLabel,
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  stateLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black87,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoubleField(
+      String label1,
+      TextEditingController controller1,
+      String hint1,
+      String label2,
+      TextEditingController controller2,
+      String hint2) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(
-            fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black87),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: label.toUpperCase(),
-          labelStyle: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.3),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          filled: true,
-          fillColor: Colors.white,
-          isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          prefixIcon: const Icon(Icons.currency_rupee_rounded,
-              size: 16, color: AppColors.primary),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-        ),
-        validator: (value) =>
-            (value == null || value.isEmpty) ? 'Required' : null,
+      child: Row(
+        children: [
+          Expanded(child: _buildPriceField(controller1, label1, hint1)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildPriceField(controller2, label2, hint2)),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSingleField(
+      String label, TextEditingController controller, String hint) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Expanded(child: _buildPriceField(controller, label, hint)),
+          const SizedBox(width: 12),
+          const Expanded(child: SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceField(
+      TextEditingController controller, String label, String hint) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(
+          fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black87),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+        labelText: label.toUpperCase(),
+        labelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        prefixIcon: const Icon(Icons.currency_rupee_rounded,
+            size: 16, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      ),
+      validator: (value) =>
+          (value == null || value.isEmpty) ? 'Required' : null,
     );
   }
 }
