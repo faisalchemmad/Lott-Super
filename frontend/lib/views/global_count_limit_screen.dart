@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
 import '../utils/constants.dart';
-import 'global_limit_menu_screen.dart';
+import 'global_count_limit_detail_screen.dart';
 
 class GlobalCountLimitScreen extends StatefulWidget {
   const GlobalCountLimitScreen({super.key});
@@ -45,64 +45,20 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _games.isEmpty
               ? _buildEmptyState()
-              : Column(
-                  children: [
-                    _buildHeader(),
-                    Expanded(
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(12),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 2.3,
-                        ),
-                        itemCount: _games.length,
-                        itemBuilder: (context, index) {
-                          final game = _games[index];
-                          return _buildGameCard(game);
-                        },
-                      ),
-                    ),
-                  ],
+              : GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 2.3,
+                  ),
+                  itemCount: _games.length,
+                  itemBuilder: (context, index) {
+                    final game = _games[index];
+                    return _buildGameCard(game);
+                  },
                 ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.public_rounded, size: 36, color: Colors.white),
-          const SizedBox(height: 8),
-          const Text(
-            'Select a Game',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Manage system-wide betting caps per game',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -124,17 +80,7 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(6),
-          onTap: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GlobalLimitMenuScreen(game: game),
-              ),
-            );
-            if (result == true) {
-              _loadGames();
-            }
-          },
+          onTap: () => _showGameOptions(game),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
@@ -178,13 +124,123 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    color: Colors.grey[400], size: 12),
+                Icon(Icons.keyboard_arrow_down_rounded,
+                    color: Colors.grey[400], size: 18),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  void _showGameOptions(GameModel game) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.videogame_asset_rounded,
+                          color: AppColors.primary, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${game.name} Global Limits',
+                      style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.analytics_rounded,
+                        color: AppColors.primary, size: 20),
+                  ),
+                  title: const Text('COUNT LIMIT',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  subtitle: const Text(
+                      'Manage global type caps (A, B, C, SUPER, etc.)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 14, color: Colors.grey),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GlobalCountLimitDetailScreen(
+                            game: game, initialTab: 0),
+                      ),
+                    );
+                    if (result == true) _loadGames();
+                  },
+                ),
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.format_list_numbered_rounded,
+                        color: Colors.deepOrange, size: 20),
+                  ),
+                  title: const Text('NUMBER COUNT',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  subtitle: Text(
+                      'Restrict specific numbers globally for ${game.name}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 14, color: Colors.grey),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GlobalCountLimitDetailScreen(
+                            game: game, initialTab: 1),
+                      ),
+                    );
+                    if (result == true) _loadGames();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
