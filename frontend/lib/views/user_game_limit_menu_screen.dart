@@ -8,7 +8,8 @@ import 'manage_user_count_limits_screen.dart';
 class UserGameLimitMenuScreen extends StatelessWidget {
   final UserModel user;
   final GameModel game;
-  const UserGameLimitMenuScreen({super.key, required this.user, required this.game});
+  const UserGameLimitMenuScreen(
+      {super.key, required this.user, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,8 @@ class UserGameLimitMenuScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: Text('${game.name} Limits',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -34,8 +36,8 @@ class UserGameLimitMenuScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ManageUserCountLimitsScreen(
-                        user: user)),
+                    builder: (context) =>
+                        ManageUserCountLimitsScreen(user: user)),
               ),
             ),
             const SizedBox(height: 24),
@@ -48,8 +50,8 @@ class UserGameLimitMenuScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ManageUserNumberLimitsScreen(
-                        user: user, game: game)),
+                    builder: (context) =>
+                        ManageUserNumberLimitsScreen(user: user, game: game)),
               ),
             ),
           ],
@@ -68,48 +70,50 @@ class UserGameLimitMenuScreen extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2)),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 36),
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6)),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title,
                           style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey[800])),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(subtitle,
                           style:
-                              TextStyle(fontSize: 13, color: Colors.grey[600])),
+                              TextStyle(fontSize: 12, color: Colors.grey[600])),
                     ],
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded,
-                    color: Colors.grey[400], size: 18),
+                    color: Colors.grey[400], size: 14),
               ],
             ),
           ),
