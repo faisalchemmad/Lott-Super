@@ -205,9 +205,12 @@ class _ResultViewScreenState extends State<ResultViewScreen>
           controller: _tabController,
           indicatorColor: Colors.white,
           indicatorWeight: 3.5,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white.withOpacity(0.65),
           labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          unselectedLabelStyle: const TextStyle(fontSize: 15),
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 0.5),
+          unselectedLabelStyle:
+              const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           tabs: const [
             Tab(text: 'KL'),
             Tab(text: 'TN'),
