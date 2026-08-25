@@ -365,61 +365,60 @@ class _GlobalCountLimitDetailScreenState
             TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('CANCEL')),
-              ElevatedButton(
-                onPressed: () async {
-                  if (numController.text.isEmpty || countController.text.isEmpty)
-                    return;
+            ElevatedButton(
+              onPressed: () async {
+                if (numController.text.isEmpty || countController.text.isEmpty)
+                  return;
 
-                  // Digit validation
-                  int reqDigits = 0;
-                  if (['A', 'B', 'C'].contains(selectedType)) {
-                    reqDigits = 1;
-                  } else if (['AB', 'BC', 'AC'].contains(selectedType)) {
-                    reqDigits = 2;
-                  } else if (['SUPER', 'BOX'].contains(selectedType)) {
-                    reqDigits = 3;
-                  }
+                // Digit validation
+                int reqDigits = 0;
+                if (['A', 'B', 'C'].contains(selectedType)) {
+                  reqDigits = 1;
+                } else if (['AB', 'BC', 'AC'].contains(selectedType)) {
+                  reqDigits = 2;
+                } else if (['SUPER', 'BOX'].contains(selectedType)) {
+                  reqDigits = 3;
+                }
 
-                  if (numController.text.length != reqDigits) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('Number must be $reqDigits digits')),
-                    );
-                    return;
-                  }
+                if (numController.text.length != reqDigits) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Number must be $reqDigits digits')),
+                  );
+                  return;
+                }
 
-                  // Ensure no non-numeric multi-numbers
-                  if (int.tryParse(numController.text) == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Please enter a valid single number')),
-                    );
-                    return;
-                  }
+                // Ensure no non-numeric multi-numbers
+                if (int.tryParse(numController.text) == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Please enter a valid single number')),
+                  );
+                  return;
+                }
 
-                  final apiService =
-                      Provider.of<ApiService>(context, listen: false);
-                  bool success;
-                  if (isEditing) {
-                    success =
-                        await apiService.updateGlobalNumberLimit(limit['id'], {
-                      'type': selectedType,
-                      'max_count': int.parse(countController.text),
-                    });
-                  } else {
-                    success = await apiService.createGlobalNumberLimit(
-                      widget.game.id,
-                      numController.text,
-                      selectedType,
-                      int.parse(countController.text),
-                    );
-                  }
+                final apiService =
+                    Provider.of<ApiService>(context, listen: false);
+                bool success;
+                if (isEditing) {
+                  success =
+                      await apiService.updateGlobalNumberLimit(limit['id'], {
+                    'type': selectedType,
+                    'max_count': int.parse(countController.text),
+                  });
+                } else {
+                  success = await apiService.createGlobalNumberLimit(
+                    widget.game.id,
+                    numController.text,
+                    selectedType,
+                    int.parse(countController.text),
+                  );
+                }
 
-                  if (success) {
-                    Navigator.pop(context);
-                    _loadGlobalNumberLimits();
-                  }
-                },
+                if (success) {
+                  Navigator.pop(context);
+                  _loadGlobalNumberLimits();
+                }
+              },
               style:
                   ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
               child: Text(isEditing ? 'UPDATE' : 'ADD',
@@ -492,61 +491,66 @@ class _GlobalCountLimitDetailScreenState
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 2.2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 2.3,
       children: children,
     );
   }
 
   Widget _buildLimitField(
       String label, TextEditingController controller, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2)),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 20, color: Colors.grey),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(15),
-              borderSide: BorderSide.none),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      style: const TextStyle(
+          fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black87),
+      decoration: InputDecoration(
+        labelText: label.toUpperCase(),
+        labelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        prefixIcon: Icon(icon, size: 16, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) return 'Enter value';
-          if (int.tryParse(value) == null) return 'Invalid';
-          return null;
-        },
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Enter value';
+        if (int.tryParse(value) == null) return 'Invalid';
+        return null;
+      },
     );
   }
 
   Widget _buildUpdateButton() {
     return SizedBox(
       width: double.infinity,
-      height: 55,
+      height: 52,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _updateTypeLimits,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          elevation: 4,
+          shadowColor: AppColors.primary.withOpacity(0.4),
         ),
         child: _isLoading
             ? const SizedBox(
@@ -557,7 +561,7 @@ class _GlobalCountLimitDetailScreenState
             : const Text('UPDATE GLOBAL TYPE LIMITS',
                 style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                     letterSpacing: 1)),
       ),
     );
