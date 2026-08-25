@@ -9,10 +9,12 @@ class ManageUserGamePermissionsScreen extends StatefulWidget {
   const ManageUserGamePermissionsScreen({super.key, required this.user});
 
   @override
-  State<ManageUserGamePermissionsScreen> createState() => _ManageUserGamePermissionsScreenState();
+  State<ManageUserGamePermissionsScreen> createState() =>
+      _ManageUserGamePermissionsScreenState();
 }
 
-class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissionsScreen> {
+class _ManageUserGamePermissionsScreenState
+    extends State<ManageUserGamePermissionsScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   List<dynamic> _allGames = [];
@@ -36,8 +38,9 @@ class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissi
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error loading games: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Error loading games: $e'),
+            backgroundColor: Colors.red));
       }
     }
   }
@@ -45,16 +48,18 @@ class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissi
   Future<void> _savePermissions() async {
     setState(() => _isSaving = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
-    
+
     try {
       final success = await apiService.updateUser(widget.user.id, {
         'allowed_games': _allowedGameIds.toList(),
       });
-      
+
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Game permissions updated successfully!'), backgroundColor: Colors.green),
+            const SnackBar(
+                content: Text('Game permissions updated successfully!'),
+                backgroundColor: Colors.green),
           );
           Navigator.pop(context, true);
         }
@@ -78,7 +83,8 @@ class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissi
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Game Permissions', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Game Permissions',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -86,45 +92,43 @@ class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissi
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  color: AppColors.primary,
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Allowed Games',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Select which games ${widget.user.username.toUpperCase()} is allowed to play.',
-                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     itemCount: _allGames.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final game = _allGames[index];
                       final isAllowed = _allowedGameIds.contains(game.id);
-                      
+
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.grey.shade300),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2)),
                           ],
                         ),
                         child: CheckboxListTile(
-                          title: Text(game.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          subtitle: Text('ID: ${game.id}'),
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          checkboxShape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                          title: Text(game.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.textDark)),
+                          subtitle: Text('ID: ${game.id}',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500)),
                           value: isAllowed,
                           activeColor: AppColors.primary,
                           onChanged: (bool? value) {
@@ -142,19 +146,31 @@ class _ManageUserGamePermissionsScreenState extends State<ManageUserGamePermissi
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _savePermissions,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withOpacity(0.4),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
                       ),
                       child: _isSaving
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Save Permissions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text('SAVE PERMISSIONS',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1)),
                     ),
                   ),
                 ),
