@@ -367,14 +367,14 @@ class _ManageUserNumberLimitsScreenState
       children: [
         if (!widget.isReadOnly)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   isTn ? 'Tamil Nadu Number Limits' : 'Kerala Number Limits',
                   style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: badgeColor),
                 ),
@@ -393,12 +393,13 @@ class _ManageUserNumberLimitsScreenState
               ],
             ),
           ),
+        if (limits.isNotEmpty) _buildTableHeader(badgeColor),
         Expanded(
           child: limits.isEmpty
               ? _buildEmptyState(
                   isTn ? 'No TN Number Limits Set' : 'No KL Number Limits Set')
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                   itemCount: limits.length,
                   itemBuilder: (context, index) {
                     final limit = limits[index];
@@ -410,10 +411,73 @@ class _ManageUserNumberLimitsScreenState
     );
   }
 
+  Widget _buildTableHeader(Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: const Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              'TYPE',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                  letterSpacing: 0.5),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              'NUMBER',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                  letterSpacing: 0.5),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'CNT',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                  letterSpacing: 0.5),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'ACTION',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                  letterSpacing: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNumberLimitCard(NumberLimitModel limit, Color badgeColor) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
@@ -421,48 +485,66 @@ class _ManageUserNumberLimitsScreenState
         boxShadow: [
           BoxShadow(
               color: Colors.black.withOpacity(0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2)),
+              blurRadius: 3,
+              offset: const Offset(0, 1)),
         ],
       ),
       child: Row(
         children: [
-          _buildTypeBadge(limit.type, badgeColor),
-          const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildTypeBadge(limit.type, badgeColor),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              limit.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50)),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${limit.maxCount}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w900, color: badgeColor),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'Number: ${limit.number}',
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50)),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Max: ${limit.maxCount} | Game: ${limit.gameName}',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600]),
-                ),
+                if (!widget.isReadOnly) ...[
+                  InkWell(
+                    onTap: () => _showAddNumberLimitDialog(limit: limit),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.edit_outlined,
+                          color: Colors.blue, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () => _confirmDelete(limit.id),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.delete_outline_rounded,
+                          color: Colors.red, size: 18),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          if (!widget.isReadOnly) ...[
-            IconButton(
-              icon:
-                  const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
-              onPressed: () => _showAddNumberLimitDialog(limit: limit),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded,
-                  color: Colors.red, size: 20),
-              onPressed: () => _confirmDelete(limit.id),
-            ),
-          ],
         ],
       ),
     );
@@ -470,7 +552,7 @@ class _ManageUserNumberLimitsScreenState
 
   Widget _buildTypeBadge(String type, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
@@ -478,7 +560,7 @@ class _ManageUserNumberLimitsScreenState
       child: Text(
         type,
         style:
-            TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+            TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11),
       ),
     );
   }
