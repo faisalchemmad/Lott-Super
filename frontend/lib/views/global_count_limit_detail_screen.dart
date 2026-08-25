@@ -475,27 +475,131 @@ class _GlobalCountLimitDetailScreenState
     );
   }
 
+  int _selectedNumberLimitTab = 0; // 0 for KL, 1 for TN
+
+  static const Set<String> _klTypes = {
+    'A',
+    'B',
+    'C',
+    'AB',
+    'BC',
+    'AC',
+    'SUPER',
+    'BOX'
+  };
+  static const Set<String> _tnTypes = {
+    'TN-A',
+    'TN-B',
+    'TN-C',
+    'TN-AB',
+    'TN-BC',
+    'TN-AC',
+    '3D-10',
+    '3D-25',
+    '3D-30',
+    '3D-60',
+    '4D-110',
+    '4D-55',
+    '4D-20'
+  };
+
   Widget _buildNumberCountTab() {
+    final klLimits =
+        _globalNumberLimits.where((l) => _klTypes.contains(l['type'])).toList();
+    final tnLimits =
+        _globalNumberLimits.where((l) => _tnTypes.contains(l['type'])).toList();
+
+    final isTn = _selectedNumberLimitTab == 1;
+    final currentLimits = isTn ? tnLimits : klLimits;
+    final activeColor = isTn ? Colors.deepOrange : AppColors.primary;
+
     return Column(
       children: [
+        // Sub-tabs for KL and TN
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => setState(() => _selectedNumberLimitTab = 0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedNumberLimitTab == 0
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'KL LIMITS (${klLimits.length})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedNumberLimitTab == 0
+                            ? Colors.white
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => setState(() => _selectedNumberLimitTab = 1),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedNumberLimitTab == 1
+                          ? Colors.deepOrange
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'TN LIMITS (${tnLimits.length})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _selectedNumberLimitTab == 1
+                            ? Colors.white
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Number Limits List',
+              Text(
+                isTn ? 'Tamil Nadu Number Limits' : 'Kerala Number Limits',
                 style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary),
+                    color: activeColor),
               ),
               ElevatedButton.icon(
-                onPressed: _showAddNumberLimitDialog,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('ADD LIMIT'),
+                onPressed: () => _showAddNumberLimitDialog(isTn: isTn),
+                icon: const Icon(Icons.add, size: 16),
+                label: Text('ADD ${isTn ? "TN" : "KL"} LIMIT'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: activeColor,
                   foregroundColor: Colors.white,
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -508,14 +612,16 @@ class _GlobalCountLimitDetailScreenState
         Expanded(
           child: _isLoadingNumbers
               ? const Center(child: CircularProgressIndicator())
-              : _globalNumberLimits.isEmpty
-                  ? _buildEmptyState('No Global Number Limits Set')
+              : currentLimits.isEmpty
+                  ? _buildEmptyState(isTn
+                      ? 'No TN Number Limits Set'
+                      : 'No KL Number Limits Set')
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _globalNumberLimits.length,
+                      itemCount: currentLimits.length,
                       itemBuilder: (context, index) {
-                        final limit = _globalNumberLimits[index];
-                        return _buildNumberLimitCard(limit);
+                        final limit = currentLimits[index];
+                        return _buildNumberLimitCard(limit, activeColor);
                       },
                     ),
         ),
@@ -523,7 +629,7 @@ class _GlobalCountLimitDetailScreenState
     );
   }
 
-  Widget _buildNumberLimitCard(dynamic limit) {
+  Widget _buildNumberLimitCard(dynamic limit, Color badgeColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -540,7 +646,7 @@ class _GlobalCountLimitDetailScreenState
       ),
       child: Row(
         children: [
-          _buildTypeBadge(limit['type']),
+          _buildTypeBadge(limit['type'], badgeColor),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -578,66 +684,100 @@ class _GlobalCountLimitDetailScreenState
     );
   }
 
-  Widget _buildTypeBadge(String type) {
+  Widget _buildTypeBadge(String type, [Color color = AppColors.primary]) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         type,
-        style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-            fontSize: 12),
+        style:
+            TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }
 
-  void _showAddNumberLimitDialog({dynamic limit}) {
+  void _showAddNumberLimitDialog({dynamic limit, bool isTn = false}) {
     final bool isEditing = limit != null;
+    final bool isTnLimit = isEditing ? _tnTypes.contains(limit['type']) : isTn;
+    final types = isTnLimit ? _tnTypes.toList() : _klTypes.toList();
+
     final numController =
         TextEditingController(text: isEditing ? limit['number'] : '');
     final countController = TextEditingController(
         text: isEditing ? limit['max_count'].toString() : '');
-    String selectedType = isEditing ? limit['type'] : 'SUPER';
-    final types = ['A', 'B', 'C', 'AB', 'BC', 'AC', 'SUPER', 'BOX'];
+    String selectedType =
+        isEditing ? limit['type'] : (isTnLimit ? '3D-10' : 'SUPER');
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-              isEditing
-                  ? 'Edit Global Number Limit'
-                  : 'Add Global Number Limit',
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isTnLimit ? Colors.deepOrange : AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  isTnLimit ? 'TN' : 'KL',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isEditing ? 'Edit Number Limit' : 'Add Number Limit',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
                 value: selectedType,
-                decoration: const InputDecoration(labelText: 'Bet Type'),
+                decoration: const InputDecoration(
+                  labelText: 'Bet Type',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
                 items: types
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                     .toList(),
                 onChanged: (val) => setDialogState(() => selectedType = val!),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: numController,
-                decoration:
-                    const InputDecoration(labelText: 'Number (1-3 digits)'),
+                decoration: const InputDecoration(
+                  labelText: 'Number',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
                 keyboardType: TextInputType.number,
-                enabled:
-                    !isEditing, // Usually don't change the number itself when editing a limit
+                enabled: !isEditing,
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: countController,
-                decoration:
-                    const InputDecoration(labelText: 'Max System Count'),
+                decoration: const InputDecoration(
+                  labelText: 'Max System Count',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
                 keyboardType: TextInputType.number,
               ),
             ],
@@ -648,20 +788,28 @@ class _GlobalCountLimitDetailScreenState
                 child: const Text('CANCEL')),
             ElevatedButton(
               onPressed: () async {
-                if (numController.text.isEmpty || countController.text.isEmpty)
+                if (numController.text.isEmpty ||
+                    countController.text.isEmpty) {
                   return;
+                }
 
                 // Digit validation
                 int reqDigits = 0;
-                if (['A', 'B', 'C'].contains(selectedType)) {
+                if (['A', 'B', 'C', 'TN-A', 'TN-B', 'TN-C']
+                    .contains(selectedType)) {
                   reqDigits = 1;
-                } else if (['AB', 'BC', 'AC'].contains(selectedType)) {
+                } else if (['AB', 'BC', 'AC', 'TN-AB', 'TN-BC', 'TN-AC']
+                    .contains(selectedType)) {
                   reqDigits = 2;
-                } else if (['SUPER', 'BOX'].contains(selectedType)) {
+                } else if (['SUPER', 'BOX', '3D-10', '3D-25', '3D-30', '3D-60']
+                    .contains(selectedType)) {
                   reqDigits = 3;
+                } else if (['4D-110', '4D-55', '4D-20']
+                    .contains(selectedType)) {
+                  reqDigits = 4;
                 }
 
-                if (numController.text.length != reqDigits) {
+                if (reqDigits > 0 && numController.text.length != reqDigits) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Number must be $reqDigits digits')),
                   );
@@ -700,10 +848,15 @@ class _GlobalCountLimitDetailScreenState
                   _loadGlobalNumberLimits();
                 }
               },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isTnLimit ? Colors.deepOrange : AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
               child: Text(isEditing ? 'UPDATE' : 'ADD',
-                  style: const TextStyle(color: Colors.white)),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),

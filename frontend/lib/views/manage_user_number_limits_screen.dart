@@ -19,15 +19,50 @@ class ManageUserNumberLimitsScreen extends StatefulWidget {
 }
 
 class _ManageUserNumberLimitsScreenState
-    extends State<ManageUserNumberLimitsScreen> {
+    extends State<ManageUserNumberLimitsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isLoading = true;
   List<NumberLimitModel> _limits = [];
   List<GameModel> _games = [];
 
+  static const Set<String> _klTypes = {
+    'A',
+    'B',
+    'C',
+    'AB',
+    'BC',
+    'AC',
+    'SUPER',
+    'BOX'
+  };
+  static const Set<String> _tnTypes = {
+    'TN-A',
+    'TN-B',
+    'TN-C',
+    'TN-AB',
+    'TN-BC',
+    'TN-AC',
+    '3D-10',
+    '3D-25',
+    '3D-30',
+    '3D-60',
+    '4D-110',
+    '4D-55',
+    '4D-20'
+  };
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -52,14 +87,17 @@ class _ManageUserNumberLimitsScreenState
     }
   }
 
-  void _showAddNumberLimitDialog({NumberLimitModel? limit}) {
+  void _showAddNumberLimitDialog({NumberLimitModel? limit, bool isTn = false}) {
     final bool isEditing = limit != null;
+    final bool isTnLimit = isEditing ? _tnTypes.contains(limit.type) : isTn;
+    final types = isTnLimit ? _tnTypes.toList() : _klTypes.toList();
+
     final numController =
         TextEditingController(text: isEditing ? limit.number : '');
     final countController =
         TextEditingController(text: isEditing ? limit.maxCount.toString() : '');
-    String selectedType = isEditing ? limit.type : 'SUPER';
-    final types = ['A', 'B', 'C', 'AB', 'BC', 'AC', 'SUPER', 'BOX'];
+    String selectedType =
+        isEditing ? limit.type : (isTnLimit ? '3D-10' : 'SUPER');
     bool allGame = false;
     int? selectedGameId =
         widget.game?.id ?? (_games.isNotEmpty ? _games.first.id : null);
@@ -69,36 +107,73 @@ class _ManageUserNumberLimitsScreenState
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-              isEditing ? 'Edit User Number Limit' : 'Add User Number Limit',
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isTnLimit ? Colors.deepOrange : AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  isTnLimit ? 'TN' : 'KL',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isEditing ? 'Edit Number Limit' : 'Add Number Limit',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
                   value: selectedType,
-                  decoration: const InputDecoration(labelText: 'Bet Type'),
+                  decoration: const InputDecoration(
+                    labelText: 'Bet Type',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
                   items: types
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                       .toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val!),
                 ),
+                const SizedBox(height: 12),
                 TextField(
                   controller: numController,
-                  decoration:
-                      const InputDecoration(labelText: 'Number (1-3 digits)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Number',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
                   keyboardType: TextInputType.number,
                   enabled: !isEditing,
                 ),
+                const SizedBox(height: 12),
                 TextField(
                   controller: countController,
-                  decoration: const InputDecoration(labelText: 'Max Count'),
+                  decoration: const InputDecoration(
+                    labelText: 'Max Count',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
                   keyboardType: TextInputType.number,
                 ),
                 if (!isEditing && _games.isNotEmpty) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Checkbox(
@@ -106,14 +181,19 @@ class _ManageUserNumberLimitsScreenState
                         onChanged: (val) =>
                             setDialogState(() => allGame = val!),
                       ),
-                      const Text('ALL Game'),
+                      const Text('ALL Games'),
                     ],
                   ),
-                  if (!allGame)
+                  if (!allGame) ...[
+                    const SizedBox(height: 8),
                     DropdownButtonFormField<int>(
                       value: selectedGameId,
-                      decoration:
-                          const InputDecoration(labelText: 'Select Game'),
+                      decoration: const InputDecoration(
+                        labelText: 'Select Game',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
                       items: _games
                           .map((g) => DropdownMenuItem(
                               value: g.id, child: Text(g.name)))
@@ -121,6 +201,7 @@ class _ManageUserNumberLimitsScreenState
                       onChanged: (val) =>
                           setDialogState(() => selectedGameId = val!),
                     ),
+                  ],
                 ],
               ],
             ),
@@ -131,19 +212,27 @@ class _ManageUserNumberLimitsScreenState
                 child: const Text('CANCEL')),
             ElevatedButton(
               onPressed: () async {
-                if (numController.text.isEmpty || countController.text.isEmpty)
+                if (numController.text.isEmpty ||
+                    countController.text.isEmpty) {
                   return;
-
-                int reqDigits = 0;
-                if (['A', 'B', 'C'].contains(selectedType)) {
-                  reqDigits = 1;
-                } else if (['AB', 'BC', 'AC'].contains(selectedType)) {
-                  reqDigits = 2;
-                } else if (['SUPER', 'BOX'].contains(selectedType)) {
-                  reqDigits = 3;
                 }
 
-                if (numController.text.length != reqDigits) {
+                int reqDigits = 0;
+                if (['A', 'B', 'C', 'TN-A', 'TN-B', 'TN-C']
+                    .contains(selectedType)) {
+                  reqDigits = 1;
+                } else if (['AB', 'BC', 'AC', 'TN-AB', 'TN-BC', 'TN-AC']
+                    .contains(selectedType)) {
+                  reqDigits = 2;
+                } else if (['SUPER', 'BOX', '3D-10', '3D-25', '3D-30', '3D-60']
+                    .contains(selectedType)) {
+                  reqDigits = 3;
+                } else if (['4D-110', '4D-55', '4D-20']
+                    .contains(selectedType)) {
+                  reqDigits = 4;
+                }
+
+                if (reqDigits > 0 && numController.text.length != reqDigits) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Number must be $reqDigits digits')),
                   );
@@ -180,10 +269,15 @@ class _ManageUserNumberLimitsScreenState
                   );
                 }
               },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isTnLimit ? Colors.deepOrange : AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
               child: Text(isEditing ? 'UPDATE' : 'ADD',
-                  style: const TextStyle(color: Colors.white)),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -224,6 +318,9 @@ class _ManageUserNumberLimitsScreenState
       title += ' (${widget.game!.name})';
     }
 
+    final klLimits = _limits.where((l) => _klTypes.contains(l.type)).toList();
+    final tnLimits = _limits.where((l) => _tnTypes.contains(l.type)).toList();
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -232,55 +329,88 @@ class _ManageUserNumberLimitsScreenState
                 fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: [
+            Tab(text: 'KL LIMITS (${klLimits.length})'),
+            Tab(text: 'TN LIMITS (${tnLimits.length})'),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          if (!widget.isReadOnly)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Custom Limits',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary)),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddNumberLimitDialog(),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('ADD LIMIT'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6)),
-                    ),
-                  ),
-                ],
-              ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildLimitsListTab(
+                    limits: klLimits,
+                    isTn: false,
+                    badgeColor: AppColors.primary),
+                _buildLimitsListTab(
+                    limits: tnLimits,
+                    isTn: true,
+                    badgeColor: Colors.deepOrange),
+              ],
             ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _limits.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _limits.length,
-                        itemBuilder: (context, index) {
-                          final limit = _limits[index];
-                          return _buildNumberLimitCard(limit);
-                        },
-                      ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildNumberLimitCard(NumberLimitModel limit) {
+  Widget _buildLimitsListTab(
+      {required List<NumberLimitModel> limits,
+      required bool isTn,
+      required Color badgeColor}) {
+    return Column(
+      children: [
+        if (!widget.isReadOnly)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isTn ? 'Tamil Nadu Number Limits' : 'Kerala Number Limits',
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: badgeColor),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _showAddNumberLimitDialog(isTn: isTn),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text('ADD ${isTn ? "TN" : "KL"} LIMIT'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: badgeColor,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: limits.isEmpty
+              ? _buildEmptyState(
+                  isTn ? 'No TN Number Limits Set' : 'No KL Number Limits Set')
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: limits.length,
+                  itemBuilder: (context, index) {
+                    final limit = limits[index];
+                    return _buildNumberLimitCard(limit, badgeColor);
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumberLimitCard(NumberLimitModel limit, Color badgeColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -297,7 +427,7 @@ class _ManageUserNumberLimitsScreenState
       ),
       child: Row(
         children: [
-          _buildTypeBadge(limit.type),
+          _buildTypeBadge(limit.type, badgeColor),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -338,32 +468,29 @@ class _ManageUserNumberLimitsScreenState
     );
   }
 
-  Widget _buildTypeBadge(String type) {
+  Widget _buildTypeBadge(String type, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         type,
-        style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.bold,
-            fontSize: 12),
+        style:
+            TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(String msg) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.numbers_outlined, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 12),
-          const Text('No Number Limits Set',
-              style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text(msg, style: const TextStyle(color: Colors.grey, fontSize: 16)),
         ],
       ),
     );
