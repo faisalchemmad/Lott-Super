@@ -494,38 +494,39 @@ class _ManagePrizeCommissionScreenState
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 8))
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2))
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 20),
+                child: Icon(icon, color: AppColors.primary, size: 18),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Text(title,
                   style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                       color: Colors.black87,
                       letterSpacing: 0.5)),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           ...children,
         ],
       ),
@@ -534,26 +535,26 @@ class _ManagePrizeCommissionScreenState
 
   Widget _buildSubHeader(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(text,
           style: TextStyle(
               fontSize: 11,
-              color: Colors.grey[400],
+              color: Colors.grey[500],
               fontWeight: FontWeight.w900,
-              letterSpacing: 1)),
+              letterSpacing: 0.8)),
     );
   }
 
   Widget _buildSingleRow(String label, TextEditingController controller,
       [Color? accentColor]) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
           Expanded(
               child: _buildTextField(
                   label, controller, accentColor ?? AppColors.primary)),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           const Expanded(child: SizedBox()),
         ],
       ),
@@ -568,7 +569,7 @@ class _ManagePrizeCommissionScreenState
       String label3,
       TextEditingController controller3) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
           Expanded(
@@ -587,12 +588,12 @@ class _ManagePrizeCommissionScreenState
   Widget _buildDoubleRow(String pLabel, TextEditingController pController,
       String cLabel, TextEditingController cController) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
           Expanded(
               child: _buildTextField(pLabel, pController, AppColors.primary)),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
               child: _buildTextField(
                   cLabel, cController, const Color(0xFF10B981))),
@@ -603,29 +604,35 @@ class _ManagePrizeCommissionScreenState
 
   Widget _buildTextField(
       String label, TextEditingController controller, Color accentColor) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        enabled: !widget.isReadOnly,
-        style: const TextStyle(
-            fontWeight: FontWeight.w900, fontSize: 16, color: Colors.black87),
-        decoration: InputDecoration(
-          labelText: label.toUpperCase(),
-          labelStyle: TextStyle(
-              color: accentColor.withOpacity(0.6),
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      enabled: !widget.isReadOnly,
+      style: const TextStyle(
+          fontWeight: FontWeight.w900, fontSize: 15, color: Colors.black87),
+      decoration: InputDecoration(
+        labelText: label.toUpperCase(),
+        labelStyle: TextStyle(
+            color: accentColor,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: accentColor, width: 1.5),
         ),
       ),
     );
