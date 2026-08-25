@@ -74,6 +74,21 @@ class User(AbstractUser):
     count_ac = models.IntegerField(default=0)
     count_super = models.IntegerField(default=0)
     count_box = models.IntegerField(default=0)
+
+    # TN Granular Count Limits
+    tn_count_a = models.IntegerField(default=0)
+    tn_count_b = models.IntegerField(default=0)
+    tn_count_c = models.IntegerField(default=0)
+    tn_count_ab = models.IntegerField(default=0)
+    tn_count_bc = models.IntegerField(default=0)
+    tn_count_ac = models.IntegerField(default=0)
+    tn_count_3d_10 = models.IntegerField(default=0)
+    tn_count_3d_25 = models.IntegerField(default=0)
+    tn_count_3d_30 = models.IntegerField(default=0)
+    tn_count_3d_60 = models.IntegerField(default=0)
+    tn_count_4d_110 = models.IntegerField(default=0)
+    tn_count_4d_55 = models.IntegerField(default=0)
+    tn_count_4d_20 = models.IntegerField(default=0)
     # Consolidated prices per unit
     price_abc = models.DecimalField(max_digits=10, decimal_places=2, default=12.00)
     price_ab_bc_ac = models.DecimalField(max_digits=10, decimal_places=2, default=10.00)
@@ -194,6 +209,21 @@ class Game(models.Model):
     global_count_ac = models.IntegerField(default=0)
     global_count_super = models.IntegerField(default=0)
     global_count_box = models.IntegerField(default=0)
+
+    # TN Global Count Limits
+    global_tn_count_a = models.IntegerField(default=0)
+    global_tn_count_b = models.IntegerField(default=0)
+    global_tn_count_c = models.IntegerField(default=0)
+    global_tn_count_ab = models.IntegerField(default=0)
+    global_tn_count_bc = models.IntegerField(default=0)
+    global_tn_count_ac = models.IntegerField(default=0)
+    global_tn_count_3d_10 = models.IntegerField(default=0)
+    global_tn_count_3d_25 = models.IntegerField(default=0)
+    global_tn_count_3d_30 = models.IntegerField(default=0)
+    global_tn_count_3d_60 = models.IntegerField(default=0)
+    global_tn_count_4d_110 = models.IntegerField(default=0)
+    global_tn_count_4d_55 = models.IntegerField(default=0)
+    global_tn_count_4d_20 = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} - {self.time}"

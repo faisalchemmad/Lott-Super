@@ -20,6 +20,64 @@ from decimal import Decimal
 import random
 import string
 
+def get_user_type_count_limit(user, bet_type):
+    if not user:
+        return 0
+    bt = str(bet_type).upper().replace('_', '-')
+    mapping = {
+        'A': getattr(user, 'count_a', 0),
+        'B': getattr(user, 'count_b', 0),
+        'C': getattr(user, 'count_c', 0),
+        'AB': getattr(user, 'count_ab', 0),
+        'BC': getattr(user, 'count_bc', 0),
+        'AC': getattr(user, 'count_ac', 0),
+        'SUPER': getattr(user, 'count_super', 0),
+        'BOX': getattr(user, 'count_box', 0),
+        'TN-A': getattr(user, 'tn_count_a', 0),
+        'TN-B': getattr(user, 'tn_count_b', 0),
+        'TN-C': getattr(user, 'tn_count_c', 0),
+        'TN-AB': getattr(user, 'tn_count_ab', 0),
+        'TN-BC': getattr(user, 'tn_count_bc', 0),
+        'TN-AC': getattr(user, 'tn_count_ac', 0),
+        '3D-10': getattr(user, 'tn_count_3d_10', 0),
+        '3D-25': getattr(user, 'tn_count_3d_25', 0),
+        '3D-30': getattr(user, 'tn_count_3d_30', 0),
+        '3D-60': getattr(user, 'tn_count_3d_60', 0),
+        '4D-110': getattr(user, 'tn_count_4d_110', 0),
+        '4D-55': getattr(user, 'tn_count_4d_55', 0),
+        '4D-20': getattr(user, 'tn_count_4d_20', 0),
+    }
+    return mapping.get(bt, 0)
+
+def get_game_global_type_count_limit(game, bet_type):
+    if not game:
+        return 0
+    bt = str(bet_type).upper().replace('_', '-')
+    mapping = {
+        'A': getattr(game, 'global_count_a', 0),
+        'B': getattr(game, 'global_count_b', 0),
+        'C': getattr(game, 'global_count_c', 0),
+        'AB': getattr(game, 'global_count_ab', 0),
+        'BC': getattr(game, 'global_count_bc', 0),
+        'AC': getattr(game, 'global_count_ac', 0),
+        'SUPER': getattr(game, 'global_count_super', 0),
+        'BOX': getattr(game, 'global_count_box', 0),
+        'TN-A': getattr(game, 'global_tn_count_a', 0),
+        'TN-B': getattr(game, 'global_tn_count_b', 0),
+        'TN-C': getattr(game, 'global_tn_count_c', 0),
+        'TN-AB': getattr(game, 'global_tn_count_ab', 0),
+        'TN-BC': getattr(game, 'global_tn_count_bc', 0),
+        'TN-AC': getattr(game, 'global_tn_count_ac', 0),
+        '3D-10': getattr(game, 'global_tn_count_3d_10', 0),
+        '3D-25': getattr(game, 'global_tn_count_3d_25', 0),
+        '3D-30': getattr(game, 'global_tn_count_3d_30', 0),
+        '3D-60': getattr(game, 'global_tn_count_3d_60', 0),
+        '4D-110': getattr(game, 'global_tn_count_4d_110', 0),
+        '4D-55': getattr(game, 'global_tn_count_4d_55', 0),
+        '4D-20': getattr(game, 'global_tn_count_4d_20', 0),
+    }
+    return mapping.get(bt, 0)
+
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'SUPER_ADMIN'
@@ -287,7 +345,7 @@ class BetViewSet(viewsets.ModelViewSet):
                 if has_specific_limit:
                     continue
 
-                t_limit = getattr(p, f'count_{bet_type.lower()}', 0)
+                t_limit = get_user_type_count_limit(p, bet_type)
                 if t_limit > 0:
                     d_ids = p.get_descendant_ids()
                     type_tot = Bet.objects.filter(
@@ -308,7 +366,7 @@ class BetViewSet(viewsets.ModelViewSet):
         system_gnl_exists = GlobalNumberLimit.objects.filter(admin__isnull=True, game=game, number=number, type=bet_type).exists()
         
         if not system_gnl_exists:
-            game_type_limit = getattr(game, f'global_count_{bet_type.lower()}', 0)
+            game_type_limit = get_game_global_type_count_limit(game, bet_type)
             if game_type_limit > 0:
                 total_type_count = Bet.objects.filter(
                     game=game, type=bet_type, number=number,
@@ -538,7 +596,7 @@ class BetViewSet(viewsets.ModelViewSet):
                     if has_specific_limit:
                         continue
 
-                    t_limit = getattr(p, f'count_{bet_type.lower()}', 0)
+                    t_limit = get_user_type_count_limit(p, bet_type)
                     if t_limit > 0:
                         type_tot = Bet.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
                         type_clr = ClearedExposure.objects.filter(user__id__in=d_ids, game=game, number=number, type=bet_type, date=today).aggregate(t=Sum('count'))['t'] or 0
@@ -561,7 +619,7 @@ class BetViewSet(viewsets.ModelViewSet):
             system_gnl_exists = GlobalNumberLimit.objects.filter(admin__isnull=True, game=game, number=number, type=bet_type).exists()
             
             if not system_gnl_exists:
-                game_type_limit = getattr(game, f'global_count_{bet_type.lower()}', 0)
+                game_type_limit = get_game_global_type_count_limit(game, bet_type)
                 if game_type_limit > 0:
                     tot_type = Bet.objects.filter(game=game, type=bet_type, number=number, created_at__date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
                     t_clr = ClearedExposure.objects.filter(game=game, type=bet_type, number=number, date=timezone.localtime().date()).aggregate(t=Sum('count'))['t'] or 0
@@ -2194,17 +2252,7 @@ class MonitorView(views.APIView):
                 limit = limit_obj.max_count
             except NumberLimit.DoesNotExist:
                 user = users_map.get(u_id)
-                limit_map = {
-                    'A': user.count_a if user else 0,
-                    'B': user.count_b if user else 0,
-                    'C': user.count_c if user else 0,
-                    'AB': user.count_ab if user else 0,
-                    'BC': user.count_bc if user else 0,
-                    'AC': user.count_ac if user else 0,
-                    'SUPER': user.count_super if user else 0,
-                    'BOX': user.count_box if user else 0
-                }
-                limit = limit_map.get(b_type, 0)
+                limit = get_user_type_count_limit(user, b_type)
                 
             # Get cleared count
             try:

@@ -19,6 +19,21 @@ class UserModel {
   final int countSuper;
   final int countBox;
 
+  // TN Count Limits
+  final int tnCountA;
+  final int tnCountB;
+  final int tnCountC;
+  final int tnCountAB;
+  final int tnCountBC;
+  final int tnCountAC;
+  final int tnCount3d10;
+  final int tnCount3d25;
+  final int tnCount3d30;
+  final int tnCount3d60;
+  final int tnCount4d110;
+  final int tnCount4d55;
+  final int tnCount4d20;
+
   // Price Defaults (per unit)
   final double priceAbc;
   final double priceAbBcAc;
@@ -125,6 +140,19 @@ class UserModel {
     this.countAC = 0,
     this.countSuper = 0,
     this.countBox = 0,
+    this.tnCountA = 0,
+    this.tnCountB = 0,
+    this.tnCountC = 0,
+    this.tnCountAB = 0,
+    this.tnCountBC = 0,
+    this.tnCountAC = 0,
+    this.tnCount3d10 = 0,
+    this.tnCount3d25 = 0,
+    this.tnCount3d30 = 0,
+    this.tnCount3d60 = 0,
+    this.tnCount4d110 = 0,
+    this.tnCount4d55 = 0,
+    this.tnCount4d20 = 0,
     this.priceAbc = 12.0,
     this.priceAbBcAc = 10.0,
     this.priceSuper = 10.0,
@@ -222,6 +250,19 @@ class UserModel {
       countAC: json['count_ac'] ?? 0,
       countSuper: json['count_super'] ?? 0,
       countBox: json['count_box'] ?? 0,
+      tnCountA: json['tn_count_a'] ?? 0,
+      tnCountB: json['tn_count_b'] ?? 0,
+      tnCountC: json['tn_count_c'] ?? 0,
+      tnCountAB: json['tn_count_ab'] ?? 0,
+      tnCountBC: json['tn_count_bc'] ?? 0,
+      tnCountAC: json['tn_count_ac'] ?? 0,
+      tnCount3d10: json['tn_count_3d_10'] ?? 0,
+      tnCount3d25: json['tn_count_3d_25'] ?? 0,
+      tnCount3d30: json['tn_count_3d_30'] ?? 0,
+      tnCount3d60: json['tn_count_3d_60'] ?? 0,
+      tnCount4d110: json['tn_count_4d_110'] ?? 0,
+      tnCount4d55: json['tn_count_4d_55'] ?? 0,
+      tnCount4d20: json['tn_count_4d_20'] ?? 0,
       priceAbc: double.parse(json['price_abc']?.toString() ?? '12.0'),
       priceAbBcAc: double.parse(json['price_ab_bc_ac']?.toString() ?? '10.0'),
       priceSuper: double.parse(json['price_super']?.toString() ?? '10.0'),
@@ -352,6 +393,19 @@ class UserModel {
       'count_ac': countAC,
       'count_super': countSuper,
       'count_box': countBox,
+      'tn_count_a': tnCountA,
+      'tn_count_b': tnCountB,
+      'tn_count_c': tnCountC,
+      'tn_count_ab': tnCountAB,
+      'tn_count_bc': tnCountBC,
+      'tn_count_ac': tnCountAC,
+      'tn_count_3d_10': tnCount3d10,
+      'tn_count_3d_25': tnCount3d25,
+      'tn_count_3d_30': tnCount3d30,
+      'tn_count_3d_60': tnCount3d60,
+      'tn_count_4d_110': tnCount4d110,
+      'tn_count_4d_55': tnCount4d55,
+      'tn_count_4d_20': tnCount4d20,
       'price_abc': priceAbc,
       'price_ab_bc_ac': priceAbBcAc,
       'price_super': priceSuper,

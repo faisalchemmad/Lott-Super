@@ -20,6 +20,7 @@ class _GlobalCountLimitDetailScreenState
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
+  // KL Controllers
   late TextEditingController _countA;
   late TextEditingController _countB;
   late TextEditingController _countC;
@@ -28,6 +29,22 @@ class _GlobalCountLimitDetailScreenState
   late TextEditingController _countAC;
   late TextEditingController _countSuper;
   late TextEditingController _countBox;
+
+  // TN Controllers
+  late TextEditingController _globalTnCountA;
+  late TextEditingController _globalTnCountB;
+  late TextEditingController _globalTnCountC;
+  late TextEditingController _globalTnCountAB;
+  late TextEditingController _globalTnCountBC;
+  late TextEditingController _globalTnCountAC;
+  late TextEditingController _globalTnCount3d10;
+  late TextEditingController _globalTnCount3d25;
+  late TextEditingController _globalTnCount3d30;
+  late TextEditingController _globalTnCount3d60;
+  late TextEditingController _globalTnCount4d110;
+  late TextEditingController _globalTnCount4d55;
+  late TextEditingController _globalTnCount4d20;
+
   bool _isLoading = false;
 
   // Global Number Limits Tab Data
@@ -39,6 +56,7 @@ class _GlobalCountLimitDetailScreenState
     super.initState();
     _tabController =
         TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
+    // KL
     _countA = TextEditingController(text: widget.game.globalCountA.toString());
     _countB = TextEditingController(text: widget.game.globalCountB.toString());
     _countC = TextEditingController(text: widget.game.globalCountC.toString());
@@ -52,6 +70,34 @@ class _GlobalCountLimitDetailScreenState
         TextEditingController(text: widget.game.globalCountSuper.toString());
     _countBox =
         TextEditingController(text: widget.game.globalCountBox.toString());
+
+    // TN
+    _globalTnCountA =
+        TextEditingController(text: widget.game.globalTnCountA.toString());
+    _globalTnCountB =
+        TextEditingController(text: widget.game.globalTnCountB.toString());
+    _globalTnCountC =
+        TextEditingController(text: widget.game.globalTnCountC.toString());
+    _globalTnCountAB =
+        TextEditingController(text: widget.game.globalTnCountAb.toString());
+    _globalTnCountBC =
+        TextEditingController(text: widget.game.globalTnCountBc.toString());
+    _globalTnCountAC =
+        TextEditingController(text: widget.game.globalTnCountAc.toString());
+    _globalTnCount3d10 =
+        TextEditingController(text: widget.game.globalTnCount3d10.toString());
+    _globalTnCount3d25 =
+        TextEditingController(text: widget.game.globalTnCount3d25.toString());
+    _globalTnCount3d30 =
+        TextEditingController(text: widget.game.globalTnCount3d30.toString());
+    _globalTnCount3d60 =
+        TextEditingController(text: widget.game.globalTnCount3d60.toString());
+    _globalTnCount4d110 =
+        TextEditingController(text: widget.game.globalTnCount4d110.toString());
+    _globalTnCount4d55 =
+        TextEditingController(text: widget.game.globalTnCount4d55.toString());
+    _globalTnCount4d20 =
+        TextEditingController(text: widget.game.globalTnCount4d20.toString());
 
     _loadGlobalNumberLimits();
   }
@@ -86,6 +132,20 @@ class _GlobalCountLimitDetailScreenState
     _countAC.dispose();
     _countSuper.dispose();
     _countBox.dispose();
+
+    _globalTnCountA.dispose();
+    _globalTnCountB.dispose();
+    _globalTnCountC.dispose();
+    _globalTnCountAB.dispose();
+    _globalTnCountBC.dispose();
+    _globalTnCountAC.dispose();
+    _globalTnCount3d10.dispose();
+    _globalTnCount3d25.dispose();
+    _globalTnCount3d30.dispose();
+    _globalTnCount3d60.dispose();
+    _globalTnCount4d110.dispose();
+    _globalTnCount4d55.dispose();
+    _globalTnCount4d20.dispose();
     super.dispose();
   }
 
@@ -97,6 +157,7 @@ class _GlobalCountLimitDetailScreenState
 
     try {
       final updatedData = {
+        // KL
         'global_count_a': int.parse(_countA.text),
         'global_count_b': int.parse(_countB.text),
         'global_count_c': int.parse(_countC.text),
@@ -105,6 +166,20 @@ class _GlobalCountLimitDetailScreenState
         'global_count_ac': int.parse(_countAC.text),
         'global_count_super': int.parse(_countSuper.text),
         'global_count_box': int.parse(_countBox.text),
+        // TN
+        'global_tn_count_a': int.parse(_globalTnCountA.text),
+        'global_tn_count_b': int.parse(_globalTnCountB.text),
+        'global_tn_count_c': int.parse(_globalTnCountC.text),
+        'global_tn_count_ab': int.parse(_globalTnCountAB.text),
+        'global_tn_count_bc': int.parse(_globalTnCountBC.text),
+        'global_tn_count_ac': int.parse(_globalTnCountAC.text),
+        'global_tn_count_3d_10': int.parse(_globalTnCount3d10.text),
+        'global_tn_count_3d_25': int.parse(_globalTnCount3d25.text),
+        'global_tn_count_3d_30': int.parse(_globalTnCount3d30.text),
+        'global_tn_count_3d_60': int.parse(_globalTnCount3d60.text),
+        'global_tn_count_4d_110': int.parse(_globalTnCount4d110.text),
+        'global_tn_count_4d_55': int.parse(_globalTnCount4d55.text),
+        'global_tn_count_4d_20': int.parse(_globalTnCount4d20.text),
       };
 
       await apiService.updateGame(widget.game.id, updatedData);
@@ -148,69 +223,253 @@ class _GlobalCountLimitDetailScreenState
   Widget _buildTypeLimitsTab() {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Single Digit Limits'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildLimitField(
-                          'A Count', _countA, Icons.looks_one_rounded)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildLimitField(
-                          'B Count', _countB, Icons.looks_two_rounded)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildLimitField(
-                          'C Count', _countC, Icons.looks_3_rounded)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildSectionTitle('Double Digit Limits'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildLimitField(
-                          'AB Count', _countAB, Icons.filter_2_rounded)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildLimitField(
-                          'BC Count', _countBC, Icons.filter_2_rounded)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildLimitField(
-                          'AC Count', _countAC, Icons.filter_2_rounded)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildSectionTitle('Three Digit Limits'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildLimitField(
-                          'SUPER Count', _countSuper, Icons.star_rounded)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildLimitField(
-                          'BOX Count', _countBox, Icons.inventory_2_rounded)),
-                  const SizedBox(width: 8),
-                  const Expanded(child: SizedBox()),
-                ],
-              ),
-              const SizedBox(height: 36),
+              _buildKlSection(),
+              const SizedBox(height: 16),
+              _buildTnSection(),
+              const SizedBox(height: 24),
               _buildUpdateButton(),
               const SizedBox(height: 20),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildKlSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border:
+            Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'KL',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'KERALA GLOBAL LIMITS',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: AppColors.primary,
+                    letterSpacing: 0.5),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('Single Digit Limits'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField(
+                      'A Count', _countA, Icons.looks_one_rounded)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField(
+                      'B Count', _countB, Icons.looks_two_rounded)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField(
+                      'C Count', _countC, Icons.looks_3_rounded)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('Double Digit Limits'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField(
+                      'AB Count', _countAB, Icons.filter_2_rounded)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField(
+                      'BC Count', _countBC, Icons.filter_2_rounded)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField(
+                      'AC Count', _countAC, Icons.filter_2_rounded)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('Three Digit Limits'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField(
+                      'SUPER Count', _countSuper, Icons.star_rounded)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField(
+                      'BOX Count', _countBox, Icons.inventory_2_rounded)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTnSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border:
+            Border.all(color: Colors.deepOrange.withOpacity(0.3), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.deepOrange,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'TN',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'TAMIL NADU GLOBAL LIMITS',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.deepOrange,
+                    letterSpacing: 0.5),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('TN Single Digit Limits', Colors.deepOrange),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField('A Count', _globalTnCountA,
+                      Icons.looks_one_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('B Count', _globalTnCountB,
+                      Icons.looks_two_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('C Count', _globalTnCountC,
+                      Icons.looks_3_rounded, Colors.deepOrange)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('TN Double Digit Limits', Colors.deepOrange),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField('AB Count', _globalTnCountAB,
+                      Icons.filter_2_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('BC Count', _globalTnCountBC,
+                      Icons.filter_2_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('AC Count', _globalTnCountAC,
+                      Icons.filter_2_rounded, Colors.deepOrange)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('TN 3 Digit Limits', Colors.deepOrange),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField('3D-10', _globalTnCount3d10,
+                      Icons.star_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('3D-25', _globalTnCount3d25,
+                      Icons.star_rounded, Colors.deepOrange)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField('3D-30', _globalTnCount3d30,
+                      Icons.star_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('3D-60', _globalTnCount3d60,
+                      Icons.star_rounded, Colors.deepOrange)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildSectionTitle('TN 4 Digit Limits', Colors.deepOrange),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildLimitField('4D-110', _globalTnCount4d110,
+                      Icons.inventory_2_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('4D-55', _globalTnCount4d55,
+                      Icons.inventory_2_rounded, Colors.deepOrange)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _buildLimitField('4D-20', _globalTnCount4d20,
+                      Icons.inventory_2_rounded, Colors.deepOrange)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -475,28 +734,28 @@ class _GlobalCountLimitDetailScreenState
     }
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, [Color color = AppColors.primary]) {
     return Text(
-      title,
-      style: const TextStyle(
-          fontSize: 16,
+      title.toUpperCase(),
+      style: TextStyle(
+          fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: AppColors.primary,
+          color: color,
           letterSpacing: 0.5),
     );
   }
 
   Widget _buildLimitField(String label, TextEditingController controller,
-      [IconData? icon]) {
+      [IconData? icon, Color activeColor = AppColors.primary]) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
       style: const TextStyle(
-          fontWeight: FontWeight.w900, fontSize: 14, color: Colors.black87),
+          fontWeight: FontWeight.w900, fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
         labelText: label.toUpperCase(),
-        labelStyle: const TextStyle(
-            color: AppColors.primary,
+        labelStyle: TextStyle(
+            color: activeColor,
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.2),
@@ -505,9 +764,8 @@ class _GlobalCountLimitDetailScreenState
         fillColor: Colors.white,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        prefixIcon: icon != null
-            ? Icon(icon, size: 14, color: AppColors.primary)
-            : null,
+        prefixIcon:
+            icon != null ? Icon(icon, size: 14, color: activeColor) : null,
         prefixIconConstraints: icon != null
             ? const BoxConstraints(minWidth: 24, minHeight: 24)
             : null,
@@ -521,7 +779,7 @@ class _GlobalCountLimitDetailScreenState
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: activeColor, width: 1.5),
         ),
       ),
       validator: (value) {
