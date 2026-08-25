@@ -190,6 +190,7 @@ class _GlobalCountLimitDetailScreenState
               content: Text('Global type limits updated successfully!'),
               backgroundColor: Colors.green),
         );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {

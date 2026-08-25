@@ -194,14 +194,14 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                       size: 14, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context);
-                    final result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => GlobalCountLimitDetailScreen(
                             game: game, initialTab: 0),
                       ),
                     );
-                    if (result == true) _loadGames();
+                    _loadGames();
                   },
                 ),
                 ListTile(
@@ -226,14 +226,14 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                       size: 14, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context);
-                    final result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => GlobalCountLimitDetailScreen(
                             game: game, initialTab: 1),
                       ),
                     );
-                    if (result == true) _loadGames();
+                    _loadGames();
                   },
                 ),
               ],
