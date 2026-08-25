@@ -212,12 +212,19 @@ class Bet(models.Model):
         ('TN-AB', 'TN-AB'),
         ('TN-BC', 'TN-BC'),
         ('TN-AC', 'TN-AC'),
+        ('3D-10', '3D-10'),
+        ('3D-25', '3D-25'),
+        ('3D-30', '3D-30'),
+        ('3D-60', '3D-60'),
+        ('4D-110', '4D-110'),
+        ('4D-55', '4D-55'),
+        ('4D-20', '4D-20'),
         ('SUPER', 'SUPER'),
         ('BOX', 'BOX'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bets')
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='bets')
-    number = models.CharField(max_length=3)
+    number = models.CharField(max_length=10)
     amount = models.DecimalField(max_digits=10, decimal_places=2) # Price per count
     count = models.IntegerField(default=1)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
@@ -226,7 +233,6 @@ class Bet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_winner = models.BooleanField(null=True, blank=True)
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    winning_prize_type = models.CharField(max_length=50, null=True, blank=True)
     winning_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     winning_prize_type = models.CharField(max_length=200, blank=True, null=True)
 
@@ -253,7 +259,7 @@ class GameResult(models.Model):
 class NumberLimit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='number_limits', default=1)
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='number_limits')
-    number = models.CharField(max_length=3)
+    number = models.CharField(max_length=10)
     type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
     max_count = models.IntegerField(default=50) # Max allowed bets for this specific number
 
@@ -267,7 +273,7 @@ class GlobalNumberLimit(models.Model):
     # Null admin means system-wide global limit (Super Admin)
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='global_number_limits', null=True, blank=True)
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='global_number_limits')
-    number = models.CharField(max_length=3)
+    number = models.CharField(max_length=10)
     type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
     max_count = models.IntegerField(default=50)
 
@@ -281,7 +287,7 @@ class GlobalNumberLimit(models.Model):
 class ClearedExposure(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cleared_exposures')
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='cleared_exposures')
-    number = models.CharField(max_length=3)
+    number = models.CharField(max_length=10)
     type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
     date = models.DateField(default=timezone.now)
     count = models.IntegerField(default=0)
@@ -315,7 +321,7 @@ class ForwardLimit(models.Model):
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forward_limits')
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
-    number = models.CharField(max_length=3, blank=True, null=True, help_text="Optional: If blank, applies to all numbers of this type")
+    number = models.CharField(max_length=10, blank=True, null=True, help_text="Optional: If blank, applies to all numbers of this type")
     max_retained_count = models.IntegerField(default=100) # Amount kept by admin, excess is forwarded
     state = models.CharField(max_length=5, default='KL')
     
@@ -335,7 +341,7 @@ class ForwardedBet(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     state = models.CharField(max_length=5, default='KL')
     type = models.CharField(max_length=10, choices=Bet.TYPE_CHOICES)
-    number = models.CharField(max_length=3)
+    number = models.CharField(max_length=10)
     count = models.IntegerField()
     
     # Financials (At what price/commission was it forwarded?)
@@ -351,7 +357,7 @@ class ForwardedBet(models.Model):
     
     is_winner = models.BooleanField(null=True, blank=True)
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    winning_prize_type = models.CharField(max_length=50, null=True, blank=True)
+    winning_prize_type = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         auto_str = "AUTO" if self.is_auto else "MANUAL"
