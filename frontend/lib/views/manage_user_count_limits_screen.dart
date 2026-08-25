@@ -105,98 +105,71 @@ class _ManageUserCountLimitsScreenState
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildInfoCard(
-                'These limits apply per-number for each bet type (e.g., if set to 250, every number from 000-999 allows up to 250 counts for this user).'),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle('Single Digit caps'),
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    _buildSectionTitle('Single Digit caps'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildLimitField(
-                                'A Count', _countA, Icons.looks_one_rounded)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: _buildLimitField(
-                                'B Count', _countB, Icons.looks_two_rounded)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: _buildLimitField(
-                                'C Count', _countC, Icons.looks_3_rounded)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSectionTitle('Double Digit caps'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildLimitField(
-                                'AB Count', _countAB, Icons.filter_2_rounded)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: _buildLimitField(
-                                'BC Count', _countBC, Icons.filter_2_rounded)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: _buildLimitField(
-                                'AC Count', _countAC, Icons.filter_2_rounded)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSectionTitle('Three Digit caps'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildLimitField('SUPER Count', _countSuper,
-                                Icons.star_rounded)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: _buildLimitField('BOX Count', _countBox,
-                                Icons.inventory_2_rounded)),
-                        const SizedBox(width: 8),
-                        const Expanded(child: SizedBox()),
-                      ],
-                    ),
-                    const SizedBox(height: 36),
-                    if (!widget.isReadOnly) _buildUpdateButton(),
-                    const SizedBox(height: 20),
+                    Expanded(
+                        child: _buildLimitField(
+                            'A Count', _countA, Icons.looks_one_rounded)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _buildLimitField(
+                            'B Count', _countB, Icons.looks_two_rounded)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _buildLimitField(
+                            'C Count', _countC, Icons.looks_3_rounded)),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(String text) {
-    return Container(
-      width: double.infinity,
-      color: AppColors.primary,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style:
-                  TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                const SizedBox(height: 20),
+                _buildSectionTitle('Double Digit caps'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildLimitField(
+                            'AB Count', _countAB, Icons.filter_2_rounded)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _buildLimitField(
+                            'BC Count', _countBC, Icons.filter_2_rounded)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _buildLimitField(
+                            'AC Count', _countAC, Icons.filter_2_rounded)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _buildSectionTitle('Three Digit caps'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildLimitField(
+                            'SUPER Count', _countSuper, Icons.star_rounded)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _buildLimitField(
+                            'BOX Count', _countBox, Icons.inventory_2_rounded)),
+                    const SizedBox(width: 8),
+                    const Expanded(child: SizedBox()),
+                  ],
+                ),
+                const SizedBox(height: 36),
+                if (!widget.isReadOnly) _buildUpdateButton(),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

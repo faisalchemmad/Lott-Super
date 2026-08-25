@@ -147,76 +147,70 @@ class _GlobalCountLimitDetailScreenState
 
   Widget _buildTypeLimitsTab() {
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildInfoCard(
-              'These limits apply system-wide per number for each game type (e.g., 500 means each number allows 500 counts individually).'),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Single Digit Limits'),
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  _buildSectionTitle('Single Digit Limits'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildLimitField(
-                              'A Count', _countA, Icons.looks_one_rounded)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildLimitField(
-                              'B Count', _countB, Icons.looks_two_rounded)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildLimitField(
-                              'C Count', _countC, Icons.looks_3_rounded)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSectionTitle('Double Digit Limits'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildLimitField(
-                              'AB Count', _countAB, Icons.filter_2_rounded)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildLimitField(
-                              'BC Count', _countBC, Icons.filter_2_rounded)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildLimitField(
-                              'AC Count', _countAC, Icons.filter_2_rounded)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSectionTitle('Three Digit Limits'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildLimitField(
-                              'SUPER Count', _countSuper, Icons.star_rounded)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildLimitField('BOX Count', _countBox,
-                              Icons.inventory_2_rounded)),
-                      const SizedBox(width: 8),
-                      const Expanded(child: SizedBox()),
-                    ],
-                  ),
-                  const SizedBox(height: 36),
-                  _buildUpdateButton(),
-                  const SizedBox(height: 20),
+                  Expanded(
+                      child: _buildLimitField(
+                          'A Count', _countA, Icons.looks_one_rounded)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _buildLimitField(
+                          'B Count', _countB, Icons.looks_two_rounded)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _buildLimitField(
+                          'C Count', _countC, Icons.looks_3_rounded)),
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Double Digit Limits'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                      child: _buildLimitField(
+                          'AB Count', _countAB, Icons.filter_2_rounded)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _buildLimitField(
+                          'BC Count', _countBC, Icons.filter_2_rounded)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _buildLimitField(
+                          'AC Count', _countAC, Icons.filter_2_rounded)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Three Digit Limits'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                      child: _buildLimitField(
+                          'SUPER Count', _countSuper, Icons.star_rounded)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _buildLimitField(
+                          'BOX Count', _countBox, Icons.inventory_2_rounded)),
+                  const SizedBox(width: 8),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
+              const SizedBox(height: 36),
+              _buildUpdateButton(),
+              const SizedBox(height: 20),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
