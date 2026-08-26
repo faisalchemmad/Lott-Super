@@ -30,6 +30,13 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   final List<TextEditingController> _compControllers =
       List.generate(30, (_) => TextEditingController());
 
+  final FocusNode _p1Focus = FocusNode();
+  final FocusNode _p2Focus = FocusNode();
+  final FocusNode _p3Focus = FocusNode();
+  final FocusNode _p4Focus = FocusNode();
+  final FocusNode _p5Focus = FocusNode();
+  final List<FocusNode> _compFocusNodes = List.generate(30, (_) => FocusNode());
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +74,14 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     _p5Controller.dispose();
     for (var c in _compControllers) {
       c.dispose();
+    }
+    _p1Focus.dispose();
+    _p2Focus.dispose();
+    _p3Focus.dispose();
+    _p4Focus.dispose();
+    _p5Focus.dispose();
+    for (var f in _compFocusNodes) {
+      f.dispose();
     }
     super.dispose();
   }
@@ -444,26 +459,38 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
               Expanded(
                 flex: 3,
                 child: _buildPrizeBox(
-                    '1ST PRIZE',
-                    _p1Controller,
-                    AppColors.primary,
-                    true,
-                    _resultType == 'TN' ? 4 : 3, (val) {
-                  if (_resultType == 'TN') {
-                    _p2Controller.text =
-                        val.length >= 3 ? val.substring(val.length - 3) : val;
-                    _p3Controller.text =
-                        val.length >= 2 ? val.substring(val.length - 2) : val;
-                    _p4Controller.text =
-                        val.length >= 1 ? val.substring(val.length - 1) : val;
-                  }
-                }),
+                  '1ST PRIZE',
+                  _p1Controller,
+                  _p1Focus,
+                  AppColors.primary,
+                  true,
+                  _resultType == 'TN' ? 4 : 3,
+                  (val) {
+                    if (_resultType == 'TN') {
+                      _p2Controller.text =
+                          val.length >= 3 ? val.substring(val.length - 3) : val;
+                      _p3Controller.text =
+                          val.length >= 2 ? val.substring(val.length - 2) : val;
+                      _p4Controller.text =
+                          val.length >= 1 ? val.substring(val.length - 1) : val;
+                    }
+                  },
+                  _p2Focus,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 flex: 2,
                 child: _buildPrizeBox(
-                    '2ND PRIZE', _p2Controller, Colors.grey.shade700, false, 3),
+                  '2ND PRIZE',
+                  _p2Controller,
+                  _p2Focus,
+                  Colors.grey.shade700,
+                  false,
+                  3,
+                  null,
+                  _p3Focus,
+                ),
               ),
             ],
           ),
@@ -474,18 +501,42 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildPrizeBox('3RD PRIZE', _p3Controller,
-                      Colors.grey.shade700, false, 3),
+                  child: _buildPrizeBox(
+                    '3RD PRIZE',
+                    _p3Controller,
+                    _p3Focus,
+                    Colors.grey.shade700,
+                    false,
+                    3,
+                    null,
+                    _p4Focus,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: _buildPrizeBox('4TH PRIZE', _p4Controller,
-                      Colors.grey.shade700, false, 3),
+                  child: _buildPrizeBox(
+                    '4TH PRIZE',
+                    _p4Controller,
+                    _p4Focus,
+                    Colors.grey.shade700,
+                    false,
+                    3,
+                    null,
+                    _p5Focus,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: _buildPrizeBox('5TH PRIZE', _p5Controller,
-                      Colors.grey.shade700, false, 3),
+                  child: _buildPrizeBox(
+                    '5TH PRIZE',
+                    _p5Controller,
+                    _p5Focus,
+                    Colors.grey.shade700,
+                    false,
+                    3,
+                    null,
+                    _compFocusNodes.isNotEmpty ? _compFocusNodes[0] : null,
+                  ),
                 ),
               ],
             ),
@@ -493,13 +544,29 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildPrizeBox('3RD PRIZE', _p3Controller,
-                      Colors.grey.shade700, false, 2),
+                  child: _buildPrizeBox(
+                    '3RD PRIZE',
+                    _p3Controller,
+                    _p3Focus,
+                    Colors.grey.shade700,
+                    false,
+                    2,
+                    null,
+                    _p4Focus,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _buildPrizeBox('4TH PRIZE', _p4Controller,
-                      Colors.grey.shade700, false, 1),
+                  child: _buildPrizeBox(
+                    '4TH PRIZE',
+                    _p4Controller,
+                    _p4Focus,
+                    Colors.grey.shade700,
+                    false,
+                    1,
+                    null,
+                    null,
+                  ),
                 ),
               ],
             ),
@@ -540,9 +607,20 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   alignment: Alignment.center,
                   child: TextField(
                     controller: _compControllers[index],
+                    focusNode: _compFocusNodes[index],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 3,
+                    onChanged: (val) {
+                      if (val.length >= 3) {
+                        if (index < 29) {
+                          _compFocusNodes[index + 1].requestFocus();
+                        } else {
+                          _compFocusNodes[index].unfocus();
+                        }
+                      }
+                    },
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 12,
@@ -571,14 +649,26 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     );
   }
 
-  Widget _buildPrizeBox(
-      String label, TextEditingController controller, Color activeColor,
+  Widget _buildPrizeBox(String label, TextEditingController controller,
+      FocusNode focusNode, Color activeColor,
       [bool isFirst = false,
       int maxLength = 3,
-      void Function(String)? onChanged]) {
+      void Function(String)? onChanged,
+      FocusNode? nextFocusNode]) {
     return TextFormField(
       controller: controller,
-      onChanged: onChanged,
+      focusNode: focusNode,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (val) {
+        if (onChanged != null) onChanged(val);
+        if (val.length >= maxLength) {
+          if (nextFocusNode != null) {
+            nextFocusNode.requestFocus();
+          } else {
+            focusNode.unfocus();
+          }
+        }
+      },
       maxLength: maxLength,
       keyboardType: TextInputType.number,
       textAlign: TextAlign.center,
