@@ -204,19 +204,15 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       body: _isLoadingGames
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Column(
                 children: [
                   _buildSelectionHeader(),
-                  const SizedBox(height: 24),
-                  _buildPrizeFields(),
-                  if (_resultType == 'KL') ...[
-                    const SizedBox(height: 24),
-                    _buildCompField(),
-                  ],
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 10),
+                  _buildCombinedResultsSection(),
+                  const SizedBox(height: 10),
                   _buildSubmitButton(),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -225,7 +221,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
   Widget _buildSelectionHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
@@ -242,12 +238,12 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: _buildGameDropdown()),
-              const SizedBox(width: 10),
-              _buildDigitToggle(),
+              Expanded(flex: 5, child: _buildGameDropdown()),
+              const SizedBox(width: 8),
+              Expanded(flex: 3, child: _buildDigitToggle()),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildDateSelector(),
         ],
       ),
@@ -255,33 +251,35 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   }
 
   Widget _buildDigitToggle() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('TYPE',
-            style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5)),
-        const SizedBox(height: 6),
-        Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDigitOption('KL'),
-              Container(width: 1, color: Colors.grey.shade300),
-              _buildDigitOption('TN'),
-            ],
-          ),
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: 'TYPE',
+        labelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-      ],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildDigitOption('KL'),
+          _buildDigitOption('TN'),
+        ],
+      ),
     );
   }
 
@@ -291,7 +289,6 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       onTap: () {
         setState(() {
           _resultType = type;
-          // Clear current inputs when switching type
           _p1Controller.clear();
           _p2Controller.clear();
           _p3Controller.clear();
@@ -303,10 +300,10 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(4),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -314,7 +311,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey[700],
             fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -322,98 +319,92 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   }
 
   Widget _buildGameDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('SELECT GAME',
-            style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5)),
-        const SizedBox(height: 6),
-        Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.shade300)),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: _selectedGameId,
-              hint: const Text('Select Game',
-                  style: TextStyle(color: Colors.grey, fontSize: 13)),
-              isExpanded: true,
-              dropdownColor: Colors.white,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: Colors.grey, size: 20),
-              style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13),
-              items: _games
-                  .map(
-                      (g) => DropdownMenuItem(value: g.id, child: Text(g.name)))
-                  .toList(),
-              onChanged: (val) => setState(() => _selectedGameId = val),
-            ),
-          ),
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: 'SELECT GAME',
+        labelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-      ],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedGameId,
+          hint: const Text('Select Game',
+              style: TextStyle(color: Colors.grey, fontSize: 13)),
+          isExpanded: true,
+          isDense: true,
+          dropdownColor: Colors.white,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey, size: 18),
+          style: const TextStyle(
+              color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 13),
+          items: _games
+              .map((g) => DropdownMenuItem(value: g.id, child: Text(g.name)))
+              .toList(),
+          onChanged: (val) => setState(() => _selectedGameId = val),
+        ),
+      ),
     );
   }
 
   Widget _buildDateSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('SELECT DATE',
-            style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5)),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: _selectDate,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.shade300)),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded,
-                    color: AppColors.primary, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  DateFormat('dd MMMM yyyy').format(_selectedDate),
-                  style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13),
-                ),
-                const Spacer(),
-                Text('CHANGE',
-                    style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900)),
-              ],
-            ),
+    return InkWell(
+      onTap: _selectDate,
+      borderRadius: BorderRadius.circular(6),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: 'SELECT DATE',
+          labelStyle: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.3),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          suffixIcon: const Icon(Icons.calendar_today_rounded,
+              color: AppColors.primary, size: 15),
+          suffixIconConstraints:
+              const BoxConstraints(minWidth: 30, minHeight: 20),
         ),
-      ],
+        child: Text(
+          DateFormat('dd MMMM yyyy').format(_selectedDate),
+          style: const TextStyle(
+              color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+      ),
     );
   }
 
-  Widget _buildPrizeFields() {
+  Widget _buildCombinedResultsSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
@@ -431,188 +422,207 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+              const Icon(Icons.military_tech_rounded,
+                  color: AppColors.primary, size: 18),
+              const SizedBox(width: 6),
+              const Text(
+                'PRIZE NUMBERS',
+                style: TextStyle(
+                  color: Color(0xFF2C3E50),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 0.5,
                 ),
-                child: const Icon(Icons.military_tech_rounded,
-                    color: AppColors.primary, size: 18),
               ),
-              const SizedBox(width: 10),
-              const Text('PRIZE NUMBERS',
-                  style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      letterSpacing: 0.5)),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildPrizeInput('1st Prize', _p1Controller, AppColors.primary, true,
-              _resultType == 'TN' ? 4 : 3, (val) {
-            if (_resultType == 'TN') {
-              _p2Controller.text =
-                  val.length >= 3 ? val.substring(val.length - 3) : val;
-              _p3Controller.text =
-                  val.length >= 2 ? val.substring(val.length - 2) : val;
-              _p4Controller.text =
-                  val.length >= 1 ? val.substring(val.length - 1) : val;
-            }
-          }),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            child: Divider(color: Colors.black12),
+          const SizedBox(height: 10),
+
+          // 1st and 2nd Prize Row
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: _buildPrizeBox(
+                    '1ST PRIZE',
+                    _p1Controller,
+                    AppColors.primary,
+                    true,
+                    _resultType == 'TN' ? 4 : 3, (val) {
+                  if (_resultType == 'TN') {
+                    _p2Controller.text =
+                        val.length >= 3 ? val.substring(val.length - 3) : val;
+                    _p3Controller.text =
+                        val.length >= 2 ? val.substring(val.length - 2) : val;
+                    _p4Controller.text =
+                        val.length >= 1 ? val.substring(val.length - 1) : val;
+                  }
+                }),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: _buildPrizeBox(
+                    '2ND PRIZE', _p2Controller, Colors.grey.shade700, false, 3),
+              ),
+            ],
           ),
-          _buildPrizeInput(
-              '2nd Prize', _p2Controller, Colors.grey[700]!, false, 3),
-          if (_resultType == 'TN') ...[
-            _buildPrizeInput(
-                '3rd Prize', _p3Controller, Colors.grey[700]!, false, 2),
-            _buildPrizeInput(
-                '4th Prize', _p4Controller, Colors.grey[700]!, false, 1),
+          const SizedBox(height: 8),
+
+          // 3rd, 4th, 5th Prize Row
+          if (_resultType == 'KL') ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPrizeBox('3RD PRIZE', _p3Controller,
+                      Colors.grey.shade700, false, 3),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _buildPrizeBox('4TH PRIZE', _p4Controller,
+                      Colors.grey.shade700, false, 3),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _buildPrizeBox('5TH PRIZE', _p5Controller,
+                      Colors.grey.shade700, false, 3),
+                ),
+              ],
+            ),
           ] else ...[
-            _buildPrizeInput(
-                '3rd Prize', _p3Controller, Colors.grey[700]!, false, 3),
-            _buildPrizeInput(
-                '4th Prize', _p4Controller, Colors.grey[700]!, false, 3),
-            _buildPrizeInput(
-                '5th Prize', _p5Controller, Colors.grey[700]!, false, 3),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPrizeBox('3RD PRIZE', _p3Controller,
+                      Colors.grey.shade700, false, 2),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildPrizeBox('4TH PRIZE', _p4Controller,
+                      Colors.grey.shade700, false, 1),
+                ),
+              ],
+            ),
+          ],
+
+          // Complimentary 30 nos inside the same border
+          if (_resultType == 'KL') ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Colors.black12),
+            const SizedBox(height: 8),
+            const Text(
+              'COMPLIMENTARY (30 NOS)',
+              style: TextStyle(
+                color: Color(0xFF2C3E50),
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 6,
+                crossAxisSpacing: 4,
+                mainAxisSpacing: 4,
+                childAspectRatio: 1.8,
+              ),
+              itemCount: 30,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  alignment: Alignment.center,
+                  child: TextField(
+                    controller: _compControllers[index],
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    maxLength: 3,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      hintText: "${index + 1}",
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildPrizeInput(
-      String label, TextEditingController controller, Color color,
+  Widget _buildPrizeBox(
+      String label, TextEditingController controller, Color activeColor,
       [bool isFirst = false,
       int maxLength = 3,
       void Function(String)? onChanged]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-              width: 80,
-              child: Text(label,
-                  style: TextStyle(
-                      color: color,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.3))),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: isFirst ? color.withOpacity(0.04) : Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                    color:
-                        isFirst ? color.withOpacity(0.5) : Colors.grey.shade300,
-                    width: isFirst ? 1.5 : 1),
-              ),
-              alignment: Alignment.center,
-              child: TextField(
-                controller: controller,
-                onChanged: onChanged,
-                style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2),
-                maxLength: maxLength,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  counterText: "",
-                  hintText: "000",
-                  hintStyle: TextStyle(color: Colors.grey[350]),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ),
-          ),
-        ],
+    return TextFormField(
+      controller: controller,
+      onChanged: onChanged,
+      maxLength: maxLength,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: isFirst ? AppColors.primary : Colors.black87,
+        fontSize: isFirst ? 16 : 14,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1.5,
       ),
-    );
-  }
-
-  Widget _buildCompField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('COMPLIMENTARY (30 NOS)',
-              style: TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 0.5)),
-          const SizedBox(height: 10),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-              childAspectRatio: 1.85,
-            ),
-            itemCount: 30,
-            itemBuilder: (context, index) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                alignment: Alignment.center,
-                child: TextField(
-                  controller: _compControllers[index],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                  decoration: InputDecoration(
-                    counterText: "",
-                    hintText: "${index + 1}",
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade300,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: isFirst ? AppColors.primary : Colors.grey.shade700,
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.3,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        counterText: "",
+        hintText: "000",
+        hintStyle: TextStyle(color: Colors.grey.shade300, fontSize: 13),
+        filled: true,
+        fillColor: isFirst ? AppColors.primary.withOpacity(0.04) : Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(
+              color: isFirst
+                  ? AppColors.primary.withOpacity(0.5)
+                  : Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(
+              color: isFirst
+                  ? AppColors.primary.withOpacity(0.5)
+                  : Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(
+              color: isFirst ? AppColors.primary : Colors.blue, width: 1.5),
+        ),
       ),
     );
   }
@@ -620,27 +630,27 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: 42,
       child: ElevatedButton(
         onPressed: _isSubmitting ? null : _submitResult,
         style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            elevation: 4,
+            elevation: 3,
             shadowColor: AppColors.primary.withOpacity(0.3),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
         child: _isSubmitting
             ? const SizedBox(
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                     color: Colors.white, strokeWidth: 2))
             : Text(
                 widget.resultData != null ? 'UPDATE RESULT' : 'PUBLISH RESULT',
                 style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 15,
+                    fontSize: 14,
                     letterSpacing: 1)),
       ),
     );
