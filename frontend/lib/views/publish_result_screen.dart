@@ -196,15 +196,16 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
   Widget _buildSelectionHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -213,11 +214,11 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           Row(
             children: [
               Expanded(child: _buildGameDropdown()),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               _buildDigitToggle(),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           _buildDateSelector(),
         ],
       ),
@@ -230,23 +231,23 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       children: [
         Text('TYPE',
             style: TextStyle(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
-          height: 48,
+          height: 40,
           decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.grey.shade300),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildDigitOption('KL'),
-              Container(width: 1, color: Colors.black.withOpacity(0.05)),
+              Container(width: 1, color: Colors.grey.shade300),
               _buildDigitOption('TN'),
             ],
           ),
@@ -271,18 +272,18 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(5),
         ),
         alignment: Alignment.center,
         child: Text(
           type,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
+            color: isSelected ? Colors.white : Colors.grey[700],
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
       ),
@@ -295,28 +296,31 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       children: [
         Text('SELECT GAME',
             style: TextStyle(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black.withOpacity(0.05))),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300)),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               value: _selectedGameId,
               hint: const Text('Select Game',
-                  style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  style: TextStyle(color: Colors.grey, fontSize: 13)),
               isExpanded: true,
               dropdownColor: Colors.white,
               icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: Colors.grey),
+                  color: Colors.grey, size: 20),
               style: const TextStyle(
-                  color: Colors.black87, fontWeight: FontWeight.bold),
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13),
               items: _games
                   .map(
                       (g) => DropdownMenuItem(value: g.id, child: Text(g.name)))
@@ -335,34 +339,37 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       children: [
         Text('SELECT DATE',
             style: TextStyle(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         InkWell(
           onTap: _selectDate,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(6),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black.withOpacity(0.05))),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade300)),
             child: Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
-                    color: AppColors.primary, size: 18),
-                const SizedBox(width: 12),
+                    color: AppColors.primary, size: 16),
+                const SizedBox(width: 8),
                 Text(
                   DateFormat('dd MMMM yyyy').format(_selectedDate),
                   style: const TextStyle(
-                      color: Colors.black87, fontWeight: FontWeight.bold),
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13),
                 ),
                 const Spacer(),
                 Text('CHANGE',
                     style: TextStyle(
-                        color: AppColors.primary.withOpacity(0.6),
+                        color: AppColors.primary,
                         fontSize: 11,
                         fontWeight: FontWeight.w900)),
               ],
@@ -375,15 +382,16 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
   Widget _buildPrizeFields() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -393,24 +401,24 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Icon(Icons.military_tech_rounded,
-                    color: AppColors.primary, size: 20),
+                    color: AppColors.primary, size: 18),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               const Text('PRIZE NUMBERS',
                   style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w900,
-                      fontSize: 15,
+                      fontSize: 14,
                       letterSpacing: 0.5)),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildPrizeInput('1st Prize', _p1Controller, AppColors.primary, true,
               _resultType == 'TN' ? 4 : 3, (val) {
             if (_resultType == 'TN') {
@@ -423,7 +431,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
             }
           }),
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: 4),
             child: Divider(color: Colors.black12),
           ),
           _buildPrizeInput(
@@ -452,35 +460,37 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       int maxLength = 3,
       void Function(String)? onChanged]) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           SizedBox(
-              width: 90,
+              width: 80,
               child: Text(label,
                   style: TextStyle(
                       color: color,
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5))),
-          const SizedBox(width: 16),
+                      letterSpacing: 0.3))),
+          const SizedBox(width: 12),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isFirst ? color.withOpacity(0.05) : AppColors.background,
-                borderRadius: BorderRadius.circular(10),
+                color: isFirst ? color.withOpacity(0.04) : Colors.white,
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: isFirst
-                        ? color.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.03)),
+                    color:
+                        isFirst ? color.withOpacity(0.5) : Colors.grey.shade300,
+                    width: isFirst ? 1.5 : 1),
               ),
+              alignment: Alignment.center,
               child: TextField(
                 controller: controller,
                 onChanged: onChanged,
                 style: const TextStyle(
                     color: Colors.black87,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2),
                 maxLength: maxLength,
@@ -488,8 +498,10 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                 decoration: InputDecoration(
                   counterText: "",
                   hintText: "000",
-                  hintStyle: TextStyle(color: Colors.grey[300]),
+                  hintStyle: TextStyle(color: Colors.grey[350]),
                   border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ),
@@ -503,16 +515,17 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -523,25 +536,25 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w900,
-                      fontSize: 13,
+                      fontSize: 12,
                       letterSpacing: 0.5)),
               InkWell(
                 onTap: _handlePaste,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.paste_rounded,
-                          color: Colors.blue, size: 14),
-                      const SizedBox(width: 6),
-                      const Text('PASTE',
+                      Icon(Icons.paste_rounded, color: Colors.blue, size: 13),
+                      SizedBox(width: 4),
+                      Text('PASTE',
                           style: TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.w900,
@@ -552,27 +565,29 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withOpacity(0.03)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: TextField(
               controller: _compController,
-              maxLines: 4,
+              maxLines: 3,
               style: const TextStyle(
                   color: Colors.black87,
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2),
+                  letterSpacing: 1.1),
               decoration: InputDecoration(
                 hintText: "Paste comma separated 3-digit numbers...",
                 hintStyle: TextStyle(
                     color: Colors.grey[400], fontWeight: FontWeight.normal),
                 border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),
@@ -584,23 +599,27 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
-      height: 58,
+      height: 48,
       child: ElevatedButton(
         onPressed: _isSubmitting ? null : _submitResult,
         style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            elevation: 8,
-            shadowColor: AppColors.primary.withOpacity(0.4),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18))),
+            elevation: 4,
+            shadowColor: AppColors.primary.withOpacity(0.3),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
         child: _isSubmitting
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
             : Text(
                 widget.resultData != null ? 'UPDATE RESULT' : 'PUBLISH RESULT',
                 style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 16,
+                    fontSize: 15,
                     letterSpacing: 1)),
       ),
     );
