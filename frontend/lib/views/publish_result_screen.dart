@@ -27,7 +27,8 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   final TextEditingController _p3Controller = TextEditingController();
   final TextEditingController _p4Controller = TextEditingController();
   final TextEditingController _p5Controller = TextEditingController();
-  final TextEditingController _compController = TextEditingController();
+  final List<TextEditingController> _compControllers =
+      List.generate(30, (_) => TextEditingController());
 
   @override
   void initState() {
@@ -44,9 +45,30 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       _p3Controller.text = widget.resultData!['third_prize'] ?? '';
       _p4Controller.text = widget.resultData!['fourth_prize'] ?? '';
       _p5Controller.text = widget.resultData!['fifth_prize'] ?? '';
-      _compController.text = widget.resultData!['complimentary_numbers'] ?? '';
+
+      String compStr = widget.resultData!['complimentary_numbers'] ?? '';
+      List<String> compParts = compStr
+          .split(RegExp(r'[,\s\n]+'))
+          .where((e) => e.trim().isNotEmpty)
+          .toList();
+      for (int i = 0; i < 30 && i < compParts.length; i++) {
+        _compControllers[i].text = compParts[i].trim();
+      }
     }
     _fetchGames();
+  }
+
+  @override
+  void dispose() {
+    _p1Controller.dispose();
+    _p2Controller.dispose();
+    _p3Controller.dispose();
+    _p4Controller.dispose();
+    _p5Controller.dispose();
+    for (var c in _compControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _fetchGames() async {
@@ -66,14 +88,26 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
       List<String> parts =
           text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
 
-      if (parts.length >= 30) {
-        _compController.text = parts.take(30).join(', ');
-      } else {
-        _compController.text = parts.join(', ');
+      for (int i = 0; i < 30; i++) {
+        _compControllers[i].text = i < parts.length ? parts[i] : '';
+      }
+
+      if (parts.length < 30) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Found only ${parts.length} 3-digit numbers.')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('30 Complimentary numbers pasted!')));
       }
+      setState(() {});
     }
+  }
+
+  void _handleClearComp() {
+    for (var c in _compControllers) {
+      c.clear();
+    }
+    setState(() {});
   }
 
   void _handlePasteAll() async {
@@ -85,14 +119,15 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
       if (parts.isNotEmpty) {
         setState(() {
-          if (parts.length >= 1) _p1Controller.text = parts[0];
+          if (parts.isNotEmpty) _p1Controller.text = parts[0];
           if (parts.length >= 2) _p2Controller.text = parts[1];
           if (parts.length >= 3) _p3Controller.text = parts[2];
           if (parts.length >= 4) _p4Controller.text = parts[3];
           if (parts.length >= 5) _p5Controller.text = parts[4];
 
-          if (parts.length > 5) {
-            _compController.text = parts.skip(5).take(30).join(', ');
+          List<String> compParts = parts.skip(5).toList();
+          for (int i = 0; i < 30; i++) {
+            _compControllers[i].text = i < compParts.length ? compParts[i] : '';
           }
         });
 
@@ -123,10 +158,13 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     }
 
     setState(() => _isSubmitting = true);
-    // Note: We need to implement createGameResult in ApiService
     try {
       final apiService = Provider.of<ApiService>(context, listen: false);
-      // Constructing payload manually for now or use Map
+      String compNumbers = _compControllers
+          .map((c) => c.text.trim())
+          .where((t) => t.isNotEmpty)
+          .join(', ');
+
       final response = await apiService.publishResult({
         'game': _selectedGameId,
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate),
@@ -135,7 +173,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         'third_prize': _p3Controller.text,
         'fourth_prize': _p4Controller.text,
         'fifth_prize': _p5Controller.text,
-        'complimentary_numbers': _compController.text,
+        'complimentary_numbers': compNumbers,
       });
 
       if (response && mounted) {
@@ -268,7 +306,9 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           _p3Controller.clear();
           _p4Controller.clear();
           _p5Controller.clear();
-          _compController.clear();
+          for (var c in _compControllers) {
+            c.clear();
+          }
         });
       },
       child: Container(
@@ -538,58 +578,102 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                       fontWeight: FontWeight.w900,
                       fontSize: 12,
                       letterSpacing: 0.5)),
-              InkWell(
-                onTap: _handlePaste,
-                borderRadius: BorderRadius.circular(4),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+              Row(
+                children: [
+                  InkWell(
+                    onTap: _handleClearComp,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.paste_rounded, color: Colors.blue, size: 13),
-                      SizedBox(width: 4),
-                      Text('PASTE',
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: const Text('CLEAR',
                           style: TextStyle(
-                              color: Colors.blue,
+                              color: Colors.red,
                               fontWeight: FontWeight.w900,
                               fontSize: 10)),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: _handlePaste,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.paste_rounded,
+                              color: Colors.blue, size: 13),
+                          SizedBox(width: 4),
+                          Text('PASTE',
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 10)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.shade300),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+              childAspectRatio: 1.45,
             ),
-            child: TextField(
-              controller: _compController,
-              maxLines: 3,
-              style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.1),
-              decoration: InputDecoration(
-                hintText: "Paste comma separated 3-digit numbers...",
-                hintStyle: TextStyle(
-                    color: Colors.grey[400], fontWeight: FontWeight.normal),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
+            itemCount: 30,
+            itemBuilder: (context, index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                alignment: Alignment.center,
+                child: TextField(
+                  controller: _compControllers[index],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  maxLength: 3,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: "",
+                    hintText: "${index + 1}",
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade300,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
