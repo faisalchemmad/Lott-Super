@@ -79,75 +79,122 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(game == null ? 'Add Game' : 'Edit Game'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          title: Text(game == null ? 'Add Game' : 'Edit Game',
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                      labelText: 'Game Name (e.g. 1PM DRAW)'),
+                  decoration: InputDecoration(
+                    labelText: 'Game Name (e.g. 1PM DRAW)',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6)),
+                    isDense: true,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 ListTile(
-                  title: const Text('Draw Time'),
-                  subtitle: Text(drawTime.format(context)),
-                  trailing: const Icon(Icons.access_time),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(color: Colors.grey.shade200)),
+                  title: const Text('Draw Time',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(drawTime.format(context),
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.access_time,
+                      size: 18, color: AppColors.primary),
                   onTap: () async {
                     final picked = await showTimePicker(
                         context: context, initialTime: drawTime);
                     if (picked != null) setDialogState(() => drawTime = picked);
                   },
                 ),
+                const SizedBox(height: 8),
                 ListTile(
-                  title: const Text('Betting Start'),
-                  subtitle: Text(startTime.format(context)),
-                  trailing: const Icon(Icons.access_time),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(color: Colors.grey.shade200)),
+                  title: const Text('Betting Start',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(startTime.format(context),
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.access_time,
+                      size: 18, color: AppColors.primary),
                   onTap: () async {
                     final picked = await showTimePicker(
                         context: context, initialTime: startTime);
-                    if (picked != null)
+                    if (picked != null) {
                       setDialogState(() => startTime = picked);
+                    }
                   },
                 ),
+                const SizedBox(height: 8),
                 ListTile(
-                  title: const Text('Betting End'),
-                  subtitle: Text(endTime.format(context)),
-                  trailing: const Icon(Icons.access_time),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(color: Colors.grey.shade200)),
+                  title: const Text('Betting End',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(endTime.format(context),
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.access_time,
+                      size: 18, color: AppColors.primary),
                   onTap: () async {
                     final picked = await showTimePicker(
                         context: context, initialTime: endTime);
                     if (picked != null) setDialogState(() => endTime = picked);
                   },
                 ),
-                const Divider(),
+                const SizedBox(height: 8),
                 SwitchListTile(
-                  title: const Text('Allow Edit/Delete'),
-                  subtitle: const Text('Enable invoice changes for this game'),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(color: Colors.grey.shade200)),
+                  title: const Text('Allow Edit/Delete',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Enable invoice changes for this game',
+                      style: TextStyle(fontSize: 11)),
                   value: canEditDelete,
                   onChanged: (val) => setDialogState(() => canEditDelete = val),
                 ),
+                const SizedBox(height: 8),
                 ListTile(
-                  title: const Text('Edit/Delete Deadline'),
-                  subtitle: Text(deadlineTime.format(context)),
-                  trailing: const Icon(Icons.timer_outlined),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: BorderSide(color: Colors.grey.shade200)),
+                  title: const Text('Edit/Delete Deadline',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(deadlineTime.format(context),
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.timer_outlined,
+                      size: 18, color: AppColors.primary),
                   onTap: () async {
                     final picked = await showTimePicker(
                         context: context, initialTime: deadlineTime);
-                    if (picked != null)
+                    if (picked != null) {
                       setDialogState(() => deadlineTime = picked);
+                    }
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Betting Screen Color',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
-                  spacing: 10,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     '#9C212C',
                     '#2E7D32',
@@ -161,36 +208,38 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
                             onTap: () =>
                                 setDialogState(() => selectedColor = c),
                             child: Container(
-                              width: 35,
-                              height: 35,
+                              width: 32,
+                              height: 32,
                               decoration: BoxDecoration(
                                 color: Color(
                                     int.parse(c.replaceFirst('#', '0xFF'))),
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: selectedColor == c
                                       ? Colors.black
-                                      : Colors.transparent,
-                                  width: 2,
+                                      : Colors.grey.shade300,
+                                  width: selectedColor == c ? 2 : 1,
                                 ),
                               ),
                               child: selectedColor == c
                                   ? const Icon(Icons.check,
-                                      color: Colors.white, size: 20)
+                                      color: Colors.white, size: 18)
                                   : null,
                             ),
                           ))
                       .toList(),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Options Background Color',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
-                  spacing: 10,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     '#FFFFFF',
                     '#F5F5F5',
@@ -204,22 +253,22 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
                             onTap: () =>
                                 setDialogState(() => selectedBgColor = c),
                             child: Container(
-                              width: 35,
-                              height: 35,
+                              width: 32,
+                              height: 32,
                               decoration: BoxDecoration(
                                 color: Color(
                                     int.parse(c.replaceFirst('#', '0xFF'))),
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: selectedBgColor == c
                                       ? Colors.black
                                       : Colors.grey.shade400,
-                                  width: 2,
+                                  width: selectedBgColor == c ? 2 : 1,
                                 ),
                               ),
                               child: selectedBgColor == c
                                   ? const Icon(Icons.check,
-                                      color: Colors.black, size: 20)
+                                      color: Colors.black, size: 18)
                                   : null,
                             ),
                           ))
@@ -233,6 +282,12 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancel')),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6)),
+              ),
               onPressed: () async {
                 final apiService =
                     Provider.of<ApiService>(context, listen: false);
@@ -288,7 +343,9 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Game'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        title: const Text('Delete Game',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text('Are you sure you want to delete ${game.name}?'),
         actions: [
           TextButton(
@@ -296,7 +353,10 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
               child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, foregroundColor: Colors.white),
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6))),
             onPressed: () async {
               final apiService =
                   Provider.of<ApiService>(context, listen: false);
@@ -320,43 +380,93 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Games')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Manage Games',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               itemCount: _games.length,
               itemBuilder: (context, index) {
                 final game = _games[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Color(
-                          int.parse(game.color.replaceFirst('#', '0xFF'))),
-                      radius: 12,
-                    ),
-                    title: Text(game.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                        'Draw: ${game.time} | Window: ${game.startTime} - ${game.endTime}'),
-                    trailing: _canManageGames
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit,
-                                    color: AppColors.primary),
-                                onPressed: () => _showGameDialog(game),
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _confirmDelete(game),
-                              ),
-                            ],
-                          )
-                        : null,
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey.shade300),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: Color(
+                              int.parse(game.color.replaceFirst('#', '0xFF'))),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.black12),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              game.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.black87),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Draw: ${game.time} | Window: ${game.startTime} - ${game.endTime}',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_canManageGames) ...[
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              color: AppColors.primary, size: 20),
+                          onPressed: () => _showGameDialog(game),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.delete,
+                              color: Colors.red, size: 20),
+                          onPressed: () => _confirmDelete(game),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                      ],
+                    ],
                   ),
                 );
               },
@@ -365,6 +475,8 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
           ? FloatingActionButton(
               onPressed: () => _showGameDialog(),
               backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6)),
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
