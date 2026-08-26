@@ -169,7 +169,8 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                _buildInfoBanner(),
+                _buildSummaryHeader(
+                    totalSale, totalCommission, totalWinning, totalBalance),
                 _buildTableHeader(isDesktop),
                 Expanded(
                   child: _reportData.isEmpty
@@ -194,12 +195,13 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
   }
 
-  Widget _buildInfoBanner() {
-    final fmt = DateFormat('dd MMM yyyy');
+  Widget _buildSummaryHeader(double totalSale, double totalCommission,
+      double totalWinning, double totalBalance) {
+    final fmt = DateFormat('dd MMM');
+    final fmtYear = DateFormat('dd MMM yyyy');
     final bool isAdminRate = !widget.agentRate;
-    final Color bannerColor = isAdminRate
-        ? const Color(0xFFE8F4FD) // light blue for Admin Rate
-        : const Color(0xFFFFF3CD); // yellow for Agent Rate
+    final Color bannerColor =
+        isAdminRate ? const Color(0xFFE8F4FD) : const Color(0xFFFFF3CD);
     final Color textColor =
         isAdminRate ? const Color(0xFF0D6EFD) : const Color(0xFF856404);
     final IconData bannerIcon = isAdminRate
@@ -211,61 +213,189 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      color: Colors.white,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 1. Report Period Card
           InkWell(
             onTap: () => _selectDate(true),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+              ),
               child: Row(
                 children: [
-                  const Icon(Icons.date_range_rounded,
-                      size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'PERIOD: ${fmt.format(_currentFromDate)} - ${fmt.format(_currentToDate)}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black54,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.calendar_month_rounded,
+                        color: AppColors.primary, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'REPORT PERIOD',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          '${fmt.format(_currentFromDate)} - ${fmtYear.format(_currentToDate)}',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
-                  const Text(
-                    'CHANGE',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'CHANGE',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          // 2. Summary 4-Stat Card (like Sales Report)
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-            color: bannerColor,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Row(
               children: [
-                Icon(bannerIcon, size: 12, color: textColor),
+                Expanded(
+                  child: _buildNewStatItem(Icons.bar_chart_rounded,
+                      'Total Sales', '₹${totalSale.toStringAsFixed(0)}'),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(Icons.emoji_events_rounded,
+                      'Winning (Prz)', '₹${totalWinning.toStringAsFixed(0)}',
+                      valueColor:
+                          totalWinning > 0 ? Colors.red.shade700 : null),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(
+                      Icons.percent_rounded,
+                      widget.agentRate ? 'Agent Comm' : 'Discount (Dc)',
+                      '₹${totalCommission.toStringAsFixed(0)}',
+                      valueColor: const Color(0xFF8B0000)),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
+                      'Net Total', '₹${totalBalance.toStringAsFixed(0)}',
+                      valueColor: totalBalance >= 0
+                          ? const Color(0xFF10B981)
+                          : Colors.red),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Rate mode note
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+            decoration: BoxDecoration(
+              color: bannerColor,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                Icon(bannerIcon, size: 11, color: textColor),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     bannerText,
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: 8.5,
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewStatItem(IconData icon, String label, String value,
+      {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 16),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 9,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                  color: valueColor ?? AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900),
             ),
           ),
         ],
