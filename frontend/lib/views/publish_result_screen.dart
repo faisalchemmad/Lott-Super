@@ -80,34 +80,20 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     });
   }
 
-  void _handlePaste() async {
-    ClipboardData? data = await Clipboard.getData('text/plain');
-    if (data != null && data.text != null) {
-      String text = data.text!.trim();
-      // Split by comma, space or newline and take first 30 numbers of 3 digits
-      List<String> parts =
-          text.split(RegExp(r'[,\s\n]+')).where((e) => e.length == 3).toList();
-
-      for (int i = 0; i < 30; i++) {
-        _compControllers[i].text = i < parts.length ? parts[i] : '';
+  void _handleClearAll() {
+    setState(() {
+      _p1Controller.clear();
+      _p2Controller.clear();
+      _p3Controller.clear();
+      _p4Controller.clear();
+      _p5Controller.clear();
+      for (var c in _compControllers) {
+        c.clear();
       }
-
-      if (parts.length < 30) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Found only ${parts.length} 3-digit numbers.')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('30 Complimentary numbers pasted!')));
-      }
-      setState(() {});
-    }
-  }
-
-  void _handleClearComp() {
-    for (var c in _compControllers) {
-      c.clear();
-    }
-    setState(() {});
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('All fields cleared')),
+    );
   }
 
   void _handlePasteAll() async {
@@ -203,6 +189,11 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined, color: Colors.white),
+            tooltip: 'Clear All',
+            onPressed: _handleClearAll,
+          ),
           IconButton(
             icon: const Icon(Icons.copy_all_rounded, color: Colors.white),
             tooltip: 'Paste All (35 Nos)',
@@ -565,71 +556,17 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('COMPLIMENTARY (30 NOS)',
-                  style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                      letterSpacing: 0.5)),
-              Row(
-                children: [
-                  InkWell(
-                    onTap: _handleClearComp,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.red.withOpacity(0.3)),
-                      ),
-                      child: const Text('CLEAR',
-                          style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 10)),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  InkWell(
-                    onTap: _handlePaste,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.paste_rounded,
-                              color: Colors.blue, size: 13),
-                          SizedBox(width: 4),
-                          Text('PASTE',
-                              style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 10)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          const Text('COMPLIMENTARY (30 NOS)',
+              style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 0.5)),
+          const SizedBox(height: 10),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -637,7 +574,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
               crossAxisCount: 5,
               crossAxisSpacing: 6,
               mainAxisSpacing: 6,
-              childAspectRatio: 1.45,
+              childAspectRatio: 1.85,
             ),
             itemCount: 30,
             itemBuilder: (context, index) {
@@ -655,7 +592,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                   maxLength: 3,
                   style: const TextStyle(
                     color: Colors.black87,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
                   ),
@@ -664,7 +601,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
                     hintText: "${index + 1}",
                     hintStyle: TextStyle(
                       color: Colors.grey.shade300,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
                     border: InputBorder.none,
