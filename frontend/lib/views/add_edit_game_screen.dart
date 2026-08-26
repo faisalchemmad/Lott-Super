@@ -26,23 +26,67 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
   bool _isSaving = false;
 
   final List<String> _colors = [
-    '#9C212C',
-    '#2E7D32',
-    '#1565C0',
-    '#F9A825',
-    '#6A1B9A',
-    '#2C3E50',
-    '#E91E63'
+    '#9C212C', // Crimson Maroon
+    '#C0392B', // Alizarin Red
+    '#D32F2F', // Deep Red
+    '#E64A19', // Deep Orange
+    '#D35400', // Rust Orange
+    '#E67E22', // Carrot Orange
+    '#F57C00', // Bright Orange
+    '#F39C12', // Golden Orange
+    '#F9A825', // Amber Gold
+    '#FBC02D', // Bright Yellow
+    '#2E7D32', // Forest Green
+    '#27AE60', // Emerald Green
+    '#388E3C', // Kelly Green
+    '#16A085', // Green Sea
+    '#00897B', // Teal
+    '#0097A7', // Dark Cyan
+    '#00ACC1', // Cyan
+    '#1976D2', // Blue
+    '#1565C0', // Royal Blue
+    '#2980B9', // Belize Blue
+    '#0D47A1', // Deep Navy
+    '#2C3E50', // Midnight Navy
+    '#34495E', // Wet Asphalt
+    '#6A1B9A', // Deep Purple
+    '#8E44AD', // Wisteria Violet
+    '#7B1FA2', // Purple
+    '#C2185B', // Dark Pink
+    '#E91E63', // Hot Pink
+    '#880E4F', // Wine Burgundy
+    '#4E342E', // Espresso Brown
+    '#5D4037', // Saddle Brown
+    '#455A64', // Blue Grey Dark
+    '#37474F', // Slate Grey
+    '#212121', // Charcoal Black
   ];
 
   final List<String> _bgColors = [
-    '#FFFFFF',
-    '#F5F5F5',
-    '#E3F2FD',
-    '#E8F5E9',
-    '#FFF3E0',
-    '#FCE4EC',
-    '#F3E5F5',
+    '#FFFFFF', // Pure White
+    '#FAFAFA', // Snow White
+    '#F5F5F5', // Light Grey
+    '#EEEEEE', // Soft Platinum
+    '#ECEFF1', // Blue Grey Tint
+    '#E3F2FD', // Soft Sky Blue
+    '#E1F5FE', // Light Ice Blue
+    '#E0F7FA', // Soft Cyan
+    '#E0F2F1', // Soft Teal
+    '#E8F5E9', // Soft Mint Green
+    '#F1F8E9', // Soft Lime
+    '#F9FBE7', // Soft Pale Yellow
+    '#FFFDE7', // Soft Cream Yellow
+    '#FFF8E1', // Soft Amber Ivory
+    '#FFF3E0', // Soft Peach Orange
+    '#FBE9E7', // Soft Coral
+    '#FFEBEE', // Soft Rose Blush
+    '#FCE4EC', // Soft Pink
+    '#F3E5F5', // Soft Lavender
+    '#EDE7F6', // Soft Deep Purple
+    '#EFEBE9', // Soft Warm Beige
+    '#F0F4C3', // Soft Honeydew
+    '#D7CCC8', // Soft Sandstone
+    '#CFD8DC', // Soft Slate
   ];
 
   @override
@@ -54,6 +98,13 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
       _canEditDelete = widget.game!.canEditDelete;
       _selectedColor = widget.game!.color;
       _selectedBgColor = widget.game!.optionsBgColor;
+
+      if (!_colors.contains(_selectedColor)) {
+        _colors.insert(0, _selectedColor);
+      }
+      if (!_bgColors.contains(_selectedBgColor)) {
+        _bgColors.insert(0, _selectedBgColor);
+      }
 
       try {
         final dParts = widget.game!.time.split(':');
