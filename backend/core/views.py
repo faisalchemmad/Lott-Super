@@ -1375,6 +1375,7 @@ class CountReportView(views.APIView):
             'total_count': bets.aggregate(total=Sum('count'))['total'] or 0,
         })
 
+
 class DailyReportView(views.APIView):
     def get(self, request):
         user = request.user
@@ -1390,7 +1391,19 @@ class DailyReportView(views.APIView):
         
         use_agent_rate = request.query_params.get('agent_rate') == 'true'
 
-        bets = Bet.objects.all()
+        # 1. Determine target_user for drilldown
+        target_user = user
+        if agent_id:
+            try:
+                t_id = int(agent_id)
+                if t_id == user.id or t_id in user.get_descendant_ids():
+                    target_user = User.objects.get(id=t_id)
+                else:
+                    return Response({'error': 'Unauthorized'}, status=403)
+            except (ValueError, User.DoesNotExist):
+                return Response({'error': 'User not found'}, status=404)
+
+        bets = Bet.objects.filter(user_id__in=target_user.get_descendant_ids())
         
         if state and state.upper() in ['KL', 'TN']:
             bets = bets.filter(state=state.upper())
@@ -1400,23 +1413,6 @@ class DailyReportView(views.APIView):
             bets = bets.filter(created_at__date__lte=to_date)
         if game_ids:
             bets = bets.filter(game_id__in=game_ids)
-        
-        # Filter bets based on the user hierarchy
-        if agent_id:
-            try:
-                target_id = int(agent_id)
-                if target_id == user.id:
-                    # SELF selected: Show self + direct subordinates
-                    bets = bets.filter(Q(user=user) | Q(user__parent=user))
-                else:
-                    # Specific agent selected: Show their descendant tree
-                    target_user = User.objects.get(id=target_id)
-                    bets = bets.filter(user_id__in=target_user.get_descendant_ids())
-            except (ValueError, User.DoesNotExist):
-                # If agent_id is invalid, filter for no bets or handle as needed
-                bets = bets.none() # No bets if user not found
-        elif user.role != 'SUPER_ADMIN':
-            bets = bets.filter(user_id__in=user.get_descendant_ids())
 
         # Determine grouping
         group_fields = []
@@ -1427,11 +1423,10 @@ class DailyReportView(views.APIView):
             group_fields.append('game__name')
         if user_detail:
             group_fields.append('user__username')
-            group_fields.append('user__id') # Include user ID for fetching commission rates
+            group_fields.append('user__id')
 
         # If no detail is requested, provide a summary
         if not group_fields:
-            # We compute commission based on viewer's (admin) rates for summary
             bets_annotated = bets.annotate(
                 bet_type_category=Case(
                     When(type__iexact='a', then=Value('ABC')),
@@ -1456,47 +1451,48 @@ class DailyReportView(views.APIView):
                 s = Decimal(str(sg['sub_sale'] or 0))
                 cnt = Decimal(str(sg['sub_count_total'] or 0))
                 w = Decimal(str(sg['sub_winning'] or 0))
-                # Admin rate: always use viewer's commission for summary
                 comm_rate = Decimal('0')
-                if use_agent_rate:
-                    # For summary with agent_rate ON but no user grouping,
-                    # use viewer's commission as fallback
-                    pass  # No specific agent, use 0 commission
-                else:
-                    # Admin rate: viewer's own commission
+                if not use_agent_rate:
                     bcat = sg['bet_type_category']
-                    state = sg.get('state', 'KL') # Default to KL if not grouped by state
-                    if state == 'TN':
-                        if bcat == 'ABC': comm_rate = Decimal(str(user.tn_sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.tn_sales_comm_ab_bc_ac))
-                        elif bcat == '3D-10': comm_rate = Decimal(str(user.tn_sales_comm_3d_10))
-                        elif bcat == '3D-25': comm_rate = Decimal(str(user.tn_sales_comm_3d_25))
-                        elif bcat == '3D-30': comm_rate = Decimal(str(user.tn_sales_comm_3d_30))
-                        elif bcat == '3D-60': comm_rate = Decimal(str(user.tn_sales_comm_3d_60))
-                        elif bcat == '4D-110': comm_rate = Decimal(str(user.tn_sales_comm_4d_110))
-                        elif bcat == '4D-55': comm_rate = Decimal(str(user.tn_sales_comm_4d_55))
-                        elif bcat == '4D-20': comm_rate = Decimal(str(user.tn_sales_comm_4d_20))
+                    state_code = sg.get('state', 'KL')
+                    if state_code == 'TN':
+                        if bcat == 'ABC': comm_rate = Decimal(str(target_user.tn_sales_comm_abc))
+                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(target_user.tn_sales_comm_ab_bc_ac))
+                        elif bcat == '3D-10': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_10))
+                        elif bcat == '3D-25': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_25))
+                        elif bcat == '3D-30': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_30))
+                        elif bcat == '3D-60': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_60))
+                        elif bcat == '4D-110': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_110))
+                        elif bcat == '4D-55': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_55))
+                        elif bcat == '4D-20': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_20))
                     else:
-                        if bcat == 'ABC': comm_rate = Decimal(str(user.sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(user.sales_comm_ab_bc_ac))
-                        elif bcat == 'SUPER': comm_rate = Decimal(str(user.sales_comm_super))
-                        elif bcat == 'BOX': comm_rate = Decimal(str(user.sales_comm_box))
+                        if bcat == 'ABC': comm_rate = Decimal(str(target_user.sales_comm_abc))
+                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(target_user.sales_comm_ab_bc_ac))
+                        elif bcat == 'SUPER': comm_rate = Decimal(str(target_user.sales_comm_super))
+                        elif bcat == 'BOX': comm_rate = Decimal(str(target_user.sales_comm_box))
                 comm = comm_rate * cnt
                 total_sale += s
                 total_commission += comm
                 total_winning += w
             net_sale = total_sale - total_commission
             balance = net_sale - total_winning
-            return Response([{
-                'label': 'Total Summary',
-                'sale': float(total_sale),
-                'commission': float(total_commission),
-                'net_sale': float(net_sale),
-                'winning': float(total_winning),
-                'balance': float(balance),
-            }])
+            return Response({
+                'data': [{
+                    'label': 'Total Summary',
+                    'sale': float(total_sale),
+                    'commission': float(total_commission),
+                    'net_sale': float(net_sale),
+                    'winning': float(total_winning),
+                    'balance': float(balance),
+                }],
+                'breadcrumb': {
+                    'id': target_user.id,
+                    'name': target_user.username,
+                    'role': target_user.role,
+                }
+            })
 
-        # Annotate bets with their type categories for commission calculation
+        # Annotate bets with their type categories
         bets = bets.annotate(
             bet_type_category=Case(
                 When(type__iexact='a', then=Value('ABC')),
@@ -1505,118 +1501,82 @@ class DailyReportView(views.APIView):
                 When(type__iexact='ab', then=Value('AB_BC_AC')),
                 When(type__iexact='bc', then=Value('AB_BC_AC')),
                 When(type__iexact='ac', then=Value('AB_BC_AC')),
-                default=F('type'), # SUPER, BOX
+                default=F('type'),
                 output_field=CharField(),
             )
         )
 
-        # ── Build direct-subordinate map (Agent Rate mode) ────────────────────
-        # When agent_rate=ON, commission is charged at the level of the viewer's
-        # DIRECT SUBORDINATE — not the leaf bet-placer.  E.g.:
-        #   Viewer(Admin) → Agent1 → Dealer1 → Sub-dealer1 (places bet)
-        # The commission used = Agent1's rates, and the row is labelled "Agent1".
-        # This gives the Admin a summary of how much each of their direct agents earns.
-        direct_sub_commission_map = {}  # bet_user_id  -> User object (direct subordinate)
-
-        if use_agent_rate:
-            # All direct children of the viewer
-            direct_children = list(
-                User.objects.filter(parent=user).only(
-                    'id', 'username', 'sales_comm_abc', 'sales_comm_ab_bc_ac',
-                    'sales_comm_super', 'sales_comm_box'
-                )
+        # ── Build direct-subordinate map under target_user ────────────────────
+        direct_children = list(
+            User.objects.filter(parent=target_user).only(
+                'id', 'username', 'role',
+                'sales_comm_abc', 'sales_comm_ab_bc_ac', 'sales_comm_super', 'sales_comm_box',
+                'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
+                'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
+                'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
             )
-            direct_child_ids = {c.id for c in direct_children}
-            direct_child_obj = {c.id: c for c in direct_children}
+        )
+        direct_child_ids = {c.id for c in direct_children}
+        direct_child_obj = {c.id: c for c in direct_children}
 
-            # Collect all user_ids that appear in filtered bets
-            involved_user_ids = set(
-                bets.values_list('user_id', flat=True).distinct()
-            )
+        involved_user_ids = set(bets.values_list('user_id', flat=True).distinct())
+        involved_users_qs = User.objects.filter(id__in=involved_user_ids).select_related(
+            'parent', 'parent__parent', 'parent__parent__parent', 'parent__parent__parent__parent'
+        )
+        involved_users = {u.id: u for u in involved_users_qs}
 
-            # Fetch all involved users with 4-level parent chain for hierarchy walk
-            involved_users_qs = User.objects.filter(
-                id__in=involved_user_ids
-            ).select_related(
-                'parent',
-                'parent__parent',
-                'parent__parent__parent',
-                'parent__parent__parent__parent',
-            ).only(
-                'id', 'username', 'parent_id',
-                'sales_comm_abc', 'sales_comm_ab_bc_ac',
-                'sales_comm_super', 'sales_comm_box',
-            )
-            involved_users = {u.id: u for u in involved_users_qs}
-
-            for uid in involved_user_ids:
-                current = involved_users.get(uid)
-                found = False
-                while current:
+        direct_sub_map = {}
+        for uid in involved_user_ids:
+            if uid == target_user.id:
+                direct_sub_map[uid] = target_user
+                continue
+            current = involved_users.get(uid)
+            found = False
+            while current:
+                if current.id in direct_child_ids:
+                    direct_sub_map[uid] = direct_child_obj[current.id]
+                    found = True
+                    break
+                parent_id = current.parent_id
+                if not parent_id or parent_id == target_user.id:
                     if current.id in direct_child_ids:
-                        # Found the direct-subordinate ancestor
-                        direct_sub_commission_map[uid] = direct_child_obj[current.id]
+                        direct_sub_map[uid] = direct_child_obj[current.id]
                         found = True
+                    break
+                next_u = involved_users.get(parent_id)
+                if next_u is None:
+                    try:
+                        next_u = User.objects.get(id=parent_id)
+                        involved_users[parent_id] = next_u
+                    except User.DoesNotExist:
                         break
-                    parent_id = current.parent_id
-                    if not parent_id:
-                        # Reached root with no direct-sub ancestor found
-                        # Could be the viewer's own bet — skip
-                        break
-                    next_user = involved_users.get(parent_id)
-                    if next_user is None:
-                        # Parent not in involved_users — fetch from DB once
-                        try:
-                            next_user = User.objects.only(
-                                'id', 'username', 'parent_id',
-                                'sales_comm_abc', 'sales_comm_ab_bc_ac',
-                                'sales_comm_super', 'sales_comm_box',
-                            ).get(id=parent_id)
-                            # Cache it for future iterations
-                            involved_users[parent_id] = next_user
-                        except User.DoesNotExist:
-                            break
-                    current = next_user
+                current = next_u
+            if not found:
+                direct_sub_map[uid] = involved_users.get(uid, target_user)
 
-        # ── Determine report grouping fields ──────────────────────────────────
-        # Group by the determined fields and bet type category.
-        # When agent_rate=ON, if user_detail is enabled, we group by the
-        # DIRECT SUBORDINATE username (not the leaf bet-placer).
-        # We achieve this by annotating each bet with its direct-sub username.
-
-        if use_agent_rate and user_detail and direct_sub_commission_map:
-            # Build a mapping list for annotation via Case/When on user_id
+        if user_detail and direct_sub_map:
             from django.db.models import IntegerField as DjangoIntField
             whens_username = []
             whens_userid = []
-            for uid, sub_user in direct_sub_commission_map.items():
-                whens_username.append(
-                    When(user_id=uid, then=Value(sub_user.username))
-                )
-                whens_userid.append(
-                    When(user_id=uid, then=Value(sub_user.id))
-                )
+            whens_role = []
+            for uid, sub_user in direct_sub_map.items():
+                whens_username.append(When(user_id=uid, then=Value(sub_user.username)))
+                whens_userid.append(When(user_id=uid, then=Value(sub_user.id)))
+                whens_role.append(When(user_id=uid, then=Value(sub_user.role)))
+
             bets = bets.annotate(
-                direct_sub_username=Case(
-                    *whens_username,
-                    default=F('user__username'),
-                    output_field=CharField(),
-                ),
-                direct_sub_id=Case(
-                    *whens_userid,
-                    default=F('user_id'),
-                    output_field=DjangoIntField(),
-                ),
+                direct_sub_username=Case(*whens_username, default=F('user__username'), output_field=CharField()),
+                direct_sub_id=Case(*whens_userid, default=F('user_id'), output_field=DjangoIntField()),
+                direct_sub_role=Case(*whens_role, default=F('user__role'), output_field=CharField()),
             )
-            # Replace user group fields with the direct-sub annotation
             group_fields_for_query = [
                 f for f in group_fields if f not in ('user__username', 'user__id')
             ]
-            group_fields_for_query += ['direct_sub_username', 'direct_sub_id']
+            group_fields_for_query += ['direct_sub_username', 'direct_sub_id', 'direct_sub_role']
         else:
             group_fields_for_query = group_fields
 
-        # ── Execute grouped aggregation ───────────────────────────────────────
+        # Grouped aggregation
         grouped_bets = (
             bets.values(*group_fields_for_query, 'bet_type_category', 'state')
             .annotate(
@@ -1627,41 +1587,22 @@ class DailyReportView(views.APIView):
             .order_by(*group_fields_for_query, 'bet_type_category', 'state')
         )
 
-        # Pre-fetch direct-sub User objects for commission lookup (agent_rate=ON)
-        # When agent_rate=OFF, we just use the viewer
-        direct_sub_by_id = {}
-        if use_agent_rate and direct_sub_commission_map:
-            seen_ids = {u.id for u in direct_sub_commission_map.values()}
-            direct_sub_by_id = {
-                u.id: u
-                for u in User.objects.filter(id__in=seen_ids).only(
-                    'id', 'sales_comm_abc', 'sales_comm_ab_bc_ac',
-                    'sales_comm_super', 'sales_comm_box',
-                )
-            }
-
-        final_data = {}  # key → aggregated row dict
+        final_data = {}
 
         for r in grouped_bets:
-            # ── Determine commission source user ──────────────────────────────
             if use_agent_rate:
-                # When using direct-sub grouping, the sub_id is in direct_sub_id
                 sub_id = r.get('direct_sub_id') or r.get('user__id')
-                target_user_for_comm = direct_sub_by_id.get(sub_id)
+                target_user_for_comm = direct_child_obj.get(sub_id) or direct_sub_map.get(sub_id)
                 if target_user_for_comm is None:
-                    # fallback: the direct_sub_commission_map might resolve it
-                    uid = r.get('user__id')
-                    target_user_for_comm = direct_sub_commission_map.get(uid)
+                    target_user_for_comm = target_user
             else:
-                # Admin Rate — always the viewer's own commission
-                target_user_for_comm = user
+                target_user_for_comm = target_user
 
-            # ── Compute commission rate for this bet-type bucket ──────────────
             commission_rate = Decimal('0.00')
             if target_user_for_comm:
                 bcat = r['bet_type_category']
-                state = r.get('state', 'KL')
-                if state == 'TN':
+                state_code = r.get('state', 'KL')
+                if state_code == 'TN':
                     if bcat == 'ABC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_abc))
                     elif bcat == 'AB_BC_AC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_ab_bc_ac))
                     elif bcat == '3D-10': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_10))
@@ -1672,30 +1613,24 @@ class DailyReportView(views.APIView):
                     elif bcat == '4D-55': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_55))
                     elif bcat == '4D-20': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_20))
                 else:
-                    if bcat == 'ABC':
-                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_abc))
-                    elif bcat == 'AB_BC_AC':
-                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_ab_bc_ac))
-                    elif bcat == 'SUPER':
-                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_super))
-                    elif bcat == 'BOX':
-                        commission_rate = Decimal(str(target_user_for_comm.sales_comm_box))
+                    if bcat == 'ABC': commission_rate = Decimal(str(target_user_for_comm.sales_comm_abc))
+                    elif bcat == 'AB_BC_AC': commission_rate = Decimal(str(target_user_for_comm.sales_comm_ab_bc_ac))
+                    elif bcat == 'SUPER': commission_rate = Decimal(str(target_user_for_comm.sales_comm_super))
+                    elif bcat == 'BOX': commission_rate = Decimal(str(target_user_for_comm.sales_comm_box))
 
-            sub_sale    = Decimal(str(r['sub_total_sale'] or 0))
-            sub_count   = Decimal(str(r['sub_total_count'] or 0))
+            sub_sale = Decimal(str(r['sub_total_sale'] or 0))
+            sub_count = Decimal(str(r['sub_total_count'] or 0))
             sub_winning = Decimal(str(r['sub_total_winning'] or 0))
 
             commission = commission_rate * sub_count
-            net_sale   = sub_sale - commission
+            net_sale = sub_sale - commission
 
-            # ── Build grouping key ────────────────────────────────────────────
             key_parts = []
             if day_detail:
                 key_parts.append(str(r.get('date_only', '')))
             if game_detail:
                 key_parts.append(r.get('game__name', 'ALL'))
             if user_detail:
-                # Use direct-sub username when agent_rate=ON, else normal username
                 u_label = r.get('direct_sub_username') or r.get('user__username', 'ALL')
                 key_parts.append(u_label)
 
@@ -1711,10 +1646,17 @@ class DailyReportView(views.APIView):
                     r.get('direct_sub_username') or r.get('user__username', 'ALL')
                     if user_detail else 'ALL'
                 )
+                u_id = r.get('direct_sub_id') or r.get('user__id')
+                u_role = r.get('direct_sub_role') or 'SUB_DEALER'
+                is_drillable = bool(u_id and u_id != target_user.id and u_role != 'SUB_DEALER')
+
                 final_data[key] = {
                     'date': date_str,
                     'game': r.get('game__name', 'ALL'),
                     'user': u_label,
+                    'user_id': u_id,
+                    'role': u_role,
+                    'is_drillable': is_drillable,
                     'sale': Decimal('0.00'),
                     'commission': Decimal('0.00'),
                     'net_sale': Decimal('0.00'),
@@ -1722,30 +1664,39 @@ class DailyReportView(views.APIView):
                     'balance': Decimal('0.00'),
                 }
 
-            final_data[key]['sale']       += sub_sale
+            final_data[key]['sale'] += sub_sale
             final_data[key]['commission'] += commission
-            final_data[key]['net_sale']   += net_sale
-            final_data[key]['winning']    += sub_winning
-            final_data[key]['balance']    = (
+            final_data[key]['net_sale'] += net_sale
+            final_data[key]['winning'] += sub_winning
+            final_data[key]['balance'] = (
                 final_data[key]['net_sale'] - final_data[key]['winning']
             )
 
-        # ── Serialize ─────────────────────────────────────────────────────────
         output_data = []
         for key in sorted(final_data.keys()):
             item = final_data[key]
             output_data.append({
-                'date':       item['date'],
-                'game':       item['game'],
-                'user':       item['user'],
-                'sale':       float(item['sale']),
+                'date': item['date'],
+                'game': item['game'],
+                'user': item['user'],
+                'user_id': item.get('user_id'),
+                'role': item.get('role'),
+                'is_drillable': item.get('is_drillable', False),
+                'sale': float(item['sale']),
                 'commission': float(item['commission']),
-                'net_sale':   float(item['net_sale']),
-                'winning':    float(item['winning']),
-                'balance':    float(item['balance']),
+                'net_sale': float(item['net_sale']),
+                'winning': float(item['winning']),
+                'balance': float(item['balance']),
             })
 
-        return Response(output_data)
+        return Response({
+            'data': output_data,
+            'breadcrumb': {
+                'id': target_user.id,
+                'name': target_user.username,
+                'role': target_user.role,
+            }
+        })
 
 
 class NumberReportView(views.APIView):

@@ -12,7 +12,8 @@ class ApiService {
     if (kIsWeb) {
       return 'http://13.233.196.135/api';
     }
-    if (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.windows) {
+    if (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.windows) {
       return 'http://13.233.196.135/api';
     } else {
       return 'http://13.233.196.135/api';
@@ -510,7 +511,8 @@ class ApiService {
     return response.statusCode == 204;
   }
 
-  Future<Map<String, dynamic>> getCountReport({String state = 'ALL', 
+  Future<Map<String, dynamic>> getCountReport({
+    String state = 'ALL',
     required String fromDate,
     required String toDate,
     int? gameId,
@@ -539,7 +541,8 @@ class ApiService {
     return {};
   }
 
-  Future<List<dynamic>> getDailyReport({String state = 'ALL', 
+  Future<dynamic> getDailyReport({
+    String state = 'ALL',
     required String fromDate,
     required String toDate,
     int? userId,
@@ -633,7 +636,8 @@ class ApiService {
     return response.statusCode == 204;
   }
 
-  Future<List<dynamic>> getNumberReport({String state = 'ALL', 
+  Future<List<dynamic>> getNumberReport({
+    String state = 'ALL',
     String? fromDate,
     String? toDate,
     int? gameId,
@@ -722,7 +726,8 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  Future<Map<String, dynamic>> getWinningReport({String state = 'ALL', 
+  Future<Map<String, dynamic>> getWinningReport({
+    String state = 'ALL',
     String? fromDate,
     String? toDate,
     int? gameId,
@@ -1002,28 +1007,33 @@ class ApiService {
     return response.statusCode == 204;
   }
 
-  Future<List<dynamic>> getPurchaseReport({String? fromDate, String? toDate, int? gameId}) async {
+  Future<List<dynamic>> getPurchaseReport(
+      {String? fromDate, String? toDate, int? gameId}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    
+
     final Map<String, String> queryParams = {};
     if (fromDate != null) queryParams['from'] = fromDate;
     if (toDate != null) queryParams['to'] = toDate;
     if (gameId != null) queryParams['game'] = gameId.toString();
 
-    final uri = Uri.parse('$baseUrl/forwarded-bets/purchase_report/').replace(queryParameters: queryParams);
-    final response = await http.get(uri, headers: {'Authorization': 'Token $token'});
-    
+    final uri = Uri.parse('$baseUrl/forwarded-bets/purchase_report/')
+        .replace(queryParameters: queryParams);
+    final response =
+        await http.get(uri, headers: {'Authorization': 'Token $token'});
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
     return [];
   }
 
-  Future<List<dynamic>> getRetainedNumbers({required int gameId, required String state, String? type}) async {
+  Future<List<dynamic>> getRetainedNumbers(
+      {required int gameId, required String state, String? type}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    String url = '$baseUrl/forwarded-bets/get_retained_numbers/?game=$gameId&state=$state';
+    String url =
+        '$baseUrl/forwarded-bets/get_retained_numbers/?game=$gameId&state=$state';
     if (type != null && type.isNotEmpty) {
       url += '&type=$type';
     }
@@ -1050,5 +1060,4 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
-
 }

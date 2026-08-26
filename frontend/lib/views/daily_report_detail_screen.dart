@@ -7,7 +7,7 @@ import '../services/pdf_service.dart';
 import '../utils/constants.dart';
 
 class DailyReportDetailScreen extends StatefulWidget {
-  final List<dynamic> initialReportData;
+  final dynamic initialReportData;
   final DateTime fromDate;
   final DateTime toDate;
   final int? agentId;
@@ -42,34 +42,80 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   late DateTime _currentFromDate;
   late DateTime _currentToDate;
   bool _isLoading = false;
+  final List<Map<String, dynamic>> _breadcrumbStack = [];
 
   @override
   void initState() {
     super.initState();
-    _reportData = widget.initialReportData;
     _currentFromDate = widget.fromDate;
     _currentToDate = widget.toDate;
+
+    if (widget.initialReportData is Map<String, dynamic>) {
+      _reportData = widget.initialReportData['data'] ?? [];
+      final bc = widget.initialReportData['breadcrumb'];
+      if (bc != null && bc['id'] != null) {
+        _breadcrumbStack.add({
+          'id': bc['id'],
+          'name': bc['name'] ?? widget.agentName,
+          'role': bc['role'] ?? 'USER',
+        });
+      } else {
+        _breadcrumbStack.add({
+          'id': widget.agentId,
+          'name': widget.agentName,
+          'role': 'USER',
+        });
+      }
+    } else if (widget.initialReportData is List) {
+      _reportData = widget.initialReportData;
+      _breadcrumbStack.add({
+        'id': widget.agentId,
+        'name': widget.agentName,
+        'role': 'USER',
+      });
+    } else {
+      _reportData = [];
+    }
   }
 
-  Future<void> _refreshData() async {
+  Future<void> _generateReport({int? userId}) async {
     setState(() => _isLoading = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
     try {
-      final data = await apiService.getDailyReport(
+      final response = await apiService.getDailyReport(
         fromDate: DateFormat('yyyy-MM-dd').format(_currentFromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_currentToDate),
-        userId: widget.agentId,
+        userId: userId,
         gameIds:
             widget.selectedGameId != null ? [widget.selectedGameId!] : null,
         dayDetail: widget.dayDetail,
         gameDetail: widget.gameDetail,
-        userDetail: widget.userWise,
+        userDetail: true, // Always user-wise when drilling down
         agentRate: widget.agentRate,
       );
 
       setState(() {
-        _reportData = data;
+        if (response is Map<String, dynamic>) {
+          _reportData = response['data'] ?? [];
+          final bc = response['breadcrumb'];
+          if (bc != null && bc['id'] != null) {
+            int existingIdx =
+                _breadcrumbStack.indexWhere((el) => el['id'] == bc['id']);
+            if (existingIdx != -1) {
+              _breadcrumbStack.removeRange(
+                  existingIdx + 1, _breadcrumbStack.length);
+            } else {
+              _breadcrumbStack.add({
+                'id': bc['id'],
+                'name': bc['name'] ?? 'User',
+                'role': bc['role'] ?? 'USER',
+              });
+            }
+          }
+        } else if (response is List) {
+          _reportData = response;
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -79,6 +125,17 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  void _popBreadcrumb() {
+    if (_breadcrumbStack.length > 1) {
+      _breadcrumbStack.removeLast();
+      final prevId = _breadcrumbStack.last['id'];
+      _generateReport(userId: prevId);
+    } else if (_breadcrumbStack.length == 1) {
+      _breadcrumbStack.clear();
+      _generateReport(userId: widget.agentId);
     }
   }
 
@@ -97,7 +154,10 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           _currentToDate = picked;
         }
       });
-      _refreshData();
+      final currentUserId = _breadcrumbStack.isNotEmpty
+          ? _breadcrumbStack.last['id']
+          : widget.agentId;
+      _generateReport(userId: currentUserId);
     }
   }
 
@@ -109,7 +169,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
     try {
       await PdfService.generateAndShareDailyReport(
-        agentName: widget.agentName,
+        agentName: _breadcrumbStack.isNotEmpty
+            ? (_breadcrumbStack.last['name'] ?? widget.agentName)
+            : widget.agentName,
         fromDate: _currentFromDate,
         toDate: _currentToDate,
         reportData: _reportData,
@@ -145,53 +207,115 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     double totalNetSale = totalSale - totalCommission;
     double totalBalance = totalNetSale - totalWinning;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Daily Report Results',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () => _shareAsPdf(totalSale, totalWinning, totalBalance),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _refreshData,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSummaryHeader(
-                    totalSale, totalCommission, totalWinning, totalBalance),
-                _buildTableHeader(isDesktop),
-                Expanded(
-                  child: _reportData.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No data found for selected period',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        )
-                      : ListView.separated(
-                          itemCount: _reportData.length,
-                          separatorBuilder: (c, i) => const Divider(
-                              height: 1, color: Color(0xFFEEEEEE)),
-                          itemBuilder: (context, index) => _buildReportRow(
-                              _reportData[index], index, isDesktop),
-                        ),
-                ),
-                _buildSummaryFooter(totalSale, totalCommission, totalWinning,
-                    totalBalance, isDesktop),
-              ],
+    return WillPopScope(
+      onWillPop: () async {
+        if (_breadcrumbStack.length <= 1) {
+          return true;
+        }
+        _popBreadcrumb();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Daily Report Results',
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          backgroundColor: AppColors.primary,
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf),
+              onPressed: () =>
+                  _shareAsPdf(totalSale, totalWinning, totalBalance),
             ),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading
+                  ? null
+                  : () => _generateReport(
+                      userId: _breadcrumbStack.isNotEmpty
+                          ? _breadcrumbStack.last['id']
+                          : widget.agentId),
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  _buildSummaryHeader(
+                      totalSale, totalCommission, totalWinning, totalBalance),
+                  if (_breadcrumbStack.isNotEmpty) _buildBreadcrumbs(isDesktop),
+                  _buildTableHeader(isDesktop),
+                  Expanded(
+                    child: _reportData.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No data found for selected period',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _reportData.length,
+                            separatorBuilder: (c, i) => const Divider(
+                                height: 1, color: Color(0xFFEEEEEE)),
+                            itemBuilder: (context, index) => _buildReportRow(
+                                _reportData[index], index, isDesktop),
+                          ),
+                  ),
+                  _buildSummaryFooter(totalSale, totalCommission, totalWinning,
+                      totalBalance, isDesktop),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildBreadcrumbs(bool isDesktop) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _breadcrumbStack.map((bc) {
+            int idx = _breadcrumbStack.indexOf(bc);
+            bool isLast = idx == _breadcrumbStack.length - 1;
+            return Row(
+              children: [
+                GestureDetector(
+                  onTap:
+                      isLast ? null : () => _generateReport(userId: bc['id']),
+                  child: Text(
+                    bc['name'] ?? 'Home',
+                    style: TextStyle(
+                      fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+                      color: isLast ? Colors.black87 : AppColors.primary,
+                      fontSize: 12,
+                      decoration: isLast
+                          ? TextDecoration.none
+                          : TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                if (!isLast)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child:
+                        Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 
@@ -447,6 +571,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final double winning = (item['winning'] ?? 0).toDouble();
     final double balance =
         (item['balance'] ?? (sale - commission - winning)).toDouble();
+    final bool isDrillable = item['is_drillable'] ?? false;
 
     String title = item['user'] ?? '-';
     if (title == '-' || title == 'ALL') {
@@ -471,98 +596,120 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     }
     String subTitle = subItems.join(' • ');
 
-    return Container(
-      color: isEven ? const Color(0xFFF9F9F9) : Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // USER column
-          Expanded(
-            flex: 32,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.black87,
+    return InkWell(
+      onTap: isDrillable && item['user_id'] != null
+          ? () => _generateReport(userId: item['user_id'])
+          : null,
+      child: Container(
+        color: isEven ? const Color(0xFFF9F9F9) : Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // USER column
+            Expanded(
+              flex: 32,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: isDrillable
+                                ? AppColors.primary
+                                : Colors.black87,
+                            decoration: isDrillable
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isDrillable) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 10, color: AppColors.primary),
+                      ],
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (subTitle.isNotEmpty)
-                  Text(
-                    subTitle,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade600,
+                  if (subTitle.isNotEmpty)
+                    Text(
+                      subTitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          // SALES column
-          Expanded(
-            flex: 22,
-            child: Text(
-              sale.toStringAsFixed(0),
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: Colors.black87,
+                ],
               ),
             ),
-          ),
-          // PRZ/DC column
-          Expanded(
-            flex: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  winning.toStringAsFixed(0),
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: winning > 0 ? Colors.red.shade700 : Colors.black87,
-                  ),
+            // SALES column
+            Expanded(
+              flex: 22,
+              child: Text(
+                sale.toStringAsFixed(0),
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.black87,
                 ),
-                if (commission > 0)
+              ),
+            ),
+            // PRZ/DC column
+            Expanded(
+              flex: 24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
-                    'Dc: ${commission.toStringAsFixed(0)}',
+                    winning.toStringAsFixed(0),
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 10,
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF8B0000),
+                      fontSize: 12,
+                      color: winning > 0 ? Colors.red.shade700 : Colors.black87,
                     ),
                   ),
-              ],
-            ),
-          ),
-          // TOTAL column
-          Expanded(
-            flex: 22,
-            child: Text(
-              balance.toStringAsFixed(0),
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
-                color: balance >= 0 ? const Color(0xFF10B981) : Colors.red,
+                  if (commission > 0)
+                    Text(
+                      'Dc: ${commission.toStringAsFixed(0)}',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF8B0000),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+            // TOTAL column
+            Expanded(
+              flex: 22,
+              child: Text(
+                balance.toStringAsFixed(0),
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  color: balance >= 0 ? const Color(0xFF10B981) : Colors.red,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
