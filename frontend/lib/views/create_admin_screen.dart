@@ -140,23 +140,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                   required: !isEditing),
               const SizedBox(height: 20),
               _buildRoleDropdown(),
-              const SizedBox(height: 12),
-              if (_roleToSet == 'SUB_DEALER') ...[
-                CheckboxListTile(
-                  title: const Text('Default ( Booking screen selection )',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: const Text(
-                      'Automatically select this user in booking screen',
-                      style: TextStyle(fontSize: 11)),
-                  value: _isDefault,
-                  onChanged: (val) => setState(() => _isDefault = val ?? false),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.primary,
-                ),
-                const SizedBox(height: 20),
-              ],
+              const SizedBox(height: 20),
               _buildSectionTitle('Financial Limits'),
               _buildTextField(_creditLimitController, 'Weekly Credit Limit',
                   Icons.account_balance,
