@@ -23,7 +23,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
   int? _selectedGameId;
   bool _dayDetail = true;
   bool _gameDetail = false;
-  bool _userWise = false;
+  bool _userWise = true;
   bool _agentRate = false;
   UserModel? _currentUser;
   String? _userRole;
@@ -87,7 +87,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
 
     try {
       final data = await apiService.getDailyReport(
-          state: _selectedState,
+        state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         userId: _selectedAgentId,
@@ -107,8 +107,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
             agentName = 'SELF (${_currentUser!.username})';
           } else {
             final agent = _agents.firstWhere((a) => a.id == _selectedAgentId,
-                orElse: () =>
-                    UserModel(id: -1, username: 'Unknown', role: ''));
+                orElse: () => UserModel(id: -1, username: 'Unknown', role: ''));
             if (agent.id != -1) agentName = agent.username;
           }
         }
@@ -141,8 +140,6 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
     }
   }
 
-  @override
-  
   Widget _buildStateRadio(String state) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -161,7 +158,8 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
           state,
           style: TextStyle(
             fontSize: 15,
-            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
             color: _selectedState == state ? AppColors.primary : Colors.black87,
           ),
         ),
@@ -169,7 +167,8 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
     );
   }
 
-Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -186,10 +185,10 @@ Widget build(BuildContext context) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 24),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
@@ -204,7 +203,6 @@ Widget build(BuildContext context) {
                       ],
                     ),
                   ),
-
                   Row(
                     children: [
                       Expanded(
@@ -216,7 +214,6 @@ Widget build(BuildContext context) {
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -250,14 +247,11 @@ Widget build(BuildContext context) {
                           setState(() => _selectedAgentId = val),
                       icon: Icons.person_search_rounded,
                     ),
-                  
                   const SizedBox(height: 8),
                   _buildToggle('DAY DETAIL', _dayDetail,
                       (v) => setState(() => _dayDetail = v)),
                   _buildToggle('GAME DETAIL', _gameDetail,
                       (v) => setState(() => _gameDetail = v)),
-                  _buildToggle('USER WISE', _userWise,
-                      (v) => setState(() => _userWise = v)),
                   _buildToggle('AGENT RATE', _agentRate,
                       (v) => setState(() => _agentRate = v)),
                   const SizedBox(height: 48),
@@ -287,8 +281,6 @@ Widget build(BuildContext context) {
     );
   }
 
-  
-
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -298,7 +290,8 @@ Widget build(BuildContext context) {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -333,7 +326,8 @@ Widget build(BuildContext context) {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),
