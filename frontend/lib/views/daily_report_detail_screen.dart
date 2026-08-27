@@ -127,23 +127,35 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
   List<Map<String, dynamic>> _getFlattenedRows() {
     List<Map<String, dynamic>> flattened = [];
-    void addItems(List<dynamic> list, int depth) {
+
+    void addItems(List<dynamic> list, int depth, Set<int> visitedAncestors) {
+      if (depth > 10) return; // Circuit breaker against deep recursion
+
       for (var item in list) {
         flattened.add({
           'item': item,
           'depth': depth,
         });
+
         final int? uid = item['user_id'];
-        if (uid != null && _expandedUserIds.contains(uid)) {
-          final children = _expandedChildren[uid] ?? [];
-          if (children.isNotEmpty) {
-            addItems(children, depth + 1);
+        if (uid != null &&
+            _expandedUserIds.contains(uid) &&
+            !visitedAncestors.contains(uid)) {
+          final children = _expandedChildren[uid];
+          if (children != null && children.isNotEmpty) {
+            final nextVisited = Set<int>.from(visitedAncestors)..add(uid);
+            // Ignore any child that has the exact same user_id as the parent to avoid self-loop
+            final validChildren =
+                children.where((c) => c['user_id'] != uid).toList();
+            if (validChildren.isNotEmpty) {
+              addItems(validChildren, depth + 1, nextVisited);
+            }
           }
         }
       }
     }
 
-    addItems(_reportData, 0);
+    addItems(_reportData, 0, <int>{});
     return flattened;
   }
 
