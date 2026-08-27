@@ -198,25 +198,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     }
   }
 
-  Future<void> _selectDate(bool isFrom) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isFrom ? _currentFromDate : _currentToDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isFrom) {
-          _currentFromDate = picked;
-        } else {
-          _currentToDate = picked;
-        }
-      });
-      _refreshData();
-    }
-  }
-
   void _shareAsPdf(
       double totalSale, double totalWin, double totalBalance) async {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -307,8 +288,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                           },
                         ),
                 ),
-                _buildSummaryFooter(totalSale, totalCommission, totalWinning,
-                    totalBalance, isDesktop),
               ],
             ),
     );
@@ -361,128 +340,50 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
   Widget _buildSummaryHeader(double totalSale, double totalCommission,
       double totalWinning, double totalBalance) {
-    final fmt = DateFormat('dd MMM');
-    final fmtYear = DateFormat('dd MMM yyyy');
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: () => _selectDate(true),
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.calendar_month_rounded,
-                        color: AppColors.primary, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'REPORT PERIOD',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          '${fmt.format(_currentFromDate)} - ${fmtYear.format(_currentToDate)}',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'CHANGE',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.shade300, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildNewStatItem(Icons.bar_chart_rounded, 'Total Sales',
+                  '₹${_formatAmount(totalSale)}'),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildNewStatItem(Icons.bar_chart_rounded,
-                      'Total Sales', '₹${_formatAmount(totalSale)}'),
-                ),
-                Container(width: 1, height: 50, color: Colors.grey.shade200),
-                Expanded(
-                  child: _buildNewStatItem(Icons.emoji_events_rounded,
-                      'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
-                      valueColor:
-                          totalWinning > 0 ? Colors.red.shade700 : null),
-                ),
-                Container(width: 1, height: 50, color: Colors.grey.shade200),
-                Expanded(
-                  child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
-                      '₹${_formatAmount(totalCommission)}',
-                      valueColor: const Color(0xFF8B0000)),
-                ),
-                Container(width: 1, height: 50, color: Colors.grey.shade200),
-                Expanded(
-                  child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
-                      'Net Total', '₹${_formatAmount(totalBalance)}',
-                      valueColor: totalBalance >= 0
-                          ? const Color(0xFF10B981)
-                          : Colors.red),
-                ),
-              ],
+            Container(width: 1, height: 50, color: Colors.grey.shade200),
+            Expanded(
+              child: _buildNewStatItem(Icons.emoji_events_rounded,
+                  'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
+                  valueColor: totalWinning > 0 ? Colors.red.shade700 : null),
             ),
-          ),
-        ],
+            Container(width: 1, height: 50, color: Colors.grey.shade200),
+            Expanded(
+              child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
+                  '₹${_formatAmount(totalCommission)}',
+                  valueColor: const Color(0xFF8B0000)),
+            ),
+            Container(width: 1, height: 50, color: Colors.grey.shade200),
+            Expanded(
+              child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
+                  'Net Total', '₹${_formatAmount(totalBalance)}',
+                  valueColor:
+                      totalBalance >= 0 ? const Color(0xFF10B981) : Colors.red),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -778,68 +679,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSummaryFooter(double sale, double commission, double winning,
-      double balance, bool isDesktop) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!, width: 1.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 6,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _summaryColumn('SALES', sale, Colors.black87),
-          _summaryColumn('PRZ / COMM', winning, Colors.red.shade700,
-              subValue: commission),
-          _summaryColumn('TOTAL', balance,
-              balance >= 0 ? const Color(0xFF10B981) : Colors.red,
-              isMain: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryColumn(String label, double value, Color valueColor,
-      {double? subValue, bool isMain = false}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment:
-          isMain ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600])),
-        Text(
-          _formatAmount(value),
-          style: TextStyle(
-            fontSize: isMain ? 15 : 13,
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-          ),
-        ),
-        if (subValue != null && subValue > 0)
-          Text(
-            'Comm: ${_formatAmount(subValue)}',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF8B0000),
-            ),
-          ),
-      ],
     );
   }
 }
