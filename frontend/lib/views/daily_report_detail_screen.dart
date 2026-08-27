@@ -43,9 +43,17 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   late DateTime _currentToDate;
   bool _isLoading = false;
 
-  final Map<int, List<dynamic>> _expandedChildren = {};
-  final Set<int> _expandedUserIds = {};
-  final Set<int> _loadingUserIds = {};
+  final Map<String, List<dynamic>> _expandedChildren = {};
+  final Set<String> _expandedKeys = {};
+  final Set<String> _loadingKeys = {};
+
+  String _getItemKey(dynamic item) {
+    final uid = item['user_id'] ?? 0;
+    final game = item['game'] ?? 'ALL';
+    final date = item['date'] ?? 'ALL';
+    final user = item['user'] ?? '';
+    return '${uid}_${user}_${game}_$date';
+  }
 
   @override
   void initState() {
@@ -66,22 +74,24 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final int? uid = item['user_id'];
     if (uid == null || !(item['is_drillable'] ?? false)) return;
 
-    if (_expandedUserIds.contains(uid)) {
+    final String itemKey = _getItemKey(item);
+
+    if (_expandedKeys.contains(itemKey)) {
       setState(() {
-        _expandedUserIds.remove(uid);
+        _expandedKeys.remove(itemKey);
       });
       return;
     }
 
-    if (_expandedChildren.containsKey(uid)) {
+    if (_expandedChildren.containsKey(itemKey)) {
       setState(() {
-        _expandedUserIds.add(uid);
+        _expandedKeys.add(itemKey);
       });
       return;
     }
 
     setState(() {
-      _loadingUserIds.add(uid);
+      _loadingKeys.add(itemKey);
     });
 
     final apiService = Provider.of<ApiService>(context, listen: false);
@@ -105,18 +115,39 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         childData = response;
       }
 
-      // Filter out self row if returned in childData
-      final validChildren =
-          childData.where((c) => c['user_id'] != uid).toList();
+      final parentGame = item['game']?.toString();
+      final parentDate = item['date']?.toString();
+
+      // Filter children matching this row's specific game and date if applicable
+      final validChildren = childData.where((c) {
+        if (c['user_id'] == uid && c['user'] != 'Self') return false;
+        if (parentGame != null && parentGame != '-' && parentGame != 'ALL') {
+          if (c['game'] != null &&
+              c['game'] != '-' &&
+              c['game'] != 'ALL' &&
+              c['game'] != parentGame) {
+            return false;
+          }
+        }
+        if (parentDate != null && parentDate != '-' && parentDate != 'ALL') {
+          if (c['date'] != null &&
+              c['date'] != '-' &&
+              c['date'] != 'ALL' &&
+              c['date'] != parentDate) {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
 
       setState(() {
-        _expandedChildren[uid] = validChildren;
-        _expandedUserIds.add(uid);
-        _loadingUserIds.remove(uid);
+        _expandedChildren[itemKey] = validChildren;
+        _expandedKeys.add(itemKey);
+        _loadingKeys.remove(itemKey);
       });
     } catch (e) {
       setState(() {
-        _loadingUserIds.remove(uid);
+        _loadingKeys.remove(itemKey);
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -153,8 +184,8 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           _reportData = response;
         }
         _expandedChildren.clear();
-        _expandedUserIds.clear();
-        _loadingUserIds.clear();
+        _expandedKeys.clear();
+        _loadingKeys.clear();
         _isLoading = false;
       });
     } catch (e) {
@@ -285,10 +316,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
   Widget _buildTreeItem(dynamic item, int index, bool isDesktop,
       {int depth = 0}) {
-    final int? uid = item['user_id'];
-    final bool isExpanded = uid != null && _expandedUserIds.contains(uid);
-    final List<dynamic> children =
-        (uid != null ? _expandedChildren[uid] : null) ?? [];
+    final String itemKey = _getItemKey(item);
+    final bool isExpanded = _expandedKeys.contains(itemKey);
+    final List<dynamic> children = _expandedChildren[itemKey] ?? [];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -543,9 +573,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final double balance =
         (item['balance'] ?? (sale - (winning + commission))).toDouble();
     final bool isDrillable = item['is_drillable'] ?? false;
-    final int? uid = item['user_id'];
-    final bool isExpanded = uid != null && _expandedUserIds.contains(uid);
-    final bool isLoading = uid != null && _loadingUserIds.contains(uid);
+    final String itemKey = _getItemKey(item);
+    final bool isExpanded = _expandedKeys.contains(itemKey);
+    final bool isLoading = _loadingKeys.contains(itemKey);
 
     String title = item['user'] ?? '-';
     if (title == '-' || title == 'ALL') {
