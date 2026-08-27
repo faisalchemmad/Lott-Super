@@ -1427,61 +1427,20 @@ class DailyReportView(views.APIView):
 
         # If no detail is requested, provide a summary
         if not group_fields:
-            bets_annotated = bets.annotate(
-                bet_type_category=Case(
-                    When(type__iexact='a', then=Value('ABC')),
-                    When(type__iexact='b', then=Value('ABC')),
-                    When(type__iexact='c', then=Value('ABC')),
-                    When(type__iexact='ab', then=Value('AB_BC_AC')),
-                    When(type__iexact='bc', then=Value('AB_BC_AC')),
-                    When(type__iexact='ac', then=Value('AB_BC_AC')),
-                    default=F('type'),
-                    output_field=CharField(),
-                )
+            sub_groups = bets.aggregate(
+                total_sale=Sum(F('amount') * F('count')),
+                total_winning=Sum('winning_amount'),
+                total_winning_comm=Sum('winning_commission'),
             )
-            sub_groups = bets_annotated.values('bet_type_category', 'state').annotate(
-                sub_sale=Sum(F('amount') * F('count')),
-                sub_count_total=Sum('count'),
-                sub_winning=Sum('winning_amount'),
-            )
-            total_sale = Decimal('0')
-            total_commission = Decimal('0')
-            total_winning = Decimal('0')
-            for sg in sub_groups:
-                s = Decimal(str(sg['sub_sale'] or 0))
-                cnt = Decimal(str(sg['sub_count_total'] or 0))
-                w = Decimal(str(sg['sub_winning'] or 0))
-                comm_rate = Decimal('0')
-                if not use_agent_rate:
-                    bcat = sg['bet_type_category']
-                    state_code = sg.get('state', 'KL')
-                    if state_code == 'TN':
-                        if bcat == 'ABC': comm_rate = Decimal(str(target_user.tn_sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(target_user.tn_sales_comm_ab_bc_ac))
-                        elif bcat == '3D-10': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_10))
-                        elif bcat == '3D-25': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_25))
-                        elif bcat == '3D-30': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_30))
-                        elif bcat == '3D-60': comm_rate = Decimal(str(target_user.tn_sales_comm_3d_60))
-                        elif bcat == '4D-110': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_110))
-                        elif bcat == '4D-55': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_55))
-                        elif bcat == '4D-20': comm_rate = Decimal(str(target_user.tn_sales_comm_4d_20))
-                    else:
-                        if bcat == 'ABC': comm_rate = Decimal(str(target_user.sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(target_user.sales_comm_ab_bc_ac))
-                        elif bcat == 'SUPER': comm_rate = Decimal(str(target_user.sales_comm_super))
-                        elif bcat == 'BOX': comm_rate = Decimal(str(target_user.sales_comm_box))
-                comm = comm_rate * cnt
-                total_sale += s
-                total_commission += comm
-                total_winning += w
-            net_sale = total_sale - total_commission
-            balance = net_sale - total_winning
+            total_sale = Decimal(str(sub_groups['total_sale'] or 0))
+            total_winning = Decimal(str(sub_groups['total_winning'] or 0))
+            total_winning_comm = Decimal(str(sub_groups['total_winning_comm'] or 0))
+            balance = total_sale - (total_winning + total_winning_comm)
             return Response({
                 'data': [{
                     'label': 'Total Summary',
                     'sale': float(total_sale),
-                    'commission': float(total_commission),
-                    'net_sale': float(net_sale),
+                    'commission': float(total_winning_comm),
                     'winning': float(total_winning),
                     'balance': float(balance),
                 }],
@@ -1492,28 +1451,10 @@ class DailyReportView(views.APIView):
                 }
             })
 
-        # Annotate bets with their type categories
-        bets = bets.annotate(
-            bet_type_category=Case(
-                When(type__iexact='a', then=Value('ABC')),
-                When(type__iexact='b', then=Value('ABC')),
-                When(type__iexact='c', then=Value('ABC')),
-                When(type__iexact='ab', then=Value('AB_BC_AC')),
-                When(type__iexact='bc', then=Value('AB_BC_AC')),
-                When(type__iexact='ac', then=Value('AB_BC_AC')),
-                default=F('type'),
-                output_field=CharField(),
-            )
-        )
-
         # ── Build direct-subordinate map under target_user ────────────────────
         direct_children = list(
             User.objects.filter(parent=target_user).only(
                 'id', 'username', 'role',
-                'sales_comm_abc', 'sales_comm_ab_bc_ac', 'sales_comm_super', 'sales_comm_box',
-                'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
-                'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
-                'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
             )
         )
         direct_child_ids = {c.id for c in direct_children}
@@ -1578,52 +1519,22 @@ class DailyReportView(views.APIView):
 
         # Grouped aggregation
         grouped_bets = (
-            bets.values(*group_fields_for_query, 'bet_type_category', 'state')
+            bets.values(*group_fields_for_query)
             .annotate(
                 sub_total_sale=Sum(F('amount') * F('count')),
                 sub_total_count=Sum('count'),
                 sub_total_winning=Sum('winning_amount'),
+                sub_total_winning_comm=Sum('winning_commission'),
             )
-            .order_by(*group_fields_for_query, 'bet_type_category', 'state')
+            .order_by(*group_fields_for_query)
         )
 
         final_data = {}
 
         for r in grouped_bets:
-            if use_agent_rate:
-                sub_id = r.get('direct_sub_id') or r.get('user__id')
-                target_user_for_comm = direct_child_obj.get(sub_id) or direct_sub_map.get(sub_id)
-                if target_user_for_comm is None:
-                    target_user_for_comm = target_user
-            else:
-                target_user_for_comm = target_user
-
-            commission_rate = Decimal('0.00')
-            if target_user_for_comm:
-                bcat = r['bet_type_category']
-                state_code = r.get('state', 'KL')
-                if state_code == 'TN':
-                    if bcat == 'ABC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_abc))
-                    elif bcat == 'AB_BC_AC': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_ab_bc_ac))
-                    elif bcat == '3D-10': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_10))
-                    elif bcat == '3D-25': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_25))
-                    elif bcat == '3D-30': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_30))
-                    elif bcat == '3D-60': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_3d_60))
-                    elif bcat == '4D-110': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_110))
-                    elif bcat == '4D-55': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_55))
-                    elif bcat == '4D-20': commission_rate = Decimal(str(target_user_for_comm.tn_sales_comm_4d_20))
-                else:
-                    if bcat == 'ABC': commission_rate = Decimal(str(target_user_for_comm.sales_comm_abc))
-                    elif bcat == 'AB_BC_AC': commission_rate = Decimal(str(target_user_for_comm.sales_comm_ab_bc_ac))
-                    elif bcat == 'SUPER': commission_rate = Decimal(str(target_user_for_comm.sales_comm_super))
-                    elif bcat == 'BOX': commission_rate = Decimal(str(target_user_for_comm.sales_comm_box))
-
             sub_sale = Decimal(str(r['sub_total_sale'] or 0))
-            sub_count = Decimal(str(r['sub_total_count'] or 0))
             sub_winning = Decimal(str(r['sub_total_winning'] or 0))
-
-            commission = commission_rate * sub_count
-            net_sale = sub_sale - commission
+            sub_winning_comm = Decimal(str(r['sub_total_winning_comm'] or 0))
 
             key_parts = []
             if day_detail:
@@ -1659,17 +1570,15 @@ class DailyReportView(views.APIView):
                     'is_drillable': is_drillable,
                     'sale': Decimal('0.00'),
                     'commission': Decimal('0.00'),
-                    'net_sale': Decimal('0.00'),
                     'winning': Decimal('0.00'),
                     'balance': Decimal('0.00'),
                 }
 
             final_data[key]['sale'] += sub_sale
-            final_data[key]['commission'] += commission
-            final_data[key]['net_sale'] += net_sale
+            final_data[key]['commission'] += sub_winning_comm
             final_data[key]['winning'] += sub_winning
             final_data[key]['balance'] = (
-                final_data[key]['net_sale'] - final_data[key]['winning']
+                final_data[key]['sale'] - (final_data[key]['winning'] + final_data[key]['commission'])
             )
 
         output_data = []

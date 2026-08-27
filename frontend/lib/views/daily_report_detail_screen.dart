@@ -225,8 +225,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         0, (sum, item) => sum + ((item['commission'] ?? 0) as num));
     double totalWinning = _reportData.fold(
         0, (sum, item) => sum + ((item['winning'] ?? 0) as num));
-    double totalNetSale = totalSale - totalCommission;
-    double totalBalance = totalNetSale - totalWinning;
+    double totalBalance = totalSale - (totalWinning + totalCommission);
 
     return Scaffold(
       backgroundColor: Colors.white,
