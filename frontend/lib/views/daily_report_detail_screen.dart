@@ -367,13 +367,15 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             Expanded(
               child: _buildNewStatItem(Icons.emoji_events_rounded,
                   'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
-                  valueColor: totalWinning > 0 ? Colors.red.shade700 : null),
+                  valueColor:
+                      totalWinning > 0 ? const Color(0xFF10B981) : null),
             ),
             Container(width: 1, height: 50, color: Colors.grey.shade200),
             Expanded(
               child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
                   '₹${_formatAmount(totalCommission)}',
-                  valueColor: const Color(0xFF8B0000)),
+                  valueColor:
+                      totalCommission > 0 ? const Color(0xFF059669) : null),
             ),
             Container(width: 1, height: 50, color: Colors.grey.shade200),
             Expanded(
@@ -648,7 +650,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      color: winning > 0 ? Colors.red.shade700 : Colors.black87,
+                      color: winning > 0
+                          ? const Color(0xFF10B981)
+                          : Colors.black87,
                     ),
                   ),
                   if (commission > 0)
@@ -658,7 +662,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B0000),
+                        color: Color(0xFF059669),
                       ),
                     ),
                 ],
