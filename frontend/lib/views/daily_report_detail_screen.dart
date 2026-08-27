@@ -105,8 +105,12 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         childData = response;
       }
 
+      // Filter out self row if returned in childData
+      final validChildren =
+          childData.where((c) => c['user_id'] != uid).toList();
+
       setState(() {
-        _expandedChildren[uid] = childData;
+        _expandedChildren[uid] = validChildren;
         _expandedUserIds.add(uid);
         _loadingUserIds.remove(uid);
       });
@@ -123,40 +127,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         );
       }
     }
-  }
-
-  List<Map<String, dynamic>> _getFlattenedRows() {
-    List<Map<String, dynamic>> flattened = [];
-
-    void addItems(List<dynamic> list, int depth, Set<int> visitedAncestors) {
-      if (depth > 10) return; // Circuit breaker against deep recursion
-
-      for (var item in list) {
-        flattened.add({
-          'item': item,
-          'depth': depth,
-        });
-
-        final int? uid = item['user_id'];
-        if (uid != null &&
-            _expandedUserIds.contains(uid) &&
-            !visitedAncestors.contains(uid)) {
-          final children = _expandedChildren[uid];
-          if (children != null && children.isNotEmpty) {
-            final nextVisited = Set<int>.from(visitedAncestors)..add(uid);
-            // Ignore any child that has the exact same user_id as the parent to avoid self-loop
-            final validChildren =
-                children.where((c) => c['user_id'] != uid).toList();
-            if (validChildren.isNotEmpty) {
-              addItems(validChildren, depth + 1, nextVisited);
-            }
-          }
-        }
-      }
-    }
-
-    addItems(_reportData, 0, <int>{});
-    return flattened;
   }
 
   Future<void> _refreshData() async {
@@ -258,8 +228,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     double totalNetSale = totalSale - totalCommission;
     double totalBalance = totalNetSale - totalWinning;
 
-    final flattenedList = _getFlattenedRows();
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -288,7 +256,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                     totalSale, totalCommission, totalWinning, totalBalance),
                 _buildTableHeader(isDesktop),
                 Expanded(
-                  child: flattenedList.isEmpty
+                  child: _reportData.isEmpty
                       ? const Center(
                           child: Text(
                             'No data found for selected period',
@@ -296,16 +264,15 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                           ),
                         )
                       : ListView.separated(
-                          itemCount: flattenedList.length,
+                          itemCount: _reportData.length,
                           separatorBuilder: (c, i) => const Divider(
                               height: 1, color: Color(0xFFEEEEEE)),
                           itemBuilder: (context, index) {
-                            final entry = flattenedList[index];
-                            return _buildReportRow(
-                              entry['item'],
+                            return _buildTreeItem(
+                              _reportData[index],
                               index,
                               isDesktop,
-                              depth: entry['depth'] as int,
+                              depth: 0,
                             );
                           },
                         ),
@@ -314,6 +281,45 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                     totalBalance, isDesktop),
               ],
             ),
+    );
+  }
+
+  Widget _buildTreeItem(dynamic item, int index, bool isDesktop,
+      {int depth = 0}) {
+    final int? uid = item['user_id'];
+    final bool isExpanded = uid != null && _expandedUserIds.contains(uid);
+    final List<dynamic> children =
+        (uid != null ? _expandedChildren[uid] : null) ?? [];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildReportRow(item, index, isDesktop, depth: depth),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+          child: (isExpanded && children.isNotEmpty)
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: children.asMap().entries.map((entry) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                        _buildTreeItem(
+                          entry.value,
+                          entry.key,
+                          isDesktop,
+                          depth: depth + 1,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
@@ -621,12 +627,15 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                             ),
                           )
                         else
-                          Icon(
-                            isExpanded
-                                ? Icons.keyboard_arrow_down_rounded
-                                : Icons.keyboard_arrow_right_rounded,
-                            size: 15,
-                            color: AppColors.primary,
+                          AnimatedRotation(
+                            turns: isExpanded ? 0.25 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            child: const Icon(
+                              Icons.keyboard_arrow_right_rounded,
+                              size: 15,
+                              color: AppColors.primary,
+                            ),
                           ),
                       ],
                     ],
