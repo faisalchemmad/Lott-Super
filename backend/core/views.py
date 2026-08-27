@@ -1570,12 +1570,14 @@ class DailyReportView(views.APIView):
                     'is_drillable': is_drillable,
                     'sale': Decimal('0.00'),
                     'commission': Decimal('0.00'),
+                    'net_sale': Decimal('0.00'),
                     'winning': Decimal('0.00'),
                     'balance': Decimal('0.00'),
                 }
 
             final_data[key]['sale'] += sub_sale
             final_data[key]['commission'] += sub_winning_comm
+            final_data[key]['net_sale'] += sub_sale
             final_data[key]['winning'] += sub_winning
             final_data[key]['balance'] = (
                 final_data[key]['sale'] - (final_data[key]['winning'] + final_data[key]['commission'])
