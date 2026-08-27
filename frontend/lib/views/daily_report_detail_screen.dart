@@ -431,9 +431,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 ),
                 Container(width: 1, height: 50, color: Colors.grey.shade200),
                 Expanded(
-                  child: _buildNewStatItem(
-                      Icons.percent_rounded,
-                      widget.agentRate ? 'Agent Comm' : 'Discount (Dc)',
+                  child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
                       '₹${totalCommission.toStringAsFixed(0)}',
                       valueColor: const Color(0xFF8B0000)),
                 ),
@@ -517,8 +515,8 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           ),
           Expanded(
             flex: 24,
-            child:
-                Text('PRZ/DC', textAlign: TextAlign.right, style: headerStyle),
+            child: Text('PRZ/COMM',
+                textAlign: TextAlign.right, style: headerStyle),
           ),
           Expanded(
             flex: 22,
@@ -685,7 +683,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                   ),
                   if (commission > 0)
                     Text(
-                      'Dc: ${commission.toStringAsFixed(0)}',
+                      'Comm: ${commission.toStringAsFixed(0)}',
                       textAlign: TextAlign.right,
                       style: const TextStyle(
                         fontSize: 10,
@@ -733,7 +731,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _summaryColumn('SALES', sale, Colors.black87),
-          _summaryColumn('PRZ / DC', winning, Colors.red.shade700,
+          _summaryColumn('PRZ / COMM', winning, Colors.red.shade700,
               subValue: commission),
           _summaryColumn('TOTAL', balance,
               balance >= 0 ? const Color(0xFF10B981) : Colors.red,
@@ -765,7 +763,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         ),
         if (subValue != null && subValue > 0)
           Text(
-            'Dc: ${subValue.toStringAsFixed(0)}',
+            'Comm: ${subValue.toStringAsFixed(0)}',
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
