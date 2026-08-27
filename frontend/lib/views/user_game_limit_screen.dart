@@ -18,11 +18,26 @@ class UserGameLimitScreen extends StatefulWidget {
 class _UserGameLimitScreenState extends State<UserGameLimitScreen> {
   List<GameModel> _games = [];
   bool _isLoading = true;
+  UserModel? _user;
 
   @override
   void initState() {
     super.initState();
     _loadGames();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    try {
+      final users = await apiService.getUsers();
+      final u = users.firstWhere((usr) => usr.id == widget.user.id);
+      if (mounted) {
+        setState(() {
+          _user = u;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadGames() async {
@@ -200,15 +215,18 @@ class _UserGameLimitScreenState extends State<UserGameLimitScreen> {
                       style: TextStyle(fontSize: 12, color: Colors.grey)),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded,
                       size: 14, color: Colors.grey),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
-                    Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            ManageUserCountLimitsScreen(user: widget.user),
+                        builder: (context) => ManageUserCountLimitsScreen(
+                            user: _user ?? widget.user),
                       ),
                     );
+                    if (result == true) {
+                      _loadUserData();
+                    }
                   },
                 ),
                 ListTile(
@@ -230,15 +248,18 @@ class _UserGameLimitScreenState extends State<UserGameLimitScreen> {
                       style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded,
                       size: 14, color: Colors.grey),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
-                    Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ManageUserNumberLimitsScreen(
-                            user: widget.user, game: game),
+                            user: _user ?? widget.user, game: game),
                       ),
                     );
+                    if (result == true) {
+                      _loadUserData();
+                    }
                   },
                 ),
               ],

@@ -81,6 +81,42 @@ class _ManageUserCountLimitsScreenState
         TextEditingController(text: widget.user.tnCount4d55.toString());
     _tnCount4d20 =
         TextEditingController(text: widget.user.tnCount4d20.toString());
+
+    _loadFreshUserData();
+  }
+
+  Future<void> _loadFreshUserData() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    try {
+      final users = await apiService.getUsers();
+      final u = users.firstWhere((usr) => usr.id == widget.user.id);
+      if (mounted) {
+        setState(() {
+          _countA.text = u.countA.toString();
+          _countB.text = u.countB.toString();
+          _countC.text = u.countC.toString();
+          _countAB.text = u.countAB.toString();
+          _countBC.text = u.countBC.toString();
+          _countAC.text = u.countAC.toString();
+          _countSuper.text = u.countSuper.toString();
+          _countBox.text = u.countBox.toString();
+
+          _tnCountA.text = u.tnCountA.toString();
+          _tnCountB.text = u.tnCountB.toString();
+          _tnCountC.text = u.tnCountC.toString();
+          _tnCountAB.text = u.tnCountAB.toString();
+          _tnCountBC.text = u.tnCountBC.toString();
+          _tnCountAC.text = u.tnCountAC.toString();
+          _tnCount3d10.text = u.tnCount3d10.toString();
+          _tnCount3d25.text = u.tnCount3d25.toString();
+          _tnCount3d30.text = u.tnCount3d30.toString();
+          _tnCount3d60.text = u.tnCount3d60.toString();
+          _tnCount4d110.text = u.tnCount4d110.toString();
+          _tnCount4d55.text = u.tnCount4d55.toString();
+          _tnCount4d20.text = u.tnCount4d20.toString();
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -117,28 +153,28 @@ class _ManageUserCountLimitsScreenState
     final apiService = Provider.of<ApiService>(context, listen: false);
     final data = {
       // KL
-      'count_a': int.parse(_countA.text),
-      'count_b': int.parse(_countB.text),
-      'count_c': int.parse(_countC.text),
-      'count_ab': int.parse(_countAB.text),
-      'count_bc': int.parse(_countBC.text),
-      'count_ac': int.parse(_countAC.text),
-      'count_super': int.parse(_countSuper.text),
-      'count_box': int.parse(_countBox.text),
+      'count_a': int.tryParse(_countA.text.trim()) ?? 0,
+      'count_b': int.tryParse(_countB.text.trim()) ?? 0,
+      'count_c': int.tryParse(_countC.text.trim()) ?? 0,
+      'count_ab': int.tryParse(_countAB.text.trim()) ?? 0,
+      'count_bc': int.tryParse(_countBC.text.trim()) ?? 0,
+      'count_ac': int.tryParse(_countAC.text.trim()) ?? 0,
+      'count_super': int.tryParse(_countSuper.text.trim()) ?? 0,
+      'count_box': int.tryParse(_countBox.text.trim()) ?? 0,
       // TN
-      'tn_count_a': int.parse(_tnCountA.text),
-      'tn_count_b': int.parse(_tnCountB.text),
-      'tn_count_c': int.parse(_tnCountC.text),
-      'tn_count_ab': int.parse(_tnCountAB.text),
-      'tn_count_bc': int.parse(_tnCountBC.text),
-      'tn_count_ac': int.parse(_tnCountAC.text),
-      'tn_count_3d_10': int.parse(_tnCount3d10.text),
-      'tn_count_3d_25': int.parse(_tnCount3d25.text),
-      'tn_count_3d_30': int.parse(_tnCount3d30.text),
-      'tn_count_3d_60': int.parse(_tnCount3d60.text),
-      'tn_count_4d_110': int.parse(_tnCount4d110.text),
-      'tn_count_4d_55': int.parse(_tnCount4d55.text),
-      'tn_count_4d_20': int.parse(_tnCount4d20.text),
+      'tn_count_a': int.tryParse(_tnCountA.text.trim()) ?? 0,
+      'tn_count_b': int.tryParse(_tnCountB.text.trim()) ?? 0,
+      'tn_count_c': int.tryParse(_tnCountC.text.trim()) ?? 0,
+      'tn_count_ab': int.tryParse(_tnCountAB.text.trim()) ?? 0,
+      'tn_count_bc': int.tryParse(_tnCountBC.text.trim()) ?? 0,
+      'tn_count_ac': int.tryParse(_tnCountAC.text.trim()) ?? 0,
+      'tn_count_3d_10': int.tryParse(_tnCount3d10.text.trim()) ?? 0,
+      'tn_count_3d_25': int.tryParse(_tnCount3d25.text.trim()) ?? 0,
+      'tn_count_3d_30': int.tryParse(_tnCount3d30.text.trim()) ?? 0,
+      'tn_count_3d_60': int.tryParse(_tnCount3d60.text.trim()) ?? 0,
+      'tn_count_4d_110': int.tryParse(_tnCount4d110.text.trim()) ?? 0,
+      'tn_count_4d_55': int.tryParse(_tnCount4d55.text.trim()) ?? 0,
+      'tn_count_4d_20': int.tryParse(_tnCount4d20.text.trim()) ?? 0,
     };
 
     try {

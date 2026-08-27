@@ -148,13 +148,16 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
               context,
               icon: Icons.format_list_numbered_rounded,
               label: 'User Count Limit',
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          UserGameLimitScreen(user: widget.user)),
+                          UserGameLimitScreen(user: userToShow)),
                 );
+                if (result == true) {
+                  _loadUserData();
+                }
               },
             ),
             const SizedBox(height: 8),
