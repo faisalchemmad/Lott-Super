@@ -42,7 +42,10 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   late DateTime _currentFromDate;
   late DateTime _currentToDate;
   bool _isLoading = false;
-  final List<Map<String, dynamic>> _breadcrumbStack = [];
+
+  final Map<int, List<dynamic>> _expandedChildren = {};
+  final Set<int> _expandedUserIds = {};
+  final Set<int> _loadingUserIds = {};
 
   @override
   void initState() {
@@ -52,33 +55,99 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
     if (widget.initialReportData is Map<String, dynamic>) {
       _reportData = widget.initialReportData['data'] ?? [];
-      final bc = widget.initialReportData['breadcrumb'];
-      if (bc != null && bc['id'] != null) {
-        _breadcrumbStack.add({
-          'id': bc['id'],
-          'name': bc['name'] ?? widget.agentName,
-          'role': bc['role'] ?? 'USER',
-        });
-      } else {
-        _breadcrumbStack.add({
-          'id': widget.agentId,
-          'name': widget.agentName,
-          'role': 'USER',
-        });
-      }
     } else if (widget.initialReportData is List) {
       _reportData = widget.initialReportData;
-      _breadcrumbStack.add({
-        'id': widget.agentId,
-        'name': widget.agentName,
-        'role': 'USER',
-      });
     } else {
       _reportData = [];
     }
   }
 
-  Future<void> _generateReport({int? userId}) async {
+  Future<void> _toggleExpand(dynamic item) async {
+    final int? uid = item['user_id'];
+    if (uid == null || !(item['is_drillable'] ?? false)) return;
+
+    if (_expandedUserIds.contains(uid)) {
+      setState(() {
+        _expandedUserIds.remove(uid);
+      });
+      return;
+    }
+
+    if (_expandedChildren.containsKey(uid)) {
+      setState(() {
+        _expandedUserIds.add(uid);
+      });
+      return;
+    }
+
+    setState(() {
+      _loadingUserIds.add(uid);
+    });
+
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    try {
+      final response = await apiService.getDailyReport(
+        fromDate: DateFormat('yyyy-MM-dd').format(_currentFromDate),
+        toDate: DateFormat('yyyy-MM-dd').format(_currentToDate),
+        userId: uid,
+        gameIds:
+            widget.selectedGameId != null ? [widget.selectedGameId!] : null,
+        dayDetail: widget.dayDetail,
+        gameDetail: widget.gameDetail,
+        userDetail: true,
+        agentRate: widget.agentRate,
+      );
+
+      List<dynamic> childData = [];
+      if (response is Map<String, dynamic>) {
+        childData = response['data'] ?? [];
+      } else if (response is List) {
+        childData = response;
+      }
+
+      setState(() {
+        _expandedChildren[uid] = childData;
+        _expandedUserIds.add(uid);
+        _loadingUserIds.remove(uid);
+      });
+    } catch (e) {
+      setState(() {
+        _loadingUserIds.remove(uid);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading subordinates: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _getFlattenedRows() {
+    List<Map<String, dynamic>> flattened = [];
+    void addItems(List<dynamic> list, int depth) {
+      for (var item in list) {
+        flattened.add({
+          'item': item,
+          'depth': depth,
+        });
+        final int? uid = item['user_id'];
+        if (uid != null && _expandedUserIds.contains(uid)) {
+          final children = _expandedChildren[uid] ?? [];
+          if (children.isNotEmpty) {
+            addItems(children, depth + 1);
+          }
+        }
+      }
+    }
+
+    addItems(_reportData, 0);
+    return flattened;
+  }
+
+  Future<void> _refreshData() async {
     setState(() => _isLoading = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
@@ -86,36 +155,24 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
       final response = await apiService.getDailyReport(
         fromDate: DateFormat('yyyy-MM-dd').format(_currentFromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_currentToDate),
-        userId: userId,
+        userId: widget.agentId,
         gameIds:
             widget.selectedGameId != null ? [widget.selectedGameId!] : null,
         dayDetail: widget.dayDetail,
         gameDetail: widget.gameDetail,
-        userDetail: true, // Always user-wise when drilling down
+        userDetail: true,
         agentRate: widget.agentRate,
       );
 
       setState(() {
         if (response is Map<String, dynamic>) {
           _reportData = response['data'] ?? [];
-          final bc = response['breadcrumb'];
-          if (bc != null && bc['id'] != null) {
-            int existingIdx =
-                _breadcrumbStack.indexWhere((el) => el['id'] == bc['id']);
-            if (existingIdx != -1) {
-              _breadcrumbStack.removeRange(
-                  existingIdx + 1, _breadcrumbStack.length);
-            } else {
-              _breadcrumbStack.add({
-                'id': bc['id'],
-                'name': bc['name'] ?? 'User',
-                'role': bc['role'] ?? 'USER',
-              });
-            }
-          }
         } else if (response is List) {
           _reportData = response;
         }
+        _expandedChildren.clear();
+        _expandedUserIds.clear();
+        _loadingUserIds.clear();
         _isLoading = false;
       });
     } catch (e) {
@@ -125,17 +182,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
-    }
-  }
-
-  void _popBreadcrumb() {
-    if (_breadcrumbStack.length > 1) {
-      _breadcrumbStack.removeLast();
-      final prevId = _breadcrumbStack.last['id'];
-      _generateReport(userId: prevId);
-    } else if (_breadcrumbStack.length == 1) {
-      _breadcrumbStack.clear();
-      _generateReport(userId: widget.agentId);
     }
   }
 
@@ -154,10 +200,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           _currentToDate = picked;
         }
       });
-      final currentUserId = _breadcrumbStack.isNotEmpty
-          ? _breadcrumbStack.last['id']
-          : widget.agentId;
-      _generateReport(userId: currentUserId);
+      _refreshData();
     }
   }
 
@@ -169,9 +212,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
     try {
       await PdfService.generateAndShareDailyReport(
-        agentName: _breadcrumbStack.isNotEmpty
-            ? (_breadcrumbStack.last['name'] ?? widget.agentName)
-            : widget.agentName,
+        agentName: widget.agentName,
         fromDate: _currentFromDate,
         toDate: _currentToDate,
         reportData: _reportData,
@@ -196,155 +237,71 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         defaultTargetPlatform == TargetPlatform.linux ||
         defaultTargetPlatform == TargetPlatform.macOS;
 
-    // Always use gross sale for SALE column total
     double totalSale =
         _reportData.fold(0, (sum, item) => sum + ((item['sale'] ?? 0) as num));
     double totalCommission = _reportData.fold(
         0, (sum, item) => sum + ((item['commission'] ?? 0) as num));
     double totalWinning = _reportData.fold(
         0, (sum, item) => sum + ((item['winning'] ?? 0) as num));
-    // Balance = net_sale (sale - commission) - winning
     double totalNetSale = totalSale - totalCommission;
     double totalBalance = totalNetSale - totalWinning;
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (_breadcrumbStack.length <= 1) {
-          return true;
-        }
-        _popBreadcrumb();
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text('Daily Report Results',
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf),
-              onPressed: () =>
-                  _shareAsPdf(totalSale, totalWinning, totalBalance),
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading
-                  ? null
-                  : () => _generateReport(
-                      userId: _breadcrumbStack.isNotEmpty
-                          ? _breadcrumbStack.last['id']
-                          : widget.agentId),
-            ),
-          ],
-        ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  _buildSummaryHeader(
-                      totalSale, totalCommission, totalWinning, totalBalance),
-                  if (_breadcrumbStack.length > 1) _buildBreadcrumbs(isDesktop),
-                  _buildTableHeader(isDesktop),
-                  Expanded(
-                    child: _reportData.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No data found for selected period',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          )
-                        : ListView.separated(
-                            itemCount: _reportData.length,
-                            separatorBuilder: (c, i) => const Divider(
-                                height: 1, color: Color(0xFFEEEEEE)),
-                            itemBuilder: (context, index) => _buildReportRow(
-                                _reportData[index], index, isDesktop),
-                          ),
-                  ),
-                  _buildSummaryFooter(totalSale, totalCommission, totalWinning,
-                      totalBalance, isDesktop),
-                ],
-              ),
-      ),
-    );
-  }
+    final flattenedList = _getFlattenedRows();
 
-  Widget _buildBreadcrumbs(bool isDesktop) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F6F8),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Daily Report Results',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () => _shareAsPdf(totalSale, totalWinning, totalBalance),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _refreshData,
+          ),
+        ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            InkWell(
-              onTap: _popBreadcrumb,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Row(
-                  children: [
-                    Icon(Icons.arrow_back, size: 14, color: AppColors.primary),
-                    SizedBox(width: 4),
-                    Text(
-                      'Back',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _buildSummaryHeader(
+                    totalSale, totalCommission, totalWinning, totalBalance),
+                _buildTableHeader(isDesktop),
+                Expanded(
+                  child: flattenedList.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No data found for selected period',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: flattenedList.length,
+                          separatorBuilder: (c, i) => const Divider(
+                              height: 1, color: Color(0xFFEEEEEE)),
+                          itemBuilder: (context, index) {
+                            final entry = flattenedList[index];
+                            return _buildReportRow(
+                              entry['item'],
+                              index,
+                              isDesktop,
+                              depth: entry['depth'] as int,
+                            );
+                          },
+                        ),
                 ),
-              ),
+                _buildSummaryFooter(totalSale, totalCommission, totalWinning,
+                    totalBalance, isDesktop),
+              ],
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              height: 12,
-              width: 1,
-              color: Colors.grey.shade400,
-            ),
-            ..._breadcrumbStack.map((bc) {
-              int idx = _breadcrumbStack.indexOf(bc);
-              bool isLast = idx == _breadcrumbStack.length - 1;
-              return Row(
-                children: [
-                  GestureDetector(
-                    onTap:
-                        isLast ? null : () => _generateReport(userId: bc['id']),
-                    child: Text(
-                      bc['name'] ?? 'Home',
-                      style: TextStyle(
-                        fontWeight:
-                            isLast ? FontWeight.bold : FontWeight.normal,
-                        color: isLast ? Colors.black87 : AppColors.primary,
-                        fontSize: 11.5,
-                        decoration: isLast
-                            ? TextDecoration.none
-                            : TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                  if (!isLast)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 3),
-                      child: Icon(Icons.chevron_right,
-                          size: 14, color: Colors.grey),
-                    ),
-                ],
-              );
-            }).toList(),
-          ],
-        ),
-      ),
     );
   }
 
@@ -360,7 +317,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Report Period Card
           InkWell(
             onTap: () => _selectDate(true),
             borderRadius: BorderRadius.circular(6),
@@ -429,7 +385,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          // 2. Summary 4-Stat Card (like Sales Report)
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -557,7 +512,8 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
   }
 
-  Widget _buildReportRow(dynamic item, int index, bool isDesktop) {
+  Widget _buildReportRow(dynamic item, int index, bool isDesktop,
+      {int depth = 0}) {
     final bool isEven = index % 2 == 0;
     final double sale = (item['sale'] ?? 0).toDouble();
     final double commission = (item['commission'] ?? 0).toDouble();
@@ -565,6 +521,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final double balance =
         (item['balance'] ?? (sale - commission - winning)).toDouble();
     final bool isDrillable = item['is_drillable'] ?? false;
+    final int? uid = item['user_id'];
+    final bool isExpanded = uid != null && _expandedUserIds.contains(uid);
+    final bool isLoading = uid != null && _loadingUserIds.contains(uid);
 
     String title = item['user'] ?? '-';
     if (title == '-' || title == 'ALL') {
@@ -589,17 +548,26 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     }
     String subTitle = subItems.join(' • ');
 
+    Color rowBg;
+    if (depth == 0) {
+      rowBg = isEven ? const Color(0xFFF9F9F9) : Colors.white;
+    } else if (depth == 1) {
+      rowBg = const Color(0xFFF1F5F9);
+    } else {
+      rowBg = const Color(0xFFE2E8F0);
+    }
+
+    final double leftPadding = 12.0 + (depth * 14.0);
+
     return InkWell(
-      onTap: isDrillable && item['user_id'] != null
-          ? () => _generateReport(userId: item['user_id'])
-          : null,
+      onTap: isDrillable ? () => _toggleExpand(item) : null,
       child: Container(
-        color: isEven ? const Color(0xFFF9F9F9) : Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        color: rowBg,
+        padding:
+            EdgeInsets.only(left: leftPadding, right: 12, top: 8, bottom: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // USER column
             Expanded(
               flex: 32,
               child: Column(
@@ -609,18 +577,21 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (depth > 0) ...[
+                        const Icon(Icons.subdirectory_arrow_right_rounded,
+                            size: 13, color: AppColors.primary),
+                        const SizedBox(width: 3),
+                      ],
                       Flexible(
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontWeight:
+                                depth == 0 ? FontWeight.bold : FontWeight.w600,
+                            fontSize: depth == 0 ? 12 : 11.5,
                             color: isDrillable
                                 ? AppColors.primary
                                 : Colors.black87,
-                            decoration: isDrillable
-                                ? TextDecoration.underline
-                                : TextDecoration.none,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -628,25 +599,42 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                       ),
                       if (isDrillable) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.arrow_forward_ios_rounded,
-                            size: 10, color: AppColors.primary),
+                        if (isLoading)
+                          const SizedBox(
+                            width: 10,
+                            height: 10,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        else
+                          Icon(
+                            isExpanded
+                                ? Icons.keyboard_arrow_down_rounded
+                                : Icons.keyboard_arrow_right_rounded,
+                            size: 15,
+                            color: AppColors.primary,
+                          ),
                       ],
                     ],
                   ),
                   if (subTitle.isNotEmpty)
-                    Text(
-                      subTitle,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade600,
+                    Padding(
+                      padding: EdgeInsets.only(left: depth > 0 ? 16 : 0),
+                      child: Text(
+                        subTitle,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),
             ),
-            // SALES column
             Expanded(
               flex: 22,
               child: Text(
@@ -659,7 +647,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 ),
               ),
             ),
-            // PRZ/DC column
             Expanded(
               flex: 24,
               child: Column(
@@ -688,7 +675,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 ],
               ),
             ),
-            // TOTAL column
             Expanded(
               flex: 22,
               child: Text(
