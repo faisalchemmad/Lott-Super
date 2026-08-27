@@ -653,7 +653,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                   ),
                   if (commission > 0)
                     Text(
-                      'Comm: ${_formatAmount(commission)}',
+                      'Com: ${_formatAmount(commission)}',
                       textAlign: TextAlign.right,
                       style: const TextStyle(
                         fontSize: 10,
