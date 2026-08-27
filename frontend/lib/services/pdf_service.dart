@@ -44,8 +44,8 @@ class PdfService {
                       style: pw.TextStyle(
                           fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   pw.Text('Lott Super',
-                      style: pw.TextStyle(
-                          fontSize: 14, color: PdfColors.grey700)),
+                      style:
+                          pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
                 ],
               ),
             ),
@@ -59,7 +59,8 @@ class PdfService {
                   children: [
                     pw.Text('Agent: $agentName',
                         style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                    pw.Text('Period: ${fmt.format(fromDate)} - ${fmt.format(toDate)}'),
+                    pw.Text(
+                        'Period: ${fmt.format(fromDate)} - ${fmt.format(toDate)}'),
                   ],
                 ),
                 pw.Text('Generated: ${fmt.format(DateTime.now())}'),
@@ -68,9 +69,12 @@ class PdfService {
             pw.SizedBox(height: 20),
             // Table
             pw.TableHelper.fromTextArray(
-              headerStyle: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold),
-              headerDecoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFF901C22)),
-              rowDecoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFEEEEEE)),
+              headerStyle: pw.TextStyle(
+                  color: PdfColors.white, fontWeight: pw.FontWeight.bold),
+              headerDecoration:
+                  const pw.BoxDecoration(color: PdfColor.fromInt(0xFF901C22)),
+              rowDecoration:
+                  const pw.BoxDecoration(color: PdfColor.fromInt(0xFFEEEEEE)),
               cellAlignment: pw.Alignment.centerLeft,
               headerAlignment: pw.Alignment.centerLeft,
               cellStyle: const pw.TextStyle(fontSize: 9),
@@ -80,9 +84,12 @@ class PdfService {
                   item['date'] ?? '-',
                   item['user'] ?? '-',
                   item['game'] ?? '-',
-                  (item['sale'] ?? 0).toStringAsFixed(0),
-                  (item['winning'] ?? 0).toStringAsFixed(0),
-                  (item['balance'] ?? 0).toStringAsFixed(0),
+                  ((item['sale'] ?? 0) as num).toStringAsFixed(
+                      ((item['sale'] ?? 0) as num) % 1 == 0 ? 0 : 2),
+                  ((item['winning'] ?? 0) as num).toStringAsFixed(
+                      ((item['winning'] ?? 0) as num) % 1 == 0 ? 0 : 2),
+                  ((item['balance'] ?? 0) as num).toStringAsFixed(
+                      ((item['balance'] ?? 0) as num) % 1 == 0 ? 0 : 2),
                 ];
               }).toList(),
               cellAlignments: {
@@ -102,26 +109,36 @@ class PdfService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
                     children: [
-                      pw.Text('TOTAL SALE: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.Text('TOTAL SALE: ',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(width: 20),
-                      pw.Text(totalSale.toStringAsFixed(0)),
+                      pw.Text(totalSale
+                          .toStringAsFixed(totalSale % 1 == 0 ? 0 : 2)),
                     ],
                   ),
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
                     children: [
-                      pw.Text('TOTAL WINNING: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.Text('TOTAL WINNING: ',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(width: 20),
-                      pw.Text(totalWinning.toStringAsFixed(0)),
+                      pw.Text(totalWinning
+                          .toStringAsFixed(totalWinning % 1 == 0 ? 0 : 2)),
                     ],
                   ),
                   pw.SizedBox(height: 5),
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
                     children: [
-                      pw.Text('NET BALANCE: ', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('NET BALANCE: ',
+                          style: pw.TextStyle(
+                              fontSize: 14, fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(width: 20),
-                      pw.Text(totalBalance.toStringAsFixed(0), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                      pw.Text(
+                          totalBalance
+                              .toStringAsFixed(totalBalance % 1 == 0 ? 0 : 2),
+                          style: pw.TextStyle(
+                              fontSize: 14, fontWeight: pw.FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -133,18 +150,24 @@ class PdfService {
 
       final pdfBytes = await pdf.save();
 
-      if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      if (kIsWeb ||
+          Platform.isWindows ||
+          Platform.isMacOS ||
+          Platform.isLinux) {
         // For Desktop/Web, high-quality print preview is better
         await Printing.layoutPdf(
           onLayout: (PdfPageFormat format) async => pdfBytes,
-          name: 'Daily_Report_${agentName}_${DateTime.now().millisecondsSinceEpoch}',
+          name:
+              'Daily_Report_${agentName}_${DateTime.now().millisecondsSinceEpoch}',
         );
       } else {
         // For Mobile, Share menu is standard
         final output = await getTemporaryDirectory();
-        final file = File("${output.path}/daily_report_${DateTime.now().millisecondsSinceEpoch}.pdf");
+        final file = File(
+            "${output.path}/daily_report_${DateTime.now().millisecondsSinceEpoch}.pdf");
         await file.writeAsBytes(pdfBytes);
-        await Share.shareXFiles([XFile(file.path)], text: 'Daily Report - $agentName');
+        await Share.shareXFiles([XFile(file.path)],
+            text: 'Daily Report - $agentName');
       }
     } catch (e) {
       debugPrint("PDF Generation Error: $e");

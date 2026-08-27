@@ -322,6 +322,13 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
   }
 
+  String _formatAmount(num value) {
+    if (value % 1 == 0) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(2);
+  }
+
   Widget _buildSummaryHeader(double totalSale, double totalCommission,
       double totalWinning, double totalBalance) {
     final fmt = DateFormat('dd MMM');
@@ -419,25 +426,25 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
               children: [
                 Expanded(
                   child: _buildNewStatItem(Icons.bar_chart_rounded,
-                      'Total Sales', '₹${totalSale.toStringAsFixed(0)}'),
+                      'Total Sales', '₹${_formatAmount(totalSale)}'),
                 ),
                 Container(width: 1, height: 50, color: Colors.grey.shade200),
                 Expanded(
                   child: _buildNewStatItem(Icons.emoji_events_rounded,
-                      'Winning (Prz)', '₹${totalWinning.toStringAsFixed(0)}',
+                      'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
                       valueColor:
                           totalWinning > 0 ? Colors.red.shade700 : null),
                 ),
                 Container(width: 1, height: 50, color: Colors.grey.shade200),
                 Expanded(
                   child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
-                      '₹${totalCommission.toStringAsFixed(0)}',
+                      '₹${_formatAmount(totalCommission)}',
                       valueColor: const Color(0xFF8B0000)),
                 ),
                 Container(width: 1, height: 50, color: Colors.grey.shade200),
                 Expanded(
                   child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
-                      'Net Total', '₹${totalBalance.toStringAsFixed(0)}',
+                      'Net Total', '₹${_formatAmount(totalBalance)}',
                       valueColor: totalBalance >= 0
                           ? const Color(0xFF10B981)
                           : Colors.red),
@@ -534,7 +541,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final double commission = (item['commission'] ?? 0).toDouble();
     final double winning = (item['winning'] ?? 0).toDouble();
     final double balance =
-        (item['balance'] ?? (sale - commission - winning)).toDouble();
+        (item['balance'] ?? (sale - (winning + commission))).toDouble();
     final bool isDrillable = item['is_drillable'] ?? false;
     final int? uid = item['user_id'];
     final bool isExpanded = uid != null && _expandedUserIds.contains(uid);
@@ -656,7 +663,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             Expanded(
               flex: 22,
               child: Text(
-                sale.toStringAsFixed(0),
+                _formatAmount(sale),
                 textAlign: TextAlign.right,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
@@ -672,7 +679,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    winning.toStringAsFixed(0),
+                    _formatAmount(winning),
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -682,7 +689,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                   ),
                   if (commission > 0)
                     Text(
-                      'Comm: ${commission.toStringAsFixed(0)}',
+                      'Comm: ${_formatAmount(commission)}',
                       textAlign: TextAlign.right,
                       style: const TextStyle(
                         fontSize: 10,
@@ -696,7 +703,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             Expanded(
               flex: 22,
               child: Text(
-                balance.toStringAsFixed(0),
+                _formatAmount(balance),
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
@@ -753,7 +760,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 fontWeight: FontWeight.bold,
                 color: Colors.grey[600])),
         Text(
-          value.toStringAsFixed(0),
+          _formatAmount(value),
           style: TextStyle(
             fontSize: isMain ? 15 : 13,
             fontWeight: FontWeight.bold,
@@ -762,7 +769,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         ),
         if (subValue != null && subValue > 0)
           Text(
-            'Comm: ${subValue.toStringAsFixed(0)}',
+            'Comm: ${_formatAmount(subValue)}',
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
