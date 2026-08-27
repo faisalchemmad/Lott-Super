@@ -1425,6 +1425,9 @@ class DailyReportView(views.APIView):
             group_fields.append('user__username')
             group_fields.append('user__id')
 
+        # Check if this is the root request for a non-superadmin user
+        is_root_view = (agent_id is None and request.user.role != 'SUPER_ADMIN')
+
         # ── Build direct-subordinate map under target_user ────────────────────
         direct_children = list(
             User.objects.filter(parent=target_user).only(
@@ -1437,6 +1440,7 @@ class DailyReportView(views.APIView):
         )
         direct_child_ids = {c.id for c in direct_children}
         direct_child_obj = {c.id: c for c in direct_children}
+        has_subordinates = len(direct_children) > 0
 
         involved_user_ids = set(bets.values_list('user_id', flat=True).distinct())
         involved_users_qs = User.objects.filter(id__in=involved_user_ids).select_related(
@@ -1444,10 +1448,11 @@ class DailyReportView(views.APIView):
         )
         involved_users = {u.id: u for u in involved_users_qs}
 
+        # Map each user who placed a bet to either 'SELF' or the direct child object under target_user
         direct_sub_map = {}
         for uid in involved_user_ids:
             if uid == target_user.id:
-                direct_sub_map[uid] = target_user
+                direct_sub_map[uid] = 'SELF'
                 continue
             current = involved_users.get(uid)
             found = False
@@ -1471,7 +1476,7 @@ class DailyReportView(views.APIView):
                         break
                 current = next_u
             if not found:
-                direct_sub_map[uid] = involved_users.get(uid, target_user)
+                direct_sub_map[uid] = 'SELF'
 
         # Annotate bets with bet_type_category
         bets = bets.annotate(
@@ -1486,6 +1491,26 @@ class DailyReportView(views.APIView):
                 output_field=CharField(),
             )
         )
+
+        def get_comm_rate(user_obj, bcat, st):
+            if not user_obj or user_obj == 'SELF':
+                user_obj = target_user
+            if st == 'TN':
+                if bcat == 'ABC': return Decimal(str(user_obj.tn_sales_comm_abc))
+                elif bcat == 'AB_BC_AC': return Decimal(str(user_obj.tn_sales_comm_ab_bc_ac))
+                elif bcat == '3D-10': return Decimal(str(user_obj.tn_sales_comm_3d_10))
+                elif bcat == '3D-25': return Decimal(str(user_obj.tn_sales_comm_3d_25))
+                elif bcat == '3D-30': return Decimal(str(user_obj.tn_sales_comm_3d_30))
+                elif bcat == '3D-60': return Decimal(str(user_obj.tn_sales_comm_3d_60))
+                elif bcat == '4D-110': return Decimal(str(user_obj.tn_sales_comm_4d_110))
+                elif bcat == '4D-55': return Decimal(str(user_obj.tn_sales_comm_4d_55))
+                elif bcat == '4D-20': return Decimal(str(user_obj.tn_sales_comm_4d_20))
+            else:
+                if bcat == 'ABC': return Decimal(str(user_obj.sales_comm_abc))
+                elif bcat == 'AB_BC_AC': return Decimal(str(user_obj.sales_comm_ab_bc_ac))
+                elif bcat == 'SUPER': return Decimal(str(user_obj.sales_comm_super))
+                elif bcat == 'BOX': return Decimal(str(user_obj.sales_comm_box))
+            return Decimal('0.00')
 
         # If no detail is requested, provide a summary
         if not group_fields:
@@ -1503,23 +1528,7 @@ class DailyReportView(views.APIView):
                 sub_user_obj = direct_sub_map.get(uid, target_user)
                 bcat = sg['bet_type_category']
                 st = sg.get('state', 'KL')
-                comm_rate = Decimal('0.00')
-                if sub_user_obj:
-                    if st == 'TN':
-                        if bcat == 'ABC': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_ab_bc_ac))
-                        elif bcat == '3D-10': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_10))
-                        elif bcat == '3D-25': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_25))
-                        elif bcat == '3D-30': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_30))
-                        elif bcat == '3D-60': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_60))
-                        elif bcat == '4D-110': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_110))
-                        elif bcat == '4D-55': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_55))
-                        elif bcat == '4D-20': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_20))
-                    else:
-                        if bcat == 'ABC': comm_rate = Decimal(str(sub_user_obj.sales_comm_abc))
-                        elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(sub_user_obj.sales_comm_ab_bc_ac))
-                        elif bcat == 'SUPER': comm_rate = Decimal(str(sub_user_obj.sales_comm_super))
-                        elif bcat == 'BOX': comm_rate = Decimal(str(sub_user_obj.sales_comm_box))
+                comm_rate = get_comm_rate(sub_user_obj, bcat, st)
                 s = Decimal(str(sg['sub_sale'] or 0))
                 cnt = Decimal(str(sg['sub_count'] or 0))
                 w = Decimal(str(sg['sub_winning'] or 0))
@@ -1550,9 +1559,18 @@ class DailyReportView(views.APIView):
             whens_userid = []
             whens_role = []
             for uid, sub_user in direct_sub_map.items():
-                whens_username.append(When(user_id=uid, then=Value(sub_user.username)))
-                whens_userid.append(When(user_id=uid, then=Value(sub_user.id)))
-                whens_role.append(When(user_id=uid, then=Value(sub_user.role)))
+                if is_root_view:
+                    whens_username.append(When(user_id=uid, then=Value(target_user.username)))
+                    whens_userid.append(When(user_id=uid, then=Value(target_user.id)))
+                    whens_role.append(When(user_id=uid, then=Value(target_user.role)))
+                elif sub_user == 'SELF':
+                    whens_username.append(When(user_id=uid, then=Value('Self')))
+                    whens_userid.append(When(user_id=uid, then=Value(0)))
+                    whens_role.append(When(user_id=uid, then=Value(target_user.role)))
+                else:
+                    whens_username.append(When(user_id=uid, then=Value(sub_user.username)))
+                    whens_userid.append(When(user_id=uid, then=Value(sub_user.id)))
+                    whens_role.append(When(user_id=uid, then=Value(sub_user.role)))
 
             bets = bets.annotate(
                 direct_sub_username=Case(*whens_username, default=F('user__username'), output_field=CharField()),
@@ -1568,7 +1586,7 @@ class DailyReportView(views.APIView):
 
         # Grouped aggregation
         grouped_bets = (
-            bets.values(*group_fields_for_query, 'bet_type_category', 'state')
+            bets.values(*group_fields_for_query, 'user_id', 'bet_type_category', 'state')
             .annotate(
                 sub_total_sale=Sum(F('amount') * F('count')),
                 sub_total_count=Sum('count'),
@@ -1581,34 +1599,13 @@ class DailyReportView(views.APIView):
         final_data = {}
 
         for r in grouped_bets:
-            sub_id = r.get('direct_sub_id') or r.get('user__id')
-            sub_user_obj = direct_child_obj.get(sub_id)
-            if sub_user_obj is None:
-                if sub_id == target_user.id:
-                    sub_user_obj = target_user
-                else:
-                    sub_user_obj = direct_sub_map.get(sub_id, target_user)
+            uid = r['user_id']
+            sub_user_obj = direct_sub_map.get(uid, target_user)
 
             bcat = r.get('bet_type_category')
             state_code = r.get('state', 'KL')
 
-            comm_rate = Decimal('0.00')
-            if sub_user_obj:
-                if state_code == 'TN':
-                    if bcat == 'ABC': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_abc))
-                    elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_ab_bc_ac))
-                    elif bcat == '3D-10': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_10))
-                    elif bcat == '3D-25': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_25))
-                    elif bcat == '3D-30': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_30))
-                    elif bcat == '3D-60': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_3d_60))
-                    elif bcat == '4D-110': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_110))
-                    elif bcat == '4D-55': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_55))
-                    elif bcat == '4D-20': comm_rate = Decimal(str(sub_user_obj.tn_sales_comm_4d_20))
-                else:
-                    if bcat == 'ABC': comm_rate = Decimal(str(sub_user_obj.sales_comm_abc))
-                    elif bcat == 'AB_BC_AC': comm_rate = Decimal(str(sub_user_obj.sales_comm_ab_bc_ac))
-                    elif bcat == 'SUPER': comm_rate = Decimal(str(sub_user_obj.sales_comm_super))
-                    elif bcat == 'BOX': comm_rate = Decimal(str(sub_user_obj.sales_comm_box))
+            comm_rate = get_comm_rate(sub_user_obj, bcat, state_code)
 
             sub_gross_sale = Decimal(str(r['sub_total_sale'] or 0))
             sub_count = Decimal(str(r['sub_total_count'] or 0))
@@ -1641,13 +1638,19 @@ class DailyReportView(views.APIView):
                 )
                 u_id = r.get('direct_sub_id') or r.get('user__id')
                 u_role = r.get('direct_sub_role') or 'SUB_DEALER'
-                is_drillable = bool(u_id and u_id != target_user.id and u_role != 'SUB_DEALER')
+
+                if is_root_view:
+                    is_drillable = has_subordinates
+                elif u_label == 'Self' or u_id == 0:
+                    is_drillable = False
+                else:
+                    is_drillable = bool(u_id and u_id != target_user.id and u_role != 'SUB_DEALER')
 
                 final_data[key] = {
                     'date': date_str,
                     'game': r.get('game__name', 'ALL'),
                     'user': u_label,
-                    'user_id': u_id,
+                    'user_id': u_id if u_id != 0 else None,
                     'role': u_role,
                     'is_drillable': is_drillable,
                     'sale': Decimal('0.00'),
