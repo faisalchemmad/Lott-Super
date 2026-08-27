@@ -247,12 +247,7 @@ class _BettingScreenState extends State<BettingScreen>
         _users.add(user);
       }
       if (user != null) {
-        // Find the designated 'Default' sub-dealer first
-        final defaultUser = _users.firstWhere((u) => u.isDefault,
-            orElse: () => _users.firstWhere(
-                (u) => u.id != user.id && u.role == 'SUB_DEALER',
-                orElse: () => user));
-        _userController.text = defaultUser.username;
+        _userController.text = user.username;
       }
       _recentBets = bets;
       _selectedType = 'SUPER';
