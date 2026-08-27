@@ -1421,6 +1421,7 @@ class DailyReportView(views.APIView):
             group_fields.append('date_only')
         if game_detail:
             group_fields.append('game__name')
+            group_fields.append('game__color')
         if user_detail:
             group_fields.append('user__username')
             group_fields.append('user__id')
@@ -1649,6 +1650,7 @@ class DailyReportView(views.APIView):
                 final_data[key] = {
                     'date': date_str,
                     'game': r.get('game__name', 'ALL'),
+                    'game_color': r.get('game__color'),
                     'user': u_label,
                     'user_id': u_id if u_id != 0 else None,
                     'role': u_role,
@@ -1676,6 +1678,7 @@ class DailyReportView(views.APIView):
             output_data.append({
                 'date': item['date'],
                 'game': item['game'],
+                'game_color': item.get('game_color'),
                 'user': item['user'],
                 'user_id': item.get('user_id'),
                 'role': item.get('role'),

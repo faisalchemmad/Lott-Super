@@ -564,6 +564,19 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     );
   }
 
+  Color _parseColor(String? hexString, {Color defaultColor = Colors.white}) {
+    if (hexString == null || hexString.isEmpty) return defaultColor;
+    try {
+      String hex = hexString.replaceAll('#', '');
+      if (hex.length == 6) {
+        hex = 'FF$hex';
+      }
+      return Color(int.parse(hex, radix: 16));
+    } catch (_) {
+      return defaultColor;
+    }
+  }
+
   Widget _buildReportRow(dynamic item, int index, bool isDesktop,
       {int depth = 0}) {
     final bool isEven = index % 2 == 0;
@@ -576,6 +589,11 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     final String itemKey = _getItemKey(item);
     final bool isExpanded = _expandedKeys.contains(itemKey);
     final bool isLoading = _loadingKeys.contains(itemKey);
+
+    final String? gameColorHex = item['game_color'];
+    final Color? gameColor = (gameColorHex != null && gameColorHex.isNotEmpty)
+        ? _parseColor(gameColorHex)
+        : null;
 
     String title = item['user'] ?? '-';
     if (title == '-' || title == 'ALL') {
@@ -601,12 +619,22 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     String subTitle = subItems.join(' • ');
 
     Color rowBg;
-    if (depth == 0) {
-      rowBg = isEven ? const Color(0xFFF9F9F9) : Colors.white;
-    } else if (depth == 1) {
-      rowBg = const Color(0xFFF1F5F9);
+    if (gameColor != null && widget.gameDetail) {
+      if (depth == 0) {
+        rowBg = gameColor.withOpacity(0.14);
+      } else if (depth == 1) {
+        rowBg = gameColor.withOpacity(0.08);
+      } else {
+        rowBg = gameColor.withOpacity(0.04);
+      }
     } else {
-      rowBg = const Color(0xFFE2E8F0);
+      if (depth == 0) {
+        rowBg = isEven ? const Color(0xFFF9F9F9) : Colors.white;
+      } else if (depth == 1) {
+        rowBg = const Color(0xFFF1F5F9);
+      } else {
+        rowBg = const Color(0xFFE2E8F0);
+      }
     }
 
     final double leftPadding = 12.0 + (depth * 14.0);
@@ -614,7 +642,12 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     return InkWell(
       onTap: isDrillable ? () => _toggleExpand(item) : null,
       child: Container(
-        color: rowBg,
+        decoration: BoxDecoration(
+          color: rowBg,
+          border: (gameColor != null && widget.gameDetail && depth == 0)
+              ? Border(left: BorderSide(color: gameColor, width: 4.5))
+              : null,
+        ),
         padding:
             EdgeInsets.only(left: leftPadding, right: 12, top: 8, bottom: 8),
         child: Row(
