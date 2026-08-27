@@ -248,7 +248,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 children: [
                   _buildSummaryHeader(
                       totalSale, totalCommission, totalWinning, totalBalance),
-                  if (_breadcrumbStack.isNotEmpty) _buildBreadcrumbs(isDesktop),
+                  if (_breadcrumbStack.length > 1) _buildBreadcrumbs(isDesktop),
                   _buildTableHeader(isDesktop),
                   Expanded(
                     child: _reportData.isEmpty
@@ -277,43 +277,72 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
   Widget _buildBreadcrumbs(bool isDesktop) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: const Color(0xFFF4F6F8),
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _breadcrumbStack.map((bc) {
-            int idx = _breadcrumbStack.indexOf(bc);
-            bool isLast = idx == _breadcrumbStack.length - 1;
-            return Row(
-              children: [
-                GestureDetector(
-                  onTap:
-                      isLast ? null : () => _generateReport(userId: bc['id']),
-                  child: Text(
-                    bc['name'] ?? 'Home',
-                    style: TextStyle(
-                      fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
-                      color: isLast ? Colors.black87 : AppColors.primary,
-                      fontSize: 12,
-                      decoration: isLast
-                          ? TextDecoration.none
-                          : TextDecoration.underline,
+          children: [
+            InkWell(
+              onTap: _popBreadcrumb,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_back, size: 14, color: AppColors.primary),
+                    SizedBox(width: 4),
+                    Text(
+                      'Back',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              height: 12,
+              width: 1,
+              color: Colors.grey.shade400,
+            ),
+            ..._breadcrumbStack.map((bc) {
+              int idx = _breadcrumbStack.indexOf(bc);
+              bool isLast = idx == _breadcrumbStack.length - 1;
+              return Row(
+                children: [
+                  GestureDetector(
+                    onTap:
+                        isLast ? null : () => _generateReport(userId: bc['id']),
+                    child: Text(
+                      bc['name'] ?? 'Home',
+                      style: TextStyle(
+                        fontWeight:
+                            isLast ? FontWeight.bold : FontWeight.normal,
+                        color: isLast ? Colors.black87 : AppColors.primary,
+                        fontSize: 11.5,
+                        decoration: isLast
+                            ? TextDecoration.none
+                            : TextDecoration.underline,
+                      ),
                     ),
                   ),
-                ),
-                if (!isLast)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child:
-                        Icon(Icons.chevron_right, size: 16, color: Colors.grey),
-                  ),
-              ],
-            );
-          }).toList(),
+                  if (!isLast)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 3),
+                      child: Icon(Icons.chevron_right,
+                          size: 14, color: Colors.grey),
+                    ),
+                ],
+              );
+            }).toList(),
+          ],
         ),
       ),
     );
@@ -323,17 +352,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
       double totalWinning, double totalBalance) {
     final fmt = DateFormat('dd MMM');
     final fmtYear = DateFormat('dd MMM yyyy');
-    final bool isAdminRate = !widget.agentRate;
-    final Color bannerColor =
-        isAdminRate ? const Color(0xFFE8F4FD) : const Color(0xFFFFF3CD);
-    final Color textColor =
-        isAdminRate ? const Color(0xFF0D6EFD) : const Color(0xFF856404);
-    final IconData bannerIcon = isAdminRate
-        ? Icons.admin_panel_settings_rounded
-        : Icons.percent_rounded;
-    final String bannerText = isAdminRate
-        ? 'ADMIN RATE — Net sale after admin commission deduction'
-        : 'AGENT RATE ON — Commission & winning by direct subordinate rates';
 
     return Container(
       width: double.infinity,
@@ -453,31 +471,6 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                       valueColor: totalBalance >= 0
                           ? const Color(0xFF10B981)
                           : Colors.red),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Rate mode note
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
-            decoration: BoxDecoration(
-              color: bannerColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Row(
-              children: [
-                Icon(bannerIcon, size: 11, color: textColor),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    bannerText,
-                    style: TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
                 ),
               ],
             ),
