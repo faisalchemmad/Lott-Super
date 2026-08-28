@@ -58,7 +58,11 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     final games = await apiService.getGames();
     setState(() {
       _games = games;
+      if (_games.isNotEmpty && _selectedGameId == null) {
+        _selectedGameId = _games.first.id;
+      }
     });
+    _fetchResults();
   }
 
   Future<void> _fetchResults() async {
@@ -287,29 +291,27 @@ class _ResultViewScreenState extends State<ResultViewScreen>
             Expanded(
               flex: 4,
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<int?>(
-                  value: _selectedGameId,
+                child: DropdownButton<int>(
+                  value: _games.any((g) => g.id == _selectedGameId)
+                      ? _selectedGameId
+                      : (_games.isNotEmpty ? _games.first.id : null),
                   isExpanded: true,
                   isDense: true,
                   icon: const Icon(Icons.arrow_drop_down,
                       color: Colors.blueAccent, size: 20),
-                  items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('ALL GAMES',
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13)),
-                    ),
-                    ..._games.map((g) => DropdownMenuItem(
-                        value: g.id,
-                        child: Text(g.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13)))),
-                  ],
+                  items: _games
+                      .map((g) => DropdownMenuItem<int>(
+                          value: g.id,
+                          child: Text(g.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13))))
+                      .toList(),
                   onChanged: (val) {
-                    setState(() => _selectedGameId = val);
-                    _fetchResults();
+                    if (val != null) {
+                      setState(() => _selectedGameId = val);
+                      _fetchResults();
+                    }
                   },
                   style: const TextStyle(
                       color: Colors.blueAccent,
