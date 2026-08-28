@@ -120,20 +120,66 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     text += "Game: ${res['game_name']}\n\n";
 
     if (isTN) {
-      text += "1st Prize (4D) : ${res['winning_number']}\n";
-      text += "2nd Prize (3D) : ${res['second_prize'] ?? '---'}\n";
-      text += "3rd Prize (2D) : ${res['third_prize'] ?? '---'}\n";
-      text += "4th Prize (1D) : ${res['fourth_prize'] ?? '---'}\n";
+      if (res['winning_number'] != null &&
+          res['winning_number'].toString().trim().isNotEmpty) {
+        text += "${res['winning_number']}\n";
+      }
+      if (res['second_prize'] != null &&
+          res['second_prize'].toString().trim().isNotEmpty) {
+        text += "${res['second_prize']}\n";
+      }
+      if (res['third_prize'] != null &&
+          res['third_prize'].toString().trim().isNotEmpty) {
+        text += "${res['third_prize']}\n";
+      }
+      if (res['fourth_prize'] != null &&
+          res['fourth_prize'].toString().trim().isNotEmpty) {
+        text += "${res['fourth_prize']}\n";
+      }
     } else {
-      text += "1st Prize : ${res['winning_number']}\n";
-      text += "2nd Prize : ${res['second_prize'] ?? '---'}\n";
-      text += "3rd Prize : ${res['third_prize'] ?? '---'}\n";
-      text += "4th Prize : ${res['fourth_prize'] ?? '---'}\n";
-      text += "5th Prize : ${res['fifth_prize'] ?? '---'}\n\n";
-      text += "COMPLIMENTS:\n${res['complimentary_numbers'] ?? 'None'}";
+      if (res['winning_number'] != null &&
+          res['winning_number'].toString().trim().isNotEmpty) {
+        text += "${res['winning_number']}\n";
+      }
+      if (res['second_prize'] != null &&
+          res['second_prize'].toString().trim().isNotEmpty) {
+        text += "${res['second_prize']}\n";
+      }
+      if (res['third_prize'] != null &&
+          res['third_prize'].toString().trim().isNotEmpty) {
+        text += "${res['third_prize']}\n";
+      }
+      if (res['fourth_prize'] != null &&
+          res['fourth_prize'].toString().trim().isNotEmpty) {
+        text += "${res['fourth_prize']}\n";
+      }
+      if (res['fifth_prize'] != null &&
+          res['fifth_prize'].toString().trim().isNotEmpty) {
+        text += "${res['fifth_prize']}\n";
+      }
+
+      if (res['complimentary_numbers'] != null &&
+          res['complimentary_numbers'].toString().trim().isNotEmpty) {
+        List<String> compList = res['complimentary_numbers']
+            .toString()
+            .split(RegExp(r'[,\s\n]+'))
+            .where((e) => e.trim().isNotEmpty)
+            .map((e) => e.trim())
+            .toList();
+
+        if (compList.isNotEmpty) {
+          text += "\n";
+          List<String> compLines = [];
+          for (int i = 0; i < compList.length; i += 6) {
+            int end = (i + 6 < compList.length) ? i + 6 : compList.length;
+            compLines.add(compList.sublist(i, end).join(' '));
+          }
+          text += compLines.join('\n');
+        }
+      }
     }
 
-    Share.share(text);
+    Share.share(text.trim());
   }
 
   Future<void> _shareAsImage() async {
