@@ -247,14 +247,41 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                           setState(() => _selectedAgentId = val),
                       icon: Icons.person_search_rounded,
                     ),
-                  const SizedBox(height: 8),
-                  _buildToggle('DAY DETAIL', _dayDetail,
-                      (v) => setState(() => _dayDetail = v)),
-                  _buildToggle('GAME DETAIL', _gameDetail,
-                      (v) => setState(() => _gameDetail = v)),
-                  _buildToggle('AGENT RATE', _agentRate,
-                      (v) => setState(() => _agentRate = v)),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildToggleTile(
+                          title: 'DAY DETAIL',
+                          icon: Icons.calendar_today_outlined,
+                          value: _dayDetail,
+                          onChanged: (v) => setState(() => _dayDetail = v),
+                        ),
+                        Divider(height: 1, color: Colors.grey.shade200),
+                        _buildToggleTile(
+                          title: 'GAME DETAIL',
+                          icon: Icons.sports_esports_outlined,
+                          value: _gameDetail,
+                          onChanged: (v) => setState(() => _gameDetail = v),
+                        ),
+                        if (_userRole != 'SUB_DEALER') ...[
+                          Divider(height: 1, color: Colors.grey.shade200),
+                          _buildToggleTile(
+                            title: 'AGENT RATE',
+                            icon: Icons.percent_rounded,
+                            value: _agentRate,
+                            onChanged: (v) => setState(() => _agentRate = v),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 54,
@@ -340,14 +367,41 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
     );
   }
 
-  Widget _buildToggle(String label, bool value, ValueChanged<bool> onChanged) {
-    return Row(
-      children: [
-        Text(label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-        Switch(
-            value: value, onChanged: onChanged, activeColor: AppColors.primary),
-      ],
+  Widget _buildToggleTile({
+    required String title,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: Row(
+          children: [
+            Icon(icon,
+                color: value ? AppColors.primary : Colors.grey.shade600,
+                size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: value ? AppColors.primary : Colors.black87,
+                ),
+              ),
+            ),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
