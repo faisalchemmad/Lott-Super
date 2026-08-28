@@ -195,37 +195,49 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Result Report',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Container(
+          height: 36,
+          width: 170,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.18),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: Colors.white,
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            unselectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            tabs: const [
+              Tab(text: 'KL'),
+              Tab(text: 'TN'),
+            ],
+          ),
+        ),
         backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3.5,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.65),
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 0.5),
-          unselectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          tabs: const [
-            Tab(text: 'KL'),
-            Tab(text: 'TN'),
-          ],
-        ),
         actions: [
           if (currentResults.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.share_rounded, color: Colors.white),
+              icon: const Icon(Icons.share_rounded,
+                  color: Colors.white, size: 20),
               onPressed: () => _shareAsText(currentResults[0], isTN: isTNTab),
               tooltip: "Share as Text",
             ),
           if (currentResults.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.image_rounded, color: Colors.white),
+              icon: const Icon(Icons.image_rounded,
+                  color: Colors.white, size: 20),
               onPressed: _shareAsImage,
               tooltip: "Share as Image",
             ),
@@ -252,7 +264,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
 
   Widget _buildFilterHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
@@ -266,7 +278,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
               DateFormat('dd-MM-yyyy').format(_selectedDate),
               style: const TextStyle(
                 color: Color(0xFFE67E22),
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -278,21 +290,22 @@ class _ResultViewScreenState extends State<ResultViewScreen>
                 child: DropdownButton<int?>(
                   value: _selectedGameId,
                   isExpanded: true,
+                  isDense: true,
                   icon: const Icon(Icons.arrow_drop_down,
-                      color: Colors.blueAccent),
+                      color: Colors.blueAccent, size: 20),
                   items: [
                     const DropdownMenuItem(
                       value: null,
                       child: Text('ALL GAMES',
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
+                              fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                     ..._games.map((g) => DropdownMenuItem(
                         value: g.id,
                         child: Text(g.name,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14)))),
+                            style: const TextStyle(fontSize: 13)))),
                   ],
                   onChanged: (val) {
                     setState(() => _selectedGameId = val);
@@ -301,11 +314,11 @@ class _ResultViewScreenState extends State<ResultViewScreen>
                   style: const TextStyle(
                       color: Colors.blueAccent,
                       fontWeight: FontWeight.bold,
-                      fontSize: 15),
+                      fontSize: 13),
                 ),
               ),
             ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
             flex: 3,
             child: Container(
@@ -316,14 +329,14 @@ class _ResultViewScreenState extends State<ResultViewScreen>
               child: InkWell(
                 onTap: _selectDate,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 5),
                   child: Text(
                     'CHANGE DATE',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.black87,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -375,7 +388,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
         // Game Name Banner
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             border: Border(
@@ -389,24 +402,24 @@ class _ResultViewScreenState extends State<ResultViewScreen>
                 children: [
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: isTN ? Colors.orange[800] : AppColors.primary,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
                       isTN ? 'TN' : 'KL',
                       style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12),
+                          fontSize: 10.5),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Text(
                     res['game_name'] ?? 'GAME',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -417,7 +430,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
                 DateFormat('dd-MM-yyyy').format(_selectedDate),
                 style: TextStyle(
                   color: Colors.grey[600],
-                  fontSize: 13,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -425,7 +438,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
           ),
         ),
 
-        // Prize Rows
+        // Prize Rows (Compact and cleanly fitted)
         _buildPrizeRow("1", res['winning_number'], const Color(0xFF1D8740)),
         _buildPrizeRow("2", res['second_prize'], const Color(0xFF0E799F)),
         _buildPrizeRow("3", res['third_prize'], const Color(0xFFDE8D0C)),
@@ -437,24 +450,25 @@ class _ResultViewScreenState extends State<ResultViewScreen>
         if (!isTN &&
             res['complimentary_numbers'] != null &&
             res['complimentary_numbers'].toString().trim().isNotEmpty) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           const Text(
             "COMPLIMENTS",
             style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
+              color: Colors.black54,
             ),
           ),
-          const SizedBox(height: 8),
-          const Divider(height: 1, thickness: 1),
+          const SizedBox(height: 4),
+          const Divider(height: 1, thickness: 0.5),
           _buildComplimentsGrid(res['complimentary_numbers']),
         ],
 
         // Admin Action Buttons
         if (_isAdmin)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
@@ -469,38 +483,40 @@ class _ResultViewScreenState extends State<ResultViewScreen>
                       );
                       _fetchResults();
                     },
-                    icon: const Icon(Icons.edit_rounded, size: 18),
+                    icon: const Icon(Icons.edit_rounded, size: 15),
                     label: const Text('EDIT RESULT',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12)),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       backgroundColor: AppColors.primary.withOpacity(0.08),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(6)),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () => _deleteResult(res['id']),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 15),
                     label: const Text('DELETE',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12)),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       backgroundColor: Colors.red.withOpacity(0.08),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(6)),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -509,30 +525,37 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     return Container(
       width: double.infinity,
       color: bgColor,
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      margin: const EdgeInsets.only(bottom: 2),
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
+      margin: const EdgeInsets.only(bottom: 1.5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            width: 40,
+            width: 28,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 24, color: Colors.white70),
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
           ),
           const Text(
             ":",
-            style: TextStyle(fontSize: 24, color: Colors.white70),
+            style: TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+                fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Text(
             value ?? "---",
             style: const TextStyle(
-              fontSize: 32,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Colors.white,
+              letterSpacing: 1.5,
             ),
           ),
         ],
@@ -555,7 +578,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
 
     return Table(
       border: const TableBorder(
-        verticalInside: BorderSide(color: Colors.black12, width: 1),
+        verticalInside: BorderSide(color: Colors.black12, width: 0.5),
       ),
       children: List.generate(rows, (rowIndex) {
         return TableRow(
@@ -563,14 +586,14 @@ class _ResultViewScreenState extends State<ResultViewScreen>
             int index = rowIndex + (colIndex * rows);
             String text = index < nums.length ? nums[index] : "";
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
               child: Center(
                 child: Text(
                   text,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 14,
                     color: Colors.black87,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
