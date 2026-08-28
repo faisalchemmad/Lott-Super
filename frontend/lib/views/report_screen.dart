@@ -18,7 +18,6 @@ class ReportScreen extends StatefulWidget {
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
-
 class _ReportScreenState extends State<ReportScreen> {
   String _userRole = '';
 
@@ -56,121 +55,117 @@ class _ReportScreenState extends State<ReportScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           children: [
-                _buildReportCard(
-                  title: 'Sales Report',
-                  subtitle: 'Detailed breakdown of all tickets sold',
-                  icon: Icons.analytics_rounded,
-                  color: Colors.blueAccent,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SalesReportScreen()),
-                  ),
+            _buildReportCard(
+              title: 'Sales Report',
+              subtitle: 'Detailed breakdown of all tickets sold',
+              icon: Icons.analytics_rounded,
+              color: Colors.blueAccent,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SalesReportScreen()),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildReportCard(
+              title: 'Winning Report',
+              subtitle: 'Track winners and prize distributions',
+              icon: Icons.emoji_events_rounded,
+              color: Colors.amber.shade700,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WinningReportFilterScreen()),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
+              _buildReportCard(
+                title: 'Forward Purchase Report',
+                subtitle: 'View and delete forwarded bets',
+                icon: Icons.list_alt_rounded,
+                color: Colors.blue.shade700,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const ForwardPurchaseReportScreen()),
                 ),
-                const SizedBox(height: 8),
-                _buildReportCard(
-                  title: 'Winning Report',
-                  subtitle: 'Track winners and prize distributions',
-                  icon: Icons.emoji_events_rounded,
-                  color: Colors.amber.shade700,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const WinningReportFilterScreen()),
-                  ),
+              ),
+              const SizedBox(height: 8),
+              _buildReportCard(
+                title: 'Forward Winning Report',
+                subtitle: 'Track winners from forwarded bets',
+                icon: Icons.military_tech_rounded,
+                color: Colors.orange.shade700,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ForwardWinningReportScreen()),
                 ),
-                const SizedBox(height: 8),
-                if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
-                  _buildReportCard(
-                    title: 'Forward Purchase Report',
-                    subtitle: 'View and delete forwarded bets',
-                    icon: Icons.list_alt_rounded,
-                    color: Colors.blue.shade700,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const ForwardPurchaseReportScreen()),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildReportCard(
-                    title: 'Forward Winning Report',
-                    subtitle: 'Track winners from forwarded bets',
-                    icon: Icons.military_tech_rounded,
-                    color: Colors.orange.shade700,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const ForwardWinningReportScreen()),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildReportCard(
-                    title: 'Forward Net Report',
-                    subtitle: 'Summary of forwarded bets (Purchase - Win - Commi)',
-                    icon: Icons.account_balance_wallet_rounded,
-                    color: Colors.purple.shade600,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const ForwardNetReportScreen()),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                _buildReportCard(
-                  title: 'Number Report',
-                  subtitle: 'Check total quantity for specific numbers',
-                  icon: Icons.onetwothree_rounded,
-                  color: Colors.tealAccent.shade700,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const NumberReportScreen()),
-                  ),
+              ),
+              const SizedBox(height: 8),
+              _buildReportCard(
+                title: 'Forward Net Report',
+                subtitle: 'Summary of forwarded bets (Purchase - Win - Commi)',
+                icon: Icons.account_balance_wallet_rounded,
+                color: Colors.purple.shade600,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ForwardNetReportScreen()),
                 ),
-                const SizedBox(height: 8),
-                _buildReportCard(
-                  title: 'Count Report',
-                  subtitle: 'Summary of ticket counts by type',
-                  icon: Icons.calculate_rounded,
-                  color: Colors.indigoAccent,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const CountReportScreen()),
-                  ),
+              ),
+              const SizedBox(height: 8),
+              _buildReportCard(
+                title: 'Purchase Report',
+                subtitle: 'View forwarded numbers and total purchase amount',
+                icon: Icons.shopping_cart_checkout_rounded,
+                color: Colors.pinkAccent,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const PurchaseReportScreen()),
                 ),
-                const SizedBox(height: 8),
-                const SizedBox(height: 8),
-                _buildReportCard(
-                  title: 'Daily Report',
-                  subtitle: 'Summary grouped by Date or Game name',
-                  icon: Icons.calendar_today_rounded,
-                  color: Colors.orangeAccent,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const DailyReportScreen()),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildReportCard(
-                  title: 'Purchase Report',
-                  subtitle: 'View forwarded numbers and total purchase amount',
-                  icon: Icons.shopping_cart_checkout_rounded,
-                  color: Colors.pinkAccent,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PurchaseReportScreen()),
-                  ),
-                ),
-                const SizedBox(height: 50),
+              ),
+              const SizedBox(height: 8),
+            ],
+            _buildReportCard(
+              title: 'Number Report',
+              subtitle: 'Check total quantity for specific numbers',
+              icon: Icons.onetwothree_rounded,
+              color: Colors.tealAccent.shade700,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NumberReportScreen()),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildReportCard(
+              title: 'Count Report',
+              subtitle: 'Summary of ticket counts by type',
+              icon: Icons.calculate_rounded,
+              color: Colors.indigoAccent,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CountReportScreen()),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildReportCard(
+              title: 'Daily Report',
+              subtitle: 'Summary grouped by Date or Game name',
+              icon: Icons.calendar_today_rounded,
+              color: Colors.orangeAccent,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DailyReportScreen()),
+              ),
+            ),
+            const SizedBox(height: 50),
           ],
         ),
       ),
@@ -209,7 +204,10 @@ class _ReportScreenState extends State<ReportScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                      colors: [
+                        color.withOpacity(0.15),
+                        color.withOpacity(0.05)
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
