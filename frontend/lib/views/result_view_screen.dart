@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
 import '../utils/constants.dart';
@@ -183,10 +185,52 @@ class _ResultViewScreenState extends State<ResultViewScreen>
   }
 
   Future<void> _shareAsImage() async {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image sharing is currently disabled.')),
+    final currentResults = _currentTabResults;
+    if (currentResults.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No results to share.')),
+        );
+      }
+      return;
+    }
+
+    final isTNTab = _tabController.index == 1;
+    final res = currentResults[0];
+
+    try {
+      final imageBytes = await _screenshotController.captureFromWidget(
+        Material(
+          color: Colors.white,
+          child: Container(
+            width: 380,
+            color: Colors.white,
+            padding: const EdgeInsets.only(bottom: 16),
+            child:
+                _buildStyledResultBlock(res, isTN: isTNTab, isForShare: true),
+          ),
+        ),
+        delay: const Duration(milliseconds: 50),
+        pixelRatio: 2.5,
       );
+
+      final directory = await getTemporaryDirectory();
+      final imagePath =
+          '${directory.path}/result_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+
+      await Share.shareXFiles(
+        [XFile(imagePath)],
+        text:
+            'Mango - ${isTNTab ? "TN" : "KL"} RESULT REPORT (${DateFormat('dd-MM-yyyy').format(_selectedDate)})',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sharing image: $e')),
+        );
+      }
     }
   }
 
@@ -430,7 +474,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
   }
 
   Widget _buildStyledResultBlock(Map<String, dynamic> res,
-      {required bool isTN}) {
+      {required bool isTN, bool isForShare = false}) {
     return Column(
       children: [
         // Game Name Banner
@@ -514,7 +558,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
         ],
 
         // Admin Action Buttons
-        if (_isAdmin)
+        if (_isAdmin && !isForShare)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
