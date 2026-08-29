@@ -504,7 +504,9 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           item['game'] != '-' &&
           item['game'] != 'ALL') {
         title = item['game'];
-      } else if (item['date'] != null && item['date'] != '-') {
+      } else if (item['date'] != null &&
+          item['date'] != '-' &&
+          item['date'] != 'ALL') {
         title = item['date'];
       }
     }
@@ -517,7 +519,10 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         item['game'] != title) {
       subItems.add(item['game']);
     }
-    if (item['date'] != null && item['date'] != '-' && item['date'] != title) {
+    if (item['date'] != null &&
+        item['date'] != '-' &&
+        item['date'] != 'ALL' &&
+        item['date'] != title) {
       subItems.add(item['date']);
     }
     String subTitle = subItems.join(' • ');
