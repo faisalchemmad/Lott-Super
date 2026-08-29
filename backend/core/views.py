@@ -1426,8 +1426,8 @@ class DailyReportView(views.APIView):
             group_fields.append('user__username')
             group_fields.append('user__id')
 
-        # Check if this is the root request for a non-superadmin user
-        is_root_view = (agent_id is None and request.user.role != 'SUPER_ADMIN')
+        # Check if this is the root request for a non-superadmin/non-dealer user
+        is_root_view = (agent_id is None and request.user.role not in ['SUPER_ADMIN', 'DEALER'])
 
         # ── Build direct-subordinate map under target_user ────────────────────
         direct_children = list(
