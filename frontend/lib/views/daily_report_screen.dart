@@ -21,7 +21,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
   DateTime _toDate = DateTime.now();
   int? _selectedAgentId;
   int? _selectedGameId;
-  bool _dayDetail = true;
+  bool _dayDetail = false;
   bool _gameDetail = false;
   bool _userWise = true;
   bool _agentRate = false;
