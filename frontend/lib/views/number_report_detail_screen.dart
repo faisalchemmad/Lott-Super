@@ -80,12 +80,13 @@ class NumberReportDetailScreen extends StatelessWidget {
             headerDecoration:
                 const pw.BoxDecoration(color: PdfColors.blueGrey700),
             cellAlignment: pw.Alignment.centerLeft,
-            headers: ['USER', 'TYPE', 'NUM', 'QTY', 'FWD'],
+            headers: ['USER', 'GAME', 'TYPE', 'NUM', 'QTY', 'FWD'],
             data: reportData
                 .map((item) => [
                       (item['user__username'] ?? 'SYSTEM')
                           .toString()
                           .toUpperCase(),
+                      item['game__name'] ?? 'ALL',
                       item['type'].toString().toUpperCase(),
                       item['number'].toString(),
                       item['total_qty'].toString(),
@@ -121,7 +122,12 @@ class NumberReportDetailScreen extends StatelessWidget {
             child: Text('USER', textAlign: TextAlign.left, style: headerStyle),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
+            child:
+                Text('GAME', textAlign: TextAlign.center, style: headerStyle),
+          ),
+          Expanded(
+            flex: 2,
             child:
                 Text('TYPE', textAlign: TextAlign.center, style: headerStyle),
           ),
@@ -142,6 +148,7 @@ class NumberReportDetailScreen extends StatelessWidget {
     final bool isEven = index % 2 == 0;
     final userName =
         (item['user__username'] ?? 'SYSTEM').toString().toUpperCase();
+    final gameName = (item['game__name'] ?? '').toString();
     final typeName = item['type'].toString().toUpperCase();
     final number = item['number'].toString();
     final qty = item['total_qty'] ?? 0;
@@ -170,7 +177,20 @@ class NumberReportDetailScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
+            child: Text(
+              gameName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: AppColors.primary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Expanded(
+            flex: 2,
             child: Text(
               typeName,
               textAlign: TextAlign.center,

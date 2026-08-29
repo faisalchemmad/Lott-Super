@@ -1759,14 +1759,9 @@ class NumberReportView(views.APIView):
             else:
                 bets = bets.filter(type__iexact=bet_type)
 
-        if agent_id:
-            results = bets.values('game__name', 'type', 'number', 'user__username').annotate(
-                total_qty=Sum('count')
-            ).order_by('-total_qty', 'number')
-        else:
-            results = bets.values('game__name', 'type', 'number').annotate(
-                total_qty=Sum('count')
-            ).order_by('-total_qty', 'number')
+        results = bets.values('game__name', 'type', 'number', 'user__username').annotate(
+            total_qty=Sum('count')
+        ).order_by('-total_qty', 'number')
 
         results_list = list(results)
         
