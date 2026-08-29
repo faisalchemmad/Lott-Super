@@ -34,6 +34,7 @@ class SalesReportDetailScreen extends StatefulWidget {
 
 class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
   late Map<String, dynamic> _currentReportData;
+  bool _showNetRate = true;
 
   @override
   void initState() {
@@ -95,13 +96,86 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                     children: [
                       const SizedBox(height: 8),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text('RECENT INVOICES',
-                            style: TextStyle(
-                                color: Colors.grey[800],
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                                fontSize: 14)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('RECENT INVOICES',
+                                style: TextStyle(
+                                    color: Colors.grey[800],
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    fontSize: 14)),
+                            Container(
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      if (!_showNetRate) {
+                                        setState(() => _showNetRate = true);
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: _showNetRate
+                                            ? AppColors.primary
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        'Net',
+                                        style: TextStyle(
+                                          color: _showNetRate
+                                              ? Colors.white
+                                              : Colors.grey[700],
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      if (_showNetRate) {
+                                        setState(() => _showNetRate = false);
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: !_showNetRate
+                                            ? AppColors.primary
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        'Price',
+                                        style: TextStyle(
+                                          color: !_showNetRate
+                                              ? Colors.white
+                                              : Colors.grey[700],
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       if (invoices.isEmpty)
@@ -270,7 +344,6 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                     ],
                   ),
                 ),
-                
               ],
             ),
           ),
@@ -501,14 +574,18 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981)
+                                    color: (_showNetRate
+                                            ? const Color(0xFF10B981)
+                                            : Colors.blue)
                                         .withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                      '₹${(widget.userRole == "SUPER_ADMIN" || widget.userRole == "ADMIN" || widget.userRole == "AGENT" || widget.userRole == "DEALER") ? inv['net'] : inv['amount']}',
-                                      style: const TextStyle(
-                                          color: Color(0xFF10B981),
+                                      '₹${_showNetRate ? (inv['net'] ?? inv['amount']) : (inv['amount'] ?? inv['net'])}',
+                                      style: TextStyle(
+                                          color: _showNetRate
+                                              ? const Color(0xFF10B981)
+                                              : Colors.blue.shade700,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w900)),
                                 ),
@@ -547,38 +624,25 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                                           style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold))),
-                                  if (widget.userRole == 'SUPER_ADMIN' ||
-                                      widget.userRole == 'ADMIN' ||
-                                      widget.userRole == 'AGENT' ||
-                                      widget.userRole == 'DEALER') ...[
-                                    const Expanded(
-                                        flex: 2,
-                                        child: Text('NET',
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold))),
-                                    const Expanded(
-                                        flex: 2,
-                                        child: Text('TOT',
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF10B981)))),
-                                  ] else
-                                    const Expanded(
-                                        flex: 2,
-                                        child: Text('TOTAL',
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold))),
+                                  Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                          _showNetRate ? 'NET TOTAL' : 'TOTAL',
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: _showNetRate
+                                                  ? const Color(0xFF10B981)
+                                                  : Colors.black87))),
                                 ],
                               ),
                             ),
                             // Invoice Items
                             ...items.map((item) {
+                              final itemVal = _showNetRate
+                                  ? (item['net'] ?? item['total'])
+                                  : (item['total'] ?? item['net']);
                               return Container(
                                 decoration: BoxDecoration(
                                   border: Border(
@@ -608,39 +672,17 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                                       child: Text('${item['count']}',
                                           style: const TextStyle(fontSize: 13)),
                                     ),
-                                    if (widget.userRole == 'SUPER_ADMIN' ||
-                                        widget.userRole == 'ADMIN' ||
-                                        widget.userRole == 'AGENT' ||
-                                        widget.userRole == 'DEALER') ...[
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                            (item['count'] > 0
-                                                    ? (item['net'] /
-                                                        item['count'])
-                                                    : 0.0)
-                                                .toStringAsFixed(2),
-                                            textAlign: TextAlign.right,
-                                            style:
-                                                const TextStyle(fontSize: 12)),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text('${item['net']}',
-                                            textAlign: TextAlign.right,
-                                            style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF10B981))),
-                                      ),
-                                    ] else
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text('${item['total']}',
-                                            textAlign: TextAlign.right,
-                                            style:
-                                                const TextStyle(fontSize: 13)),
-                                      ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text('$itemVal',
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: _showNetRate
+                                                  ? const Color(0xFF10B981)
+                                                  : Colors.black87)),
+                                    ),
                                   ],
                                 ),
                               );
@@ -801,7 +843,7 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'TOTAL',
+                            _showNetRate ? 'NET' : 'TOTAL',
                             style: TextStyle(
                                 color: Colors.grey[500],
                                 fontSize: 9,
@@ -810,9 +852,11 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '₹${(widget.userRole == "SUPER_ADMIN" || widget.userRole == "ADMIN" || widget.userRole == "AGENT" || widget.userRole == "DEALER") ? inv['net'] : inv['amount']}',
-                            style: const TextStyle(
-                                color: Color(0xFF10B981),
+                            '₹${_showNetRate ? (inv['net'] ?? inv['amount']) : (inv['amount'] ?? inv['net'])}',
+                            style: TextStyle(
+                                color: _showNetRate
+                                    ? const Color(0xFF10B981)
+                                    : Colors.blue.shade700,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 15),
                           ),
