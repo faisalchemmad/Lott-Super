@@ -237,6 +237,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     final billId = widget.invoiceId.split('-').last.toUpperCase();
     final firstBet = _bets.isNotEmpty ? _bets.first : null;
     final agentName = firstBet?.username ?? 'Unknown';
+    final customerName = firstBet?.customerName ?? '';
 
     // Calculations
     int totalCount = 0;
