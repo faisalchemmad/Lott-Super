@@ -340,52 +340,118 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
 
   Widget _buildSummaryHeader(double totalSale, double totalCommission,
       double totalWinning, double totalBalance) {
+    final isSameDay = widget.fromDate.year == widget.toDate.year &&
+        widget.fromDate.month == widget.toDate.month &&
+        widget.fromDate.day == widget.toDate.day;
+
+    final dateRangeStr = isSameDay
+        ? DateFormat('dd MMM yyyy').format(widget.fromDate)
+        : '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       color: Colors.white,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+      child: Column(
+        children: [
+          // 1. Report Period Card
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildNewStatItem(Icons.bar_chart_rounded, 'Total Sales',
-                  '₹${_formatAmount(totalSale)}'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(Icons.calendar_month_rounded,
+                      color: AppColors.primary, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('REPORT PERIOD',
+                          style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5)),
+                      const SizedBox(height: 1),
+                      Text(
+                        dateRangeStr,
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Container(width: 1, height: 50, color: Colors.grey.shade200),
-            Expanded(
-              child: _buildNewStatItem(Icons.emoji_events_rounded,
-                  'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
-                  valueColor:
-                      totalWinning > 0 ? const Color(0xFF10B981) : null),
+          ),
+          // 2. Summary 4-Column Card
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            Container(width: 1, height: 50, color: Colors.grey.shade200),
-            Expanded(
-              child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
-                  '₹${_formatAmount(totalCommission)}',
-                  valueColor:
-                      totalCommission > 0 ? const Color(0xFF059669) : null),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildNewStatItem(Icons.bar_chart_rounded,
+                      'Total Sales', '₹${_formatAmount(totalSale)}'),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(Icons.emoji_events_rounded,
+                      'Winning (Prz)', '₹${_formatAmount(totalWinning)}',
+                      valueColor:
+                          totalWinning > 0 ? const Color(0xFF10B981) : null),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(Icons.percent_rounded, 'Dealer Comm',
+                      '₹${_formatAmount(totalCommission)}',
+                      valueColor:
+                          totalCommission > 0 ? const Color(0xFF059669) : null),
+                ),
+                Container(width: 1, height: 50, color: Colors.grey.shade200),
+                Expanded(
+                  child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
+                      'Net Total', '₹${_formatAmount(totalBalance)}',
+                      valueColor: totalBalance >= 0
+                          ? const Color(0xFF10B981)
+                          : Colors.red),
+                ),
+              ],
             ),
-            Container(width: 1, height: 50, color: Colors.grey.shade200),
-            Expanded(
-              child: _buildNewStatItem(Icons.account_balance_wallet_rounded,
-                  'Net Total', '₹${_formatAmount(totalBalance)}',
-                  valueColor:
-                      totalBalance >= 0 ? const Color(0xFF10B981) : Colors.red),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
