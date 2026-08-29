@@ -444,21 +444,21 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
       child: const Row(
         children: [
           Expanded(
-            flex: 32,
+            flex: 22,
             child: Text('USER', style: headerStyle),
           ),
           Expanded(
-            flex: 22,
+            flex: 26,
             child:
                 Text('SALES', textAlign: TextAlign.right, style: headerStyle),
           ),
           Expanded(
-            flex: 24,
-            child: Text('PRZ/COMM',
-                textAlign: TextAlign.right, style: headerStyle),
+            flex: 26,
+            child:
+                Text('PZ/COM', textAlign: TextAlign.center, style: headerStyle),
           ),
           Expanded(
-            flex: 22,
+            flex: 26,
             child:
                 Text('TOTAL', textAlign: TextAlign.right, style: headerStyle),
           ),
@@ -557,7 +557,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              flex: 32,
+              flex: 22,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -627,7 +627,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
               ),
             ),
             Expanded(
-              flex: 22,
+              flex: 26,
               child: Text(
                 _formatAmount(sale),
                 textAlign: TextAlign.right,
@@ -639,14 +639,14 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
               ),
             ),
             Expanded(
-              flex: 24,
+              flex: 26,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     _formatAmount(winning),
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -658,7 +658,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                   if (commission > 0)
                     Text(
                       'Com: ${_formatAmount(commission)}',
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -669,7 +669,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
               ),
             ),
             Expanded(
-              flex: 22,
+              flex: 26,
               child: Text(
                 _formatAmount(balance),
                 textAlign: TextAlign.right,
