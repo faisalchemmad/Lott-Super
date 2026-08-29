@@ -200,13 +200,16 @@ class NumberReportDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '$qty',
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: AppColors.primary,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '$qty',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
                 if (fwdQty > 0)
