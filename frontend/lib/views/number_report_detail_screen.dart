@@ -28,10 +28,13 @@ class NumberReportDetailScreen extends StatelessWidget {
     final dateRange =
         "${DateFormat('dd/MM/yy').format(fromDate)} - ${DateFormat('dd/MM/yy').format(toDate)}";
 
+    final totalQty = reportData.fold<int>(0,
+        (sum, item) => sum + (int.tryParse(item['total_qty'].toString()) ?? 0));
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        margin: const pw.EdgeInsets.all(24),
         build: (pw.Context context) => [
           pw.Header(
             level: 0,
@@ -43,12 +46,13 @@ class NumberReportDetailScreen extends StatelessWidget {
                   children: [
                     pw.Text('NUMBER REPORT',
                         style: pw.TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.blueGrey800)),
+                            color: PdfColor.fromHex('#901C22'))),
+                    pw.SizedBox(height: 4),
                     pw.Text('Date: $dateRange',
                         style: const pw.TextStyle(
-                            fontSize: 12, color: PdfColors.grey700)),
+                            fontSize: 11, color: PdfColors.grey700)),
                   ],
                 ),
                 pw.Column(
@@ -57,29 +61,44 @@ class NumberReportDetailScreen extends StatelessWidget {
                     pw.Text('Lott Super',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 2),
                     pw.Text(
                         'Printed: ${DateFormat('dd/MM/yy HH:mm').format(DateTime.now())}',
-                        style: const pw.TextStyle(fontSize: 10)),
+                        style: const pw.TextStyle(
+                            fontSize: 9, color: PdfColors.grey600)),
                   ],
                 ),
               ],
             ),
           ),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 8),
           pw.Row(
             children: [
               pw.Text(
-                  'Game: ${gameName ?? "All"}  |  Type: ${typeName ?? "All"}  |  Agent: ${agentName ?? "All"}',
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  'Game: ${gameName ?? "All"}  |  Type: ${typeName ?? "All"}  |  Agent: ${agentName ?? "All"}  |  Total Qty: $totalQty',
+                  style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.grey700)),
             ],
           ),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: 14),
           pw.TableHelper.fromTextArray(
             headerStyle: pw.TextStyle(
-                fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.white,
+                fontSize: 10),
             headerDecoration:
-                const pw.BoxDecoration(color: PdfColors.blueGrey700),
-            cellAlignment: pw.Alignment.centerLeft,
+                pw.BoxDecoration(color: PdfColor.fromHex('#901C22')),
+            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellAlignments: {
+              0: pw.Alignment.centerLeft,
+              1: pw.Alignment.center,
+              2: pw.Alignment.center,
+              3: pw.Alignment.center,
+              4: pw.Alignment.centerRight,
+              5: pw.Alignment.centerRight,
+            },
             headers: ['USER', 'GAME', 'TYPE', 'NUM', 'QTY', 'FWD'],
             data: reportData
                 .map((item) => [
