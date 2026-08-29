@@ -1530,7 +1530,7 @@ class DailyReportView(views.APIView):
                 bcat = sg['bet_type_category']
                 st = sg.get('state', 'KL')
 
-                if user.role != 'SUPER_ADMIN' and not use_agent_rate:
+                if user.role != 'SUPER_ADMIN' and use_agent_rate:
                     effective_comm_user = user
                 else:
                     effective_comm_user = sub_user_obj
@@ -1612,7 +1612,7 @@ class DailyReportView(views.APIView):
             bcat = r.get('bet_type_category')
             state_code = r.get('state', 'KL')
 
-            if user.role != 'SUPER_ADMIN' and not use_agent_rate:
+            if user.role != 'SUPER_ADMIN' and use_agent_rate:
                 effective_comm_user = user
             else:
                 effective_comm_user = sub_user_obj
