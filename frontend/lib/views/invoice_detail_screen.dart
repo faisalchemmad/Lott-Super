@@ -212,9 +212,12 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           "${b.gameName.padRight(6).substring(0, 6)} ${b.type.toUpperCase().padRight(5)} ${b.number.padRight(5)} ${b.count.toString().padRight(5)} ${subtotal.toStringAsFixed(0).padLeft(5)}\n";
     }
 
+    final customerName =
+        _bets.isNotEmpty ? (_bets.first.customerName ?? '') : '';
+
     String shareText = "INV No : $billId\n"
         "Date : $dateStr\n"
-        "Customer : $agentName\n"
+        "Customer : ${customerName.isNotEmpty ? customerName : agentName}\n"
         "Sales Time : $timeStr\n"
         "Total Amount : ${totalGrossAmount.toStringAsFixed(0)}\n"
         "Total Count : $totalCount\n\n"
@@ -292,9 +295,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400))),
-                    const Expanded(
-                        child: Text('CUSTOMER:',
-                            style: TextStyle(
+                    Expanded(
+                        child: Text(
+                            'CUSTOMER: ${customerName.isNotEmpty ? customerName.toUpperCase() : "-"}',
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400))),

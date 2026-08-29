@@ -7,6 +7,7 @@ class BetModel {
   final String gameName;
   final String gameTime;
   final String? username;
+  final String? customerName;
   final DateTime createdAt;
 
   final double totalAmount;
@@ -24,6 +25,7 @@ class BetModel {
     required this.gameName,
     required this.gameTime,
     this.username,
+    this.customerName,
     required this.createdAt,
     this.totalAmount = 0.0,
     this.commission = 0.0,
@@ -42,6 +44,7 @@ class BetModel {
       gameName: json['game_name'] ?? '',
       gameTime: json['game_time'] ?? '',
       username: json['user_username'], // Updated to match view's custom dict
+      customerName: json['customer_name'],
       createdAt: DateTime.parse(json['created_at']),
       totalAmount:
           double.tryParse(json['total_amount']?.toString() ?? '0') ?? 0.0,

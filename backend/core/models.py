@@ -260,6 +260,7 @@ class Bet(models.Model):
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     state = models.CharField(max_length=5, default='KL')
     invoice_id = models.CharField(max_length=8, blank=True, null=True)
+    customer_name = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_winner = models.BooleanField(null=True, blank=True)
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)

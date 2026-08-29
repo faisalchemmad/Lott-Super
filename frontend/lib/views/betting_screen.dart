@@ -708,7 +708,7 @@ class _BettingScreenState extends State<BettingScreen>
       } catch (_) {}
 
       final result = await apiService.placeBulkBets(widget.game.id, _draftBets,
-          userId: targetUserId);
+          userId: targetUserId, customerName: _customerController.text.trim());
       final invoiceId = result['invoice_id'];
       final failedBets = result['failed_bets'] ?? [];
 

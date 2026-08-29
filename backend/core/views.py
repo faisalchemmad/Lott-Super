@@ -422,6 +422,7 @@ class BetViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Account Blocked'}, status=status.HTTP_403_FORBIDDEN)
 
         bets_data = request.data.get('bets', [])
+        customer_name = (request.data.get('customer_name') or '').strip()
         if not bets_data:
             return Response({'error': 'No bets provided'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -640,7 +641,8 @@ class BetViewSet(viewsets.ModelViewSet):
                 amount=amount,
                 count=count,
                 state=state,
-                invoice_id=invoice_id
+                invoice_id=invoice_id,
+                customer_name=customer_name or None
             )
             created_bets_count += 1
             total_created_amount += amount * count
@@ -871,6 +873,7 @@ class BetViewSet(viewsets.ModelViewSet):
                 'id': bet.id,
                 'game_name': bet.game.name,
                 'user_username': bet.user.username,
+                'customer_name': bet.customer_name or '',
                 'number': bet.number,
                 'amount': float(bet.amount),
                 'count': bet.count,
@@ -1032,6 +1035,7 @@ class SalesReportView(views.APIView):
                 invoice_map[inv_id] = {
                     'invoice_id': inv_id,
                     'user__username': u.username,
+                    'customer_name': bet.customer_name or '',
                     'game__name': bet.game.name,
                     'game__time': bet.game.time,
                     'amount': Decimal('0.00'),
@@ -1041,6 +1045,8 @@ class SalesReportView(views.APIView):
                     'created_at': bet.created_at,
                     'items': []
                 }
+            elif not invoice_map[inv_id].get('customer_name') and bet.customer_name:
+                invoice_map[inv_id]['customer_name'] = bet.customer_name
             
             inv = invoice_map[inv_id]
             inv['amount'] += bet_sale

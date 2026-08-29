@@ -111,7 +111,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> placeBulkBets(
       int gameId, List<Map<String, dynamic>> bets,
-      {int? userId}) async {
+      {int? userId, String? customerName}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -127,6 +127,9 @@ class ApiService {
 
     final Map<String, dynamic> requestBody = {'bets': formattedBets};
     if (userId != null) requestBody['user_id'] = userId;
+    if (customerName != null && customerName.isNotEmpty) {
+      requestBody['customer_name'] = customerName;
+    }
 
     final response = await http.post(
       Uri.parse('$baseUrl/bets/bulk-create/'),

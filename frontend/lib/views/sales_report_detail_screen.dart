@@ -560,6 +560,31 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                                         color: Colors.grey[700],
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700)),
+                                if (inv['customer_name'] != null &&
+                                    inv['customer_name']
+                                        .toString()
+                                        .isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                          color: Colors.purple.shade200,
+                                          width: 0.5),
+                                    ),
+                                    child: Text(
+                                      inv['customer_name'].toString(),
+                                      style: TextStyle(
+                                        color: Colors.purple.shade700,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                             Row(
@@ -823,7 +848,12 @@ class _SalesReportDetailScreenState extends State<SalesReportDetailScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    inv['user__username'] ?? '',
+                                    (inv['customer_name'] != null &&
+                                            inv['customer_name']
+                                                .toString()
+                                                .isNotEmpty)
+                                        ? '${inv['user__username'] ?? ''} (${inv['customer_name']})'
+                                        : (inv['user__username'] ?? ''),
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                         color: Colors.grey[700],
