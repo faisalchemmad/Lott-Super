@@ -1529,7 +1529,13 @@ class DailyReportView(views.APIView):
                 sub_user_obj = direct_sub_map.get(uid, target_user)
                 bcat = sg['bet_type_category']
                 st = sg.get('state', 'KL')
-                comm_rate = get_comm_rate(sub_user_obj, bcat, st)
+
+                if user.role != 'SUPER_ADMIN' and not use_agent_rate:
+                    effective_comm_user = user
+                else:
+                    effective_comm_user = sub_user_obj
+
+                comm_rate = get_comm_rate(effective_comm_user, bcat, st)
                 s = Decimal(str(sg['sub_sale'] or 0))
                 cnt = Decimal(str(sg['sub_count'] or 0))
                 w = Decimal(str(sg['sub_winning'] or 0))
@@ -1606,7 +1612,12 @@ class DailyReportView(views.APIView):
             bcat = r.get('bet_type_category')
             state_code = r.get('state', 'KL')
 
-            comm_rate = get_comm_rate(sub_user_obj, bcat, state_code)
+            if user.role != 'SUPER_ADMIN' and not use_agent_rate:
+                effective_comm_user = user
+            else:
+                effective_comm_user = sub_user_obj
+
+            comm_rate = get_comm_rate(effective_comm_user, bcat, state_code)
 
             sub_gross_sale = Decimal(str(r['sub_total_sale'] or 0))
             sub_count = Decimal(str(r['sub_total_count'] or 0))
