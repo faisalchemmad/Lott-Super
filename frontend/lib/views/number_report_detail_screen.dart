@@ -65,7 +65,7 @@ class NumberReportDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          const pw.SizedBox(height: 10),
+          pw.SizedBox(height: 10),
           pw.Row(
             children: [
               pw.Text(
