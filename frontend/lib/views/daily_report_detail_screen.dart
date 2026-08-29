@@ -498,7 +498,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         ? _parseColor(gameColorHex)
         : null;
 
-    String title = item['user'] ?? '-';
+    String title = (item['user'] ?? '-').toString();
     if (title == '-' || title == 'ALL') {
       if (item['game'] != null &&
           item['game'] != '-' &&
@@ -508,6 +508,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
         title = item['date'];
       }
     }
+    title = title.toUpperCase();
 
     List<String> subItems = [];
     if (item['game'] != null &&

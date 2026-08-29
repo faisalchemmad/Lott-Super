@@ -1690,7 +1690,7 @@ class DailyReportView(views.APIView):
                 'date': item['date'],
                 'game': item['game'],
                 'game_color': item.get('game_color'),
-                'user': item['user'],
+                'user': str(item['user']).upper(),
                 'user_id': item.get('user_id'),
                 'role': item.get('role'),
                 'is_drillable': item.get('is_drillable', False),
