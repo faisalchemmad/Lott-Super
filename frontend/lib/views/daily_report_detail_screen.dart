@@ -242,7 +242,7 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Daily Report Results',
+        title: const Text('Daily Report',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
@@ -628,13 +628,19 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             ),
             Expanded(
               flex: 26,
-              child: Text(
-                _formatAmount(sale),
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.black87,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _formatAmount(sale),
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.black87,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -644,25 +650,31 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    _formatAmount(winning),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: winning > 0
-                          ? const Color(0xFF10B981)
-                          : Colors.black87,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _formatAmount(winning),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: winning > 0
+                            ? const Color(0xFF10B981)
+                            : Colors.black87,
+                      ),
                     ),
                   ),
                   if (commission > 0)
-                    Text(
-                      'Com: ${_formatAmount(commission)}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF059669),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Com: ${_formatAmount(commission)}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF059669),
+                        ),
                       ),
                     ),
                 ],
@@ -670,13 +682,20 @@ class _DailyReportDetailScreenState extends State<DailyReportDetailScreen> {
             ),
             Expanded(
               flex: 26,
-              child: Text(
-                _formatAmount(balance),
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  color: balance >= 0 ? const Color(0xFF10B981) : Colors.red,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _formatAmount(balance),
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color:
+                          balance >= 0 ? const Color(0xFF10B981) : Colors.red,
+                    ),
+                  ),
                 ),
               ),
             ),
