@@ -347,15 +347,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        _buildActionCard(
-          'Place Bet',
-          Icons.add_shopping_cart,
-          Colors.blue,
-          () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const SelectGameScreen())),
-        ),
+        if (!isSuperAdmin)
+          _buildActionCard(
+            'Place Bet',
+            Icons.add_shopping_cart,
+            Colors.blue,
+            () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SelectGameScreen())),
+          ),
         _buildActionCard(
           'Reports',
           Icons.bar_chart,

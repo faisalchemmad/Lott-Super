@@ -422,6 +422,9 @@ class BetViewSet(viewsets.ModelViewSet):
         else:
             user = requested_user
 
+        if requested_user.role == 'SUPER_ADMIN' or user.role == 'SUPER_ADMIN':
+            return Response({'error': 'Super Admin cannot place bets'}, status=status.HTTP_400_BAD_REQUEST)
+
         if requested_user.is_blocked or any(p.is_blocked for p in requested_user.get_ancestors()):
             return Response({'error': 'Account Blocked'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1130,7 +1133,8 @@ class NetReportView(views.APIView):
         
         display_subjects = []
         # 'Self' row for the target user (their own personal bets)
-        display_subjects.append(('Self', [target_user.id], target_user, target_user.id))
+        if target_user.role != 'SUPER_ADMIN':
+            display_subjects.append(('Self', [target_user.id], target_user, target_user.id))
         
         for child in direct_children:
             # We want to show the Child's name and their consolidated branch total
@@ -1719,6 +1723,8 @@ class DailyReportView(views.APIView):
         output_data = []
         for key in sorted(final_data.keys()):
             item = final_data[key]
+            if target_user.role == 'SUPER_ADMIN' and str(item['user']).upper() == 'SELF':
+                continue
             output_data.append({
                 'date': item['date'],
                 'game': item['game'],
