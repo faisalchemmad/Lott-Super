@@ -78,6 +78,13 @@ def get_game_global_type_count_limit(game, bet_type):
     }
     return mapping.get(bt, 0)
 
+def get_excluded_forwarding_user_ids():
+    """Returns set of all descendant IDs for Admins where can_forward=True."""
+    excluded = set()
+    for f_admin in User.objects.filter(role='ADMIN', can_forward=True):
+        excluded.update(f_admin.get_descendant_ids())
+    return excluded
+
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'SUPER_ADMIN'
@@ -899,8 +906,12 @@ class ReportView(views.APIView):
 
         # Filters based on role (Simplified)
         bets = Bet.objects.filter(created_at__date=date)
-        if user.role != 'SUPER_ADMIN':
-            bets = bets.filter(user=user)
+        if user.role == 'SUPER_ADMIN':
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
+        else:
+            bets = bets.filter(user_id__in=user.get_descendant_ids())
 
         sales = bets.aggregate(total_sales=Sum(F('amount') * F('count')))['total_sales'] or 0
         winning = bets.filter(is_winner=True).aggregate(total_winning=Sum('winning_amount'))['total_winning'] or 0
@@ -953,6 +964,10 @@ class SalesReportView(views.APIView):
                     return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
             except User.DoesNotExist:
                 bets = bets.filter(user_id=agent_id) # Fallback
+        elif user.role == 'SUPER_ADMIN':
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
         elif user.role != 'SUPER_ADMIN':
             bets = bets.filter(user_id__in=user.get_descendant_ids())
 
@@ -1110,6 +1125,8 @@ class NetReportView(views.APIView):
 
         # 1. Get all direct children of the target user
         direct_children = User.objects.filter(parent=target_user).order_by('username')
+        if user.role == 'SUPER_ADMIN' and not target_uid:
+            direct_children = direct_children.exclude(role='ADMIN', can_forward=True)
         
         display_subjects = []
         # 'Self' row for the target user (their own personal bets)
@@ -1292,6 +1309,10 @@ class CountReportView(views.APIView):
                     bets = bets.filter(user_id__in=target_user.get_descendant_ids())
             except (ValueError, User.DoesNotExist):
                 bets = bets.filter(user_id=agent_id)
+        elif user.role == 'SUPER_ADMIN':
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
         elif user.role != 'SUPER_ADMIN':
             bets = bets.filter(user_id__in=user.get_descendant_ids())
 
@@ -1410,6 +1431,10 @@ class DailyReportView(views.APIView):
                 return Response({'error': 'User not found'}, status=404)
 
         bets = Bet.objects.filter(user_id__in=target_user.get_descendant_ids())
+        if user.role == 'SUPER_ADMIN' and not agent_id:
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
         
         if state and state.upper() in ['KL', 'TN']:
             bets = bets.filter(state=state.upper())
@@ -1438,13 +1463,15 @@ class DailyReportView(views.APIView):
         # ── Build direct-subordinate map under target_user ────────────────────
         direct_children = list(
             User.objects.filter(parent=target_user).only(
-                'id', 'username', 'role',
+                'id', 'username', 'role', 'can_forward',
                 'sales_comm_abc', 'sales_comm_ab_bc_ac', 'sales_comm_super', 'sales_comm_box',
                 'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
                 'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
                 'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
             )
         )
+        if user.role == 'SUPER_ADMIN' and not agent_id:
+            direct_children = [c for c in direct_children if not (c.role == 'ADMIN' and getattr(c, 'can_forward', False))]
         direct_child_ids = {c.id for c in direct_children}
         direct_child_obj = {c.id: c for c in direct_children}
         has_subordinates = len(direct_children) > 0
@@ -1747,6 +1774,10 @@ class NumberReportView(views.APIView):
             bets = bets.filter(number=search_number)
         if agent_id:
             bets = bets.filter(user_id=agent_id)
+        elif user.role == 'SUPER_ADMIN':
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
         elif user.role != 'SUPER_ADMIN':
             # View my bets and all my descendants' bets
             bets = bets.filter(user_id__in=user.get_descendant_ids())
@@ -1949,10 +1980,6 @@ class WinningReportView(views.APIView):
         if forwarded_only:
             bets = Bet.objects.none()
         
-        if user.role != 'SUPER_ADMIN':
-            # Admin/Agent sees their own and their descendants' winners
-            bets = bets.filter(user_id__in=user.get_descendant_ids())
-            
         if from_date:
             bets = bets.filter(created_at__date__gte=from_date)
         if to_date:
@@ -1975,6 +2002,13 @@ class WinningReportView(views.APIView):
                     bets = bets.filter(user_id__in=target_user.get_descendant_ids())
             except (ValueError, User.DoesNotExist):
                 bets = bets.filter(user_id=user_id)
+        elif user.role == 'SUPER_ADMIN':
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                bets = bets.exclude(user_id__in=excluded_ids)
+        elif user.role != 'SUPER_ADMIN':
+            # Admin/Agent sees their own and their descendants' winners
+            bets = bets.filter(user_id__in=user.get_descendant_ids())
 
         # Define priority for sorting
         from django.db.models import Case, When, Value, IntegerField
@@ -2297,6 +2331,9 @@ class DashboardView(views.APIView):
             # Global daily stats for Super Admin cards
             today = timezone.localtime().date()
             global_daily_bets = Bet.objects.filter(created_at__date=today)
+            excluded_ids = get_excluded_forwarding_user_ids()
+            if excluded_ids:
+                global_daily_bets = global_daily_bets.exclude(user_id__in=excluded_ids)
             stats = global_daily_bets.aggregate(
                 sales=Sum(F('amount') * F('count')),
                 wins=Sum('winning_amount')
