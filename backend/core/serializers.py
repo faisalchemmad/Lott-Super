@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
             'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
             'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
-            'is_blocked', 'is_default', 'date_joined', 'allowed_games'
+            'is_blocked', 'is_default', 'can_forward', 'date_joined', 'allowed_games'
         ]
 
     remaining_credit = serializers.SerializerMethodField()

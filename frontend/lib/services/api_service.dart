@@ -41,6 +41,8 @@ class ApiService {
         await prefs.setString('token', data['token']);
         await prefs.setString('role', data['user']['role']);
         await prefs.setString('username', data['user']['username']);
+        await prefs.setBool(
+            'can_forward', data['user']['can_forward'] ?? false);
         return data;
       } else {
         String errorMsg = 'Login failed';
@@ -231,7 +233,10 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return UserModel.fromJson(jsonDecode(response.body));
+      final user = UserModel.fromJson(jsonDecode(response.body));
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('can_forward', user.canForward);
+      return user;
     }
     return null;
   }

@@ -21,6 +21,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
 
   bool _isLoading = false;
   bool _isDefault = false;
+  bool _canForward = false;
   String _roleToSet = 'AGENT';
   String? _currentUserRole;
 
@@ -35,6 +36,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     if (widget.user != null) {
       _roleToSet = widget.user!.role;
       _isDefault = widget.user!.isDefault;
+      _canForward = widget.user!.canForward;
     }
     _loadCurrentUserRole();
   }
@@ -72,6 +74,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
       'role': _roleToSet,
       'weekly_credit_limit': double.tryParse(_creditLimitController.text) ?? 0,
       'is_default': _isDefault,
+      'can_forward': _canForward,
     };
 
     if (!isEditing) {
@@ -146,7 +149,33 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                   Icons.account_balance,
                   isNumber: true),
               const SizedBox(height: 20),
-              const SizedBox(height: 40),
+              if (_roleToSet == 'ADMIN') ...[
+                _buildSectionTitle('Forward Option'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text('Forward Option',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    subtitle: const Text(
+                        'Allow this Admin to auto-forward bets to Super Admin and access forward reports',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    value: _canForward,
+                    activeColor: AppColors.primary,
+                    onChanged: (val) {
+                      setState(() {
+                        _canForward = val;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 height: 55,

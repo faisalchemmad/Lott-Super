@@ -16,6 +16,7 @@ class User(AbstractUser):
     weekly_credit_limit = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     is_blocked = models.BooleanField(default=False)
     is_default = models.BooleanField(default=False)
+    can_forward = models.BooleanField(default=False)
     allowed_games = models.ManyToManyField('Game', blank=True, related_name='allowed_users')
 
     def get_descendant_ids(self):

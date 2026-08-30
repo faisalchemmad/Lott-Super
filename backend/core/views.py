@@ -653,8 +653,8 @@ class BetViewSet(viewsets.ModelViewSet):
                 from .models import ForwardLimit, ForwardedBet
                 for info in hierarchy_info:
                     p = info['user']
-                    if p.role == 'SUPER_ADMIN':
-                        continue # Super admin doesn't forward
+                    if p.role != 'ADMIN' or not getattr(p, 'can_forward', False):
+                        continue # Only Admins with can_forward=True can forward
                     
                     d_ids = info['descendant_ids']
                     
@@ -2329,6 +2329,7 @@ class DashboardView(views.APIView):
             data = {
                 'username': user.username,
                 'role': user.role,
+                'can_forward': getattr(user, 'can_forward', False),
                 'weekly_credit_limit': user.weekly_credit_limit,
                 'remaining_credit': remaining_credit,
                 'weekly_sales': sales,

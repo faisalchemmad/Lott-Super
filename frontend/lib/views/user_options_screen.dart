@@ -109,6 +109,33 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 },
               ),
               const SizedBox(height: 8),
+              if (userToShow.role == 'ADMIN' && isSuperAdmin) ...[
+                _buildOption(
+                  context,
+                  icon: Icons.forward_to_inbox_rounded,
+                  label:
+                      'Forward Option: ${userToShow.canForward ? "ENABLED" : "DISABLED"}',
+                  onTap: () async {
+                    final apiService =
+                        Provider.of<ApiService>(context, listen: false);
+                    final newStatus = !userToShow.canForward;
+                    final success = await apiService
+                        .updateUser(userToShow.id, {'can_forward': newStatus});
+                    if (success) {
+                      _loadUserData();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              'Forward option ${newStatus ? "enabled" : "disabled"} for ${userToShow.username}'),
+                          backgroundColor:
+                              newStatus ? Colors.green : Colors.orange,
+                        ));
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
             ],
             _buildOption(
               context,

@@ -404,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 MaterialPageRoute(
                     builder: (context) => const PriceSettingScreen())),
           ),
-        if (isAdmin)
+        if (isAdmin && (_stats?['can_forward'] == true))
           _buildActionCard(
             'Auto Forward',
             Icons.forward_to_inbox,
@@ -413,16 +413,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => const ManageForwardLimitsScreen())),
-          ),
-        if (isAdmin)
-          _buildActionCard(
-            'Manual Forward',
-            Icons.outbox_rounded,
-            Colors.indigoAccent,
-            () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ManualForwardingScreen())),
           ),
         if (isSuperAdmin)
           _buildActionCard(

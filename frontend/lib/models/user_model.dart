@@ -7,6 +7,7 @@ class UserModel {
   final String dateJoined;
   final int? parent;
   final bool isDefault;
+  final bool canForward;
   final List<int> allowedGames;
 
   // Count Limits
@@ -228,6 +229,7 @@ class UserModel {
     this.tnSalesComm4d20 = 0.0,
     this.isBlocked = false,
     this.isDefault = false,
+    this.canForward = false,
     this.parent,
     this.allowedGames = const [],
   });
@@ -370,6 +372,7 @@ class UserModel {
           double.parse(json['tn_sales_comm_4d_20']?.toString() ?? '0.0'),
       isBlocked: json['is_blocked'] ?? false,
       isDefault: json['is_default'] ?? false,
+      canForward: json['can_forward'] ?? false,
       parent: json['parent'],
       allowedGames:
           (json['allowed_games'] as List?)?.map((e) => e as int).toList() ?? [],
@@ -382,6 +385,7 @@ class UserModel {
       'username': username,
       'role': role,
       'parent': parent,
+      'can_forward': canForward,
       'weekly_credit_limit': weeklyCreditLimit,
       'remaining_credit': remainingCredit,
       'date_joined': dateJoined,

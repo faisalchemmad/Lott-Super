@@ -1,0 +1,8 @@
+*.pyc
+__pycache__/
+*.apk
+*.txt
+*.bak*
+db.sqlite3*
+.dart_tool/
+build/

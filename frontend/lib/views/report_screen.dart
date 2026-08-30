@@ -20,6 +20,7 @@ class ReportScreen extends StatefulWidget {
 
 class _ReportScreenState extends State<ReportScreen> {
   String _userRole = '';
+  bool _canForward = false;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _ReportScreenState extends State<ReportScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userRole = prefs.getString('role') ?? '';
+      _canForward = prefs.getBool('can_forward') ?? false;
     });
   }
 
@@ -79,7 +81,8 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
+            if (_userRole == 'SUPER_ADMIN' ||
+                (_userRole == 'ADMIN' && _canForward)) ...[
               _buildReportCard(
                 title: 'Forward Purchase Report',
                 subtitle: 'View and delete forwarded bets',
