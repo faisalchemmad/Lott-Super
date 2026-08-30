@@ -9,7 +9,8 @@ import '../utils/constants.dart';
 import 'number_report_detail_screen.dart';
 
 class NumberReportScreen extends StatefulWidget {
-  const NumberReportScreen({super.key});
+  final bool isForwardedOnly;
+  const NumberReportScreen({super.key, this.isForwardedOnly = false});
 
   @override
   State<NumberReportScreen> createState() => _NumberReportScreenState();
@@ -96,12 +97,13 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getNumberReport(
-          state: _selectedState,
+        state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGameId,
         userId: _selectedAgentId,
         type: _selectedType,
+        forwardedOnly: widget.isForwardedOnly,
       );
 
       String? gameName = _selectedGameId != null
@@ -124,6 +126,7 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
                       gameName: gameName,
                       typeName: _selectedType,
                       agentName: agentName,
+                      isForwardedOnly: widget.isForwardedOnly,
                     )));
       }
     } catch (e) {
@@ -136,7 +139,6 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
   }
 
   @override
-  
   Widget _buildStateRadio(String state) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -155,7 +157,8 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
           state,
           style: TextStyle(
             fontSize: 15,
-            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
             color: _selectedState == state ? AppColors.primary : Colors.black87,
           ),
         ),
@@ -163,12 +166,16 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
     );
   }
 
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Filter Number Report',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(
+            widget.isForwardedOnly
+                ? 'Filter Forward Number Report'
+                : 'Filter Number Report',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         centerTitle: true,
         elevation: 0,
@@ -180,10 +187,10 @@ Widget build(BuildContext context) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 24),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
@@ -198,7 +205,6 @@ Widget build(BuildContext context) {
                       ],
                     ),
                   ),
-
                   Row(
                     children: [
                       Expanded(
@@ -210,7 +216,6 @@ Widget build(BuildContext context) {
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -238,26 +243,47 @@ Widget build(BuildContext context) {
                     icon: Icons.category_rounded,
                   ),
                   const SizedBox(height: 16),
-                  const SizedBox(height: 16),
-                  if (_userRole != 'SUB_DEALER')
-                    _buildDropdownTile<int?>(
-                      label: 'SELECT AGENT',
-                      value: _selectedAgentId,
-                      items: [
-                        const DropdownMenuItem(
-                            value: null, child: Text('ANY AGENT')),
-                        if (_currentUser != null)
-                          DropdownMenuItem(
-                              value: _currentUser!.id,
-                              child: const Text('SELF')),
-                        ..._agents.where((a) => a.id != _currentUser?.id).map(
-                            (a) => DropdownMenuItem(
-                                value: a.id, child: Text(a.username))),
-                      ],
-                      onChanged: (val) =>
-                          setState(() => _selectedAgentId = val),
-                      icon: Icons.person_search_rounded,
-                    ),
+                  if (widget.isForwardedOnly) ...[
+                    if (_userRole == 'SUPER_ADMIN')
+                      _buildDropdownTile<int?>(
+                        label: 'SELECT ADMIN',
+                        value: _selectedAgentId,
+                        items: [
+                          const DropdownMenuItem(
+                              value: null, child: Text('ALL FORWARDED ADMINS')),
+                          ..._agents
+                              .where((a) => a.role == 'ADMIN' && a.canForward)
+                              .map((a) => DropdownMenuItem(
+                                  value: a.id, child: Text(a.username))),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedAgentId = val),
+                        icon: Icons.person_search_rounded,
+                      ),
+                  ] else ...[
+                    if (_userRole != 'SUB_DEALER')
+                      _buildDropdownTile<int?>(
+                        label: 'SELECT AGENT',
+                        value: _selectedAgentId,
+                        items: [
+                          const DropdownMenuItem(
+                              value: null, child: Text('ANY AGENT')),
+                          if (_currentUser != null && _userRole != 'SUPER_ADMIN')
+                            DropdownMenuItem(
+                                value: _currentUser!.id,
+                                child: const Text('SELF')),
+                          ..._agents
+                              .where((a) =>
+                                  a.id != _currentUser?.id &&
+                                  !(_userRole == 'SUPER_ADMIN' && a.canForward))
+                              .map((a) => DropdownMenuItem(
+                                  value: a.id, child: Text(a.username))),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedAgentId = val),
+                        icon: Icons.person_search_rounded,
+                      ),
+                  ],
                   const SizedBox(height: 48),
                   SizedBox(
                     width: double.infinity,
@@ -284,8 +310,6 @@ Widget build(BuildContext context) {
     );
   }
 
-  
-
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -295,7 +319,8 @@ Widget build(BuildContext context) {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -330,7 +355,8 @@ Widget build(BuildContext context) {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),

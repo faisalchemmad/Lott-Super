@@ -12,6 +12,7 @@ class NumberReportDetailScreen extends StatelessWidget {
   final String? gameName;
   final String? typeName;
   final String? agentName;
+  final bool isForwardedOnly;
 
   const NumberReportDetailScreen({
     super.key,
@@ -21,6 +22,7 @@ class NumberReportDetailScreen extends StatelessWidget {
     this.gameName,
     this.typeName,
     this.agentName,
+    this.isForwardedOnly = false,
   });
 
   Future<void> _generatePDF() async {
@@ -44,7 +46,10 @@ class NumberReportDetailScreen extends StatelessWidget {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('NUMBER REPORT',
+                    pw.Text(
+                        isForwardedOnly
+                            ? 'FORWARD NUMBER REPORT'
+                            : 'NUMBER REPORT',
                         style: pw.TextStyle(
                             fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
@@ -285,8 +290,10 @@ class NumberReportDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Number Report',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(
+            isForwardedOnly ? 'Forward Number Report' : 'Number Report',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),

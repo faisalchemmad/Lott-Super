@@ -121,6 +121,19 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               const SizedBox(height: 8),
               _buildReportCard(
+                title: 'Forward Number Report',
+                subtitle: 'Check total quantities of forwarded numbers',
+                icon: Icons.format_list_numbered_rounded,
+                color: Colors.cyan.shade700,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const NumberReportScreen(isForwardedOnly: true)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildReportCard(
                 title: 'Purchase Report',
                 subtitle: 'View forwarded numbers and total purchase amount',
                 icon: Icons.shopping_cart_checkout_rounded,

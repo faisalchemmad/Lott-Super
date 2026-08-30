@@ -651,6 +651,7 @@ class ApiService {
     int? gameId,
     int? userId,
     String? type,
+    bool forwardedOnly = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -661,6 +662,7 @@ class ApiService {
     if (gameId != null) queryParams['game'] = gameId.toString();
     if (userId != null) queryParams['user'] = userId.toString();
     if (type != null) queryParams['type'] = type;
+    if (forwardedOnly) queryParams['forwarded_only'] = 'true';
 
     final uri = Uri.parse('$baseUrl/report/number/')
         .replace(queryParameters: queryParams);

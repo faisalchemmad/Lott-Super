@@ -1761,8 +1761,66 @@ class NumberReportView(views.APIView):
         bet_type = request.query_params.get('type')
         search_number = request.query_params.get('number')
         state_filter = request.query_params.get('state')
-
         state = request.query_params.get('state')
+        forwarded_only = request.query_params.get('forwarded_only') == 'true'
+
+        if forwarded_only:
+            from .models import ForwardedBet
+            if user.role == 'SUPER_ADMIN':
+                fwd_qs = ForwardedBet.objects.filter(forwarded_to=user)
+                if agent_id:
+                    fwd_qs = fwd_qs.filter(forwarded_by_id=agent_id)
+            else:
+                fwd_qs = ForwardedBet.objects.filter(forwarded_by=user)
+            
+            if state and state.upper() in ['KL', 'TN']:
+                fwd_qs = fwd_qs.filter(state=state.upper())
+            if from_date:
+                fwd_qs = fwd_qs.filter(date__gte=from_date)
+            if to_date:
+                fwd_qs = fwd_qs.filter(date__lte=to_date)
+            if game_id:
+                fwd_qs = fwd_qs.filter(game_id=game_id)
+            if search_number:
+                fwd_qs = fwd_qs.filter(number=search_number)
+            if bet_type:
+                if bet_type in ['SUPER+BOX', 'SUPER BOX']:
+                    fwd_qs = fwd_qs.filter(type__in=['SUPER', 'BOX', 'super', 'box'])
+                else:
+                    fwd_qs = fwd_qs.filter(type__iexact=bet_type)
+
+            if user.role == 'SUPER_ADMIN':
+                fwd_items = fwd_qs.values('game__name', 'type', 'number', 'forwarded_by__username').annotate(
+                    total_qty=Sum('count')
+                ).order_by('-total_qty', 'number')
+                results = []
+                for item in fwd_items:
+                    results.append({
+                        'game__name': item['game__name'],
+                        'type': item['type'],
+                        'number': item['number'],
+                        'user__username': item['forwarded_by__username'],
+                        'total_qty': item['total_qty'],
+                        'forwarded_qty': item['total_qty'],
+                    })
+                return Response(results)
+            else:
+                fwd_items = fwd_qs.values('game__name', 'type', 'number').annotate(
+                    total_qty=Sum('count')
+                ).order_by('-total_qty', 'number')
+                results = []
+                for item in fwd_items:
+                    results.append({
+                        'game__name': item['game__name'],
+                        'type': item['type'],
+                        'number': item['number'],
+                        'user__username': user.username,
+                        'total_qty': item['total_qty'],
+                        'forwarded_qty': item['total_qty'],
+                    })
+                return Response(results)
+
+        # Regular Number Report: Only normal bets (Forwarded off Admins + downlines)
         bets = Bet.objects.all()
         
         if state_filter and state_filter.upper() != 'ALL':
@@ -1803,47 +1861,28 @@ class NumberReportView(views.APIView):
         results_list = list(results)
         
         # Attach Forwarded Quantities
-        try:
-            from .models import ForwardedBet
-            fwd_qs = ForwardedBet.objects.all()
-            if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
-            if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
-            if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
-            if search_number: fwd_qs = fwd_qs.filter(number=search_number)
-            if bet_type:
-                if bet_type in ['SUPER+BOX', 'SUPER BOX']:
-                    fwd_qs = fwd_qs.filter(type__in=['SUPER', 'BOX', 'super', 'box'])
-                else:
-                    fwd_qs = fwd_qs.filter(type__iexact=bet_type)
+        if user.role == 'ADMIN' and not agent_id:
+            try:
+                from .models import ForwardedBet
+                fwd_qs = ForwardedBet.objects.filter(forwarded_by=user)
+                if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
+                if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
+                if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
+                if search_number: fwd_qs = fwd_qs.filter(number=search_number)
+                if bet_type:
+                    if bet_type in ['SUPER+BOX', 'SUPER BOX']:
+                        fwd_qs = fwd_qs.filter(type__in=['SUPER', 'BOX', 'super', 'box'])
+                    else:
+                        fwd_qs = fwd_qs.filter(type__iexact=bet_type)
 
-            if user.role == 'SUPER_ADMIN':
-                # Super Admin sees what was forwarded TO them
-                fwd_qs = fwd_qs.filter(forwarded_to=user)
-                fwd_items = fwd_qs.values('game__name', 'type', 'number', 'forwarded_by__username').annotate(total_qty=Sum('count'))
-                for item in fwd_items:
-                    results_list.append({
-                        'game__name': item['game__name'],
-                        'type': item['type'],
-                        'number': item['number'],
-                        'user__username': item['forwarded_by__username'],
-                        'total_qty': item['total_qty'],
-                        'forwarded_qty': item['total_qty'],
-                    })
-                results_list.sort(key=lambda x: x['total_qty'], reverse=True)
-            elif not agent_id:
-                # Admin sees what they forwarded OUT
-                fwd_qs = fwd_qs.filter(forwarded_by=user)
                 fwd_grouped = fwd_qs.values('game__name', 'type', 'number').annotate(fwd_qty=Sum('count'))
                 fwd_dict = {(item['game__name'], item['type'], item['number']): item['fwd_qty'] for item in fwd_grouped}
                 for r in results_list:
                     key = (r['game__name'], r['type'], r['number'])
                     r['forwarded_qty'] = fwd_dict.get(key, 0)
-            else:
-                fwd_qs = fwd_qs.none() # Agent specific view doesn't show forwarding
-                
-        except Exception as e:
-            print("Error attaching forwarded bets:", e)
-            pass
+            except Exception as e:
+                print("Error attaching forwarded bets:", e)
+                pass
 
         return Response(results_list)
 
