@@ -1819,24 +1819,27 @@ class NumberReportView(views.APIView):
             if user.role == 'SUPER_ADMIN':
                 # Super Admin sees what was forwarded TO them
                 fwd_qs = fwd_qs.filter(forwarded_to=user)
+                fwd_items = fwd_qs.values('game__name', 'type', 'number', 'forwarded_by__username').annotate(total_qty=Sum('count'))
+                for item in fwd_items:
+                    results_list.append({
+                        'game__name': item['game__name'],
+                        'type': item['type'],
+                        'number': item['number'],
+                        'user__username': item['forwarded_by__username'],
+                        'total_qty': item['total_qty'],
+                        'forwarded_qty': item['total_qty'],
+                    })
+                results_list.sort(key=lambda x: x['total_qty'], reverse=True)
             elif not agent_id:
                 # Admin sees what they forwarded OUT
                 fwd_qs = fwd_qs.filter(forwarded_by=user)
+                fwd_grouped = fwd_qs.values('game__name', 'type', 'number').annotate(fwd_qty=Sum('count'))
+                fwd_dict = {(item['game__name'], item['type'], item['number']): item['fwd_qty'] for item in fwd_grouped}
+                for r in results_list:
+                    key = (r['game__name'], r['type'], r['number'])
+                    r['forwarded_qty'] = fwd_dict.get(key, 0)
             else:
                 fwd_qs = fwd_qs.none() # Agent specific view doesn't show forwarding
-                
-            fwd_grouped = fwd_qs.values('game__name', 'type', 'number').annotate(fwd_qty=Sum('count'))
-            fwd_dict = {(item['game__name'], item['type'], item['number']): item['fwd_qty'] for item in fwd_grouped}
-            
-            for r in results_list:
-                key = (r['game__name'], r['type'], r['number'])
-                r['forwarded_qty'] = fwd_dict.get(key, 0)
-                
-            # If Super Admin, they might have forwarded bets for numbers that have 0 direct bets?
-            # Normally Super Admin has NO direct bets if they don't bet themselves!
-            # So `results_list` might be EMPTY for Super Admin if we only look at `Bet` table under their descendants?
-            # Wait, `Bet.objects.all()` is what Super Admin sees! So it includes ALL bets.
-            # Thus, the number will definitely be in `results_list`.
                 
         except Exception as e:
             print("Error attaching forwarded bets:", e)
@@ -3161,7 +3164,11 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         game_id = request.query_params.get('game')
         search_number = request.query_params.get('number')
         
-        qs = ForwardedBet.objects.filter(forwarded_by=user)
+        if user.role == 'SUPER_ADMIN':
+            qs = ForwardedBet.objects.filter(forwarded_to=user)
+        else:
+            qs = ForwardedBet.objects.filter(forwarded_by=user)
+
         if from_date: qs = qs.filter(date__gte=from_date)
         if to_date: qs = qs.filter(date__lte=to_date)
         if game_id: qs = qs.filter(game_id=game_id)
@@ -3178,17 +3185,11 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
             total_sales += bet_sale
             total_count += bet.count
             
-            # Use date string as invoice_id to group them, or we don't even need grouping 
-            # if we just want a flat list. But frontend expects 'invoices' array with 'items'.
-            # Let's create a dummy invoice per bet or group by date/game.
-            # Frontend PurchaseReportDetailScreen expects:
-            # invoices: [ { items: [ { type, number, count, total, id } ] } ]
-            # Let's just group all into one invoice for simplicity, or one per day.
-            inv_key = f"{bet.date}_{bet.game.name}"
+            inv_key = f"{bet.date}_{bet.game.name}_{bet.forwarded_by.username}"
             if inv_key not in invoice_map:
                 invoice_map[inv_key] = {
-                    'invoice_id': inv_key,
-                    'user__username': 'Forwarded',
+                    'invoice_id': f"{bet.id}",
+                    'user__username': bet.forwarded_by.username,
                     'game__name': bet.game.name,
                     'amount': Decimal('0.00'),
                     'count': 0,
@@ -3228,16 +3229,15 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         game_id = request.query_params.get('game')
         search_number = request.query_params.get('number')
         
-        qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
+        if user.role == 'SUPER_ADMIN':
+            qs = ForwardedBet.objects.filter(forwarded_to=user, is_winner=True)
+        else:
+            qs = ForwardedBet.objects.filter(forwarded_by=user, is_winner=True)
+
         if from_date: qs = qs.filter(date__gte=from_date)
         if to_date: qs = qs.filter(date__lte=to_date)
         if game_id: qs = qs.filter(game_id=game_id)
         if search_number: qs = qs.filter(number=search_number)
-        
-        # We group by game, type, number, date to accumulate winnings?
-        # Or just return them directly like winning report?
-        # Winning report returns:
-        # { 'game': b.game.name, 'number': b.number, 'type': b.type, 'count': b.count, 'prize': b.winning_prize_type, 'amount': b.winning_amount, 'date': b.created_at }
         
         total_winning_amount = 0.0
         total_winning_count = qs.count()
@@ -3247,9 +3247,6 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
             total_winning_amount += float(b.winning_amount)
             
             prize_tiers = [t.strip() for t in (b.winning_prize_type or "WINNER").split("|") if t.strip()]
-            
-            # Simple assumption: evenly split amount if multiple tiers (rare)
-            # In practice, we'd need to recompute or just use total
             pt_amount = float(b.winning_amount) / len(prize_tiers) if prize_tiers else float(b.winning_amount)
             
             for pt in prize_tiers:
@@ -3261,9 +3258,9 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
                     'count': b.count,
                     'winning_prize_type': pt,
                     'winning_amount': pt_amount,
-                    'winning_commission': 0, # Super Admin doesn't give winning commission to admin
+                    'winning_commission': 0,
                     'is_winner': True,
-                    'user_username': 'FORWARDED',
+                    'user_username': b.forwarded_by.username,
                     'created_at': b.created_at,
                 })
                 
