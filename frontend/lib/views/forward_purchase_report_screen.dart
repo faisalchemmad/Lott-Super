@@ -7,6 +7,22 @@ import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
 
+class GameTypeOption {
+  final String key;
+  final String label;
+  final String? state;
+  final String? type;
+  final bool isHeader;
+
+  const GameTypeOption({
+    required this.key,
+    required this.label,
+    this.state,
+    this.type,
+    this.isHeader = false,
+  });
+}
+
 class ForwardPurchaseReportScreen extends StatefulWidget {
   final Map<String, dynamic>? initialData;
   final DateTime fromDate;
@@ -14,7 +30,7 @@ class ForwardPurchaseReportScreen extends StatefulWidget {
   final int? gameId;
   final int? adminId;
   final String? searchNumber;
-  final String? betType;
+  final String? selectedOptionKey;
   final String state;
 
   const ForwardPurchaseReportScreen({
@@ -25,7 +41,7 @@ class ForwardPurchaseReportScreen extends StatefulWidget {
     this.gameId,
     this.adminId,
     this.searchNumber,
-    this.betType,
+    this.selectedOptionKey,
     this.state = 'ALL',
   });
 
@@ -40,56 +56,64 @@ class _ForwardPurchaseReportScreenState
   List<dynamic> _invoices = [];
   double _totalSales = 0;
   int _totalCount = 0;
-  late String _selectedGameType;
+  late String _selectedOptionKey;
 
-  List<String> get _availableGameTypes {
-    if (widget.state == 'TN') {
-      return [
-        'ALL',
-        'A',
-        'B',
-        'C',
-        'AB',
-        'BC',
-        'AC',
-        '3D-10',
-        '3D-25',
-        '3D-30',
-        '3D-60',
-        '4D-110',
-        '4D-55',
-        '4D-20',
+  List<GameTypeOption> get _availableGameTypeOptions {
+    if (widget.state == 'KL') {
+      return const [
+        GameTypeOption(key: 'ALL', label: 'ALL KL TYPES', state: 'KL', type: null),
+        GameTypeOption(key: 'KL:SUPER', label: 'SUPER', state: 'KL', type: 'SUPER'),
+        GameTypeOption(key: 'KL:BOX', label: 'BOX', state: 'KL', type: 'BOX'),
+        GameTypeOption(key: 'KL:A', label: 'A', state: 'KL', type: 'A'),
+        GameTypeOption(key: 'KL:B', label: 'B', state: 'KL', type: 'B'),
+        GameTypeOption(key: 'KL:C', label: 'C', state: 'KL', type: 'C'),
+        GameTypeOption(key: 'KL:AB', label: 'AB', state: 'KL', type: 'AB'),
+        GameTypeOption(key: 'KL:BC', label: 'BC', state: 'KL', type: 'BC'),
+        GameTypeOption(key: 'KL:AC', label: 'AC', state: 'KL', type: 'AC'),
       ];
-    } else if (widget.state == 'KL') {
-      return [
-        'ALL',
-        'SUPER',
-        'BOX',
-        'A',
-        'B',
-        'C',
-        'AB',
-        'BC',
-        'AC',
+    } else if (widget.state == 'TN') {
+      return const [
+        GameTypeOption(key: 'ALL', label: 'ALL TN TYPES', state: 'TN', type: null),
+        GameTypeOption(key: 'TN:A', label: 'A', state: 'TN', type: 'A'),
+        GameTypeOption(key: 'TN:B', label: 'B', state: 'TN', type: 'B'),
+        GameTypeOption(key: 'TN:C', label: 'C', state: 'TN', type: 'C'),
+        GameTypeOption(key: 'TN:AB', label: 'AB', state: 'TN', type: 'AB'),
+        GameTypeOption(key: 'TN:BC', label: 'BC', state: 'TN', type: 'BC'),
+        GameTypeOption(key: 'TN:AC', label: 'AC', state: 'TN', type: 'AC'),
+        GameTypeOption(key: 'TN:3D-10', label: '3D-10', state: 'TN', type: '3D-10'),
+        GameTypeOption(key: 'TN:3D-25', label: '3D-25', state: 'TN', type: '3D-25'),
+        GameTypeOption(key: 'TN:3D-30', label: '3D-30', state: 'TN', type: '3D-30'),
+        GameTypeOption(key: 'TN:3D-60', label: '3D-60', state: 'TN', type: '3D-60'),
+        GameTypeOption(key: 'TN:4D-110', label: '4D-110', state: 'TN', type: '4D-110'),
+        GameTypeOption(key: 'TN:4D-55', label: '4D-55', state: 'TN', type: '4D-55'),
+        GameTypeOption(key: 'TN:4D-20', label: '4D-20', state: 'TN', type: '4D-20'),
       ];
     } else {
-      return [
-        'ALL',
-        'SUPER',
-        'BOX',
-        'A',
-        'B',
-        'C',
-        'AB',
-        'BC',
-        'AC',
-        '3D-10',
-        '3D-25',
-        '3D-30',
-        '3D-60',
-        '4D-110',
-        '4D-55',
-        '4D-20',
+      return const [
+        GameTypeOption(key: 'ALL', label: 'ALL TYPES', state: 'ALL', type: null),
+        GameTypeOption(key: 'HEADER_KL', label: '─── KERALA (KL) ───', isHeader: true),
+        GameTypeOption(key: 'KL:SUPER', label: 'KL - SUPER', state: 'KL', type: 'SUPER'),
+        GameTypeOption(key: 'KL:BOX', label: 'KL - BOX', state: 'KL', type: 'BOX'),
+        GameTypeOption(key: 'KL:A', label: 'KL - A', state: 'KL', type: 'A'),
+        GameTypeOption(key: 'KL:B', label: 'KL - B', state: 'KL', type: 'B'),
+        GameTypeOption(key: 'KL:C', label: 'KL - C', state: 'KL', type: 'C'),
+        GameTypeOption(key: 'KL:AB', label: 'KL - AB', state: 'KL', type: 'AB'),
+        GameTypeOption(key: 'KL:BC', label: 'KL - BC', state: 'KL', type: 'BC'),
+        GameTypeOption(key: 'KL:AC', label: 'KL - AC', state: 'KL', type: 'AC'),
+        GameTypeOption(key: 'HEADER_TN', label: '─── TAMIL NADU (TN) ───', isHeader: true),
+        GameTypeOption(key: 'TN:A', label: 'TN - A', state: 'TN', type: 'A'),
+        GameTypeOption(key: 'TN:B', label: 'TN - B', state: 'TN', type: 'B'),
+        GameTypeOption(key: 'TN:C', label: 'TN - C', state: 'TN', type: 'C'),
+        GameTypeOption(key: 'TN:AB', label: 'TN - AB', state: 'TN', type: 'AB'),
+        GameTypeOption(key: 'TN:BC', label: 'TN - BC', state: 'TN', type: 'BC'),
+        GameTypeOption(key: 'TN:AC', label: 'TN - AC', state: 'TN', type: 'AC'),
+        GameTypeOption(key: 'TN:3D-10', label: 'TN - 3D-10', state: 'TN', type: '3D-10'),
+        GameTypeOption(key: 'TN:3D-25', label: 'TN - 3D-25', state: 'TN', type: '3D-25'),
+        GameTypeOption(key: 'TN:3D-30', label: 'TN - 3D-30', state: 'TN', type: '3D-30'),
+        GameTypeOption(key: 'TN:3D-60', label: 'TN - 3D-60', state: 'TN', type: '3D-60'),
+        GameTypeOption(key: 'TN:4D-110', label: 'TN - 4D-110', state: 'TN', type: '4D-110'),
+        GameTypeOption(key: 'TN:4D-55', label: 'TN - 4D-55', state: 'TN', type: '4D-55'),
+        GameTypeOption(key: 'TN:4D-20', label: 'TN - 4D-20', state: 'TN', type: '4D-20'),
       ];
     }
   }
@@ -97,8 +121,8 @@ class _ForwardPurchaseReportScreenState
   @override
   void initState() {
     super.initState();
-    _selectedGameType = widget.betType ?? 'ALL';
-    if (widget.initialData != null && _selectedGameType == (widget.betType ?? 'ALL')) {
+    _selectedOptionKey = widget.selectedOptionKey ?? 'ALL';
+    if (widget.initialData != null && _selectedOptionKey == (widget.selectedOptionKey ?? 'ALL')) {
       _invoices = widget.initialData!['invoices'] ?? [];
       _totalSales = (widget.initialData!['sales'] ?? 0).toDouble();
       _totalCount = (widget.initialData!['count'] ?? 0).toInt();
@@ -110,6 +134,18 @@ class _ForwardPurchaseReportScreenState
   Future<void> _fetchReport() async {
     setState(() => _isLoading = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
+
+    String reqState = widget.state;
+    String? reqType;
+
+    if (_selectedOptionKey.contains(':')) {
+      final parts = _selectedOptionKey.split(':');
+      reqState = parts[0];
+      reqType = parts[1];
+    } else if (_selectedOptionKey != 'ALL') {
+      reqType = _selectedOptionKey;
+    }
+
     try {
       final data = await apiService.getForwardPurchaseReport(
         fromDate: DateFormat('yyyy-MM-dd').format(widget.fromDate),
@@ -117,8 +153,8 @@ class _ForwardPurchaseReportScreenState
         gameId: widget.gameId,
         userId: widget.adminId,
         number: widget.searchNumber,
-        betType: _selectedGameType != 'ALL' ? _selectedGameType : null,
-        state: widget.state,
+        betType: reqType,
+        state: reqState,
       );
 
       setState(() {
@@ -220,7 +256,7 @@ class _ForwardPurchaseReportScreenState
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColor.fromHex('#901C22'))),
                     pw.SizedBox(height: 4),
-                    pw.Text('Date: $dateRange | Type: $_selectedGameType',
+                    pw.Text('Date: $dateRange | Option: $_selectedOptionKey',
                         style: const pw.TextStyle(
                             fontSize: 11, color: PdfColors.grey700)),
                   ],
@@ -554,7 +590,7 @@ class _ForwardPurchaseReportScreenState
                           ),
                         ],
                       ),
-                      // Game Type Select Dropdown at top
+                      // Sectioned KL / TN Game Type Dropdown
                       Container(
                         height: 32,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -565,23 +601,47 @@ class _ForwardPurchaseReportScreenState
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: _selectedGameType,
+                            value: _selectedOptionKey,
                             isDense: true,
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1E293B),
                             ),
-                            items: _availableGameTypes.map((t) {
-                              return DropdownMenuItem(
-                                value: t,
-                                child: Text(t == 'ALL' ? 'ALL TYPES' : t),
+                            items: _availableGameTypeOptions.map((opt) {
+                              if (opt.isHeader) {
+                                return DropdownMenuItem<String>(
+                                  value: opt.key,
+                                  enabled: false,
+                                  child: Text(
+                                    opt.label,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      color: AppColors.primary,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return DropdownMenuItem<String>(
+                                value: opt.key,
+                                child: Text(
+                                  opt.label,
+                                  style: TextStyle(
+                                    fontWeight: opt.key == 'ALL'
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                  ),
+                                ),
                               );
                             }).toList(),
                             onChanged: (val) {
-                              if (val != null && val != _selectedGameType) {
+                              if (val != null &&
+                                  !val.startsWith('HEADER_') &&
+                                  val != _selectedOptionKey) {
                                 setState(() {
-                                  _selectedGameType = val;
+                                  _selectedOptionKey = val;
                                 });
                                 _fetchReport();
                               }
