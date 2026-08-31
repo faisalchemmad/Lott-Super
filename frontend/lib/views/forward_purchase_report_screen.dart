@@ -61,7 +61,7 @@ class _ForwardPurchaseReportScreenState
   List<GameTypeOption> get _availableGameTypeOptions {
     if (widget.state == 'KL') {
       return const [
-        GameTypeOption(key: 'ALL', label: 'ALL KL TYPES', state: 'KL', type: null),
+        GameTypeOption(key: 'KL:ALL', label: 'ALL KL TYPES', state: 'KL', type: null),
         GameTypeOption(key: 'KL:SUPER', label: 'SUPER', state: 'KL', type: 'SUPER'),
         GameTypeOption(key: 'KL:BOX', label: 'BOX', state: 'KL', type: 'BOX'),
         GameTypeOption(key: 'KL:A', label: 'A', state: 'KL', type: 'A'),
@@ -73,7 +73,7 @@ class _ForwardPurchaseReportScreenState
       ];
     } else if (widget.state == 'TN') {
       return const [
-        GameTypeOption(key: 'ALL', label: 'ALL TN TYPES', state: 'TN', type: null),
+        GameTypeOption(key: 'TN:ALL', label: 'ALL TN TYPES', state: 'TN', type: null),
         GameTypeOption(key: 'TN:A', label: 'A', state: 'TN', type: 'A'),
         GameTypeOption(key: 'TN:B', label: 'B', state: 'TN', type: 'B'),
         GameTypeOption(key: 'TN:C', label: 'C', state: 'TN', type: 'C'),
@@ -123,8 +123,15 @@ class _ForwardPurchaseReportScreenState
   @override
   void initState() {
     super.initState();
-    _selectedOptionKey = widget.selectedOptionKey ?? 'ALL';
-    if (widget.initialData != null && _selectedOptionKey == (widget.selectedOptionKey ?? 'ALL')) {
+    String initialKey = widget.selectedOptionKey ?? 'ALL';
+    if (widget.state == 'KL' && initialKey == 'ALL') {
+      initialKey = 'KL:ALL';
+    } else if (widget.state == 'TN' && initialKey == 'ALL') {
+      initialKey = 'TN:ALL';
+    }
+    _selectedOptionKey = initialKey;
+
+    if (widget.initialData != null) {
       _invoices = widget.initialData!['invoices'] ?? [];
       _totalSales = (widget.initialData!['sales'] ?? 0).toDouble();
       _totalCount = (widget.initialData!['count'] ?? 0).toInt();
@@ -391,7 +398,6 @@ class _ForwardPurchaseReportScreenState
     final typeName = item['type'].toString().toUpperCase();
     final number = item['number'].toString();
     final qty = item['count'] ?? 0;
-    final total = item['total'] ?? 0;
 
     final num rate = item['amount'] ?? 0;
     final rateStr = (rate % 1 == 0) ? rate.toInt().toString() : rate.toString();
@@ -511,6 +517,18 @@ class _ForwardPurchaseReportScreenState
         ? DateFormat('dd MMM yyyy').format(widget.fromDate)
         : '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}';
 
+    final validKeys = _availableGameTypeOptions
+        .where((opt) => !opt.isHeader)
+        .map((opt) => opt.key)
+        .toSet();
+
+    String? currentDropdownValue;
+    if (validKeys.contains(_selectedOptionKey)) {
+      currentDropdownValue = _selectedOptionKey;
+    } else if (validKeys.isNotEmpty) {
+      currentDropdownValue = validKeys.first;
+    }
+
     // Flatten all invoice items into flat list
     List<Map<String, dynamic>> flatItems = [];
     for (int i = 0; i < _invoices.length; i++) {
@@ -593,64 +611,65 @@ class _ForwardPurchaseReportScreenState
                         ],
                       ),
                       // Sectioned KL / TN Game Type Dropdown
-                      Container(
-                        height: 32,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedOptionKey,
-                            isDense: true,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
-                            items: _availableGameTypeOptions.map((opt) {
-                              if (opt.isHeader) {
+                      if (currentDropdownValue != null)
+                        Container(
+                          height: 32,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: currentDropdownValue,
+                              isDense: true,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                              items: _availableGameTypeOptions.map((opt) {
+                                if (opt.isHeader) {
+                                  return DropdownMenuItem<String>(
+                                    value: opt.key,
+                                    enabled: false,
+                                    child: Text(
+                                      opt.label,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                        color: AppColors.primary,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  );
+                                }
                                 return DropdownMenuItem<String>(
                                   value: opt.key,
-                                  enabled: false,
                                   child: Text(
                                     opt.label,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11,
-                                      color: AppColors.primary,
-                                      letterSpacing: 0.5,
+                                    style: TextStyle(
+                                      fontWeight: opt.key == 'ALL' || opt.key.endsWith(':ALL')
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
                                     ),
                                   ),
                                 );
-                              }
-                              return DropdownMenuItem<String>(
-                                value: opt.key,
-                                child: Text(
-                                  opt.label,
-                                  style: TextStyle(
-                                    fontWeight: opt.key == 'ALL'
-                                        ? FontWeight.bold
-                                        : FontWeight.w600,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null &&
-                                  !val.startsWith('HEADER_') &&
-                                  val != _selectedOptionKey) {
-                                setState(() {
-                                  _selectedOptionKey = val;
-                                });
-                                _fetchReport();
-                              }
-                            },
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null &&
+                                    !val.startsWith('HEADER_') &&
+                                    val != _selectedOptionKey) {
+                                  setState(() {
+                                    _selectedOptionKey = val;
+                                  });
+                                  _fetchReport();
+                                }
+                              },
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const Divider(height: 14, thickness: 0.5),

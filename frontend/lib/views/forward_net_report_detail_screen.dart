@@ -47,14 +47,14 @@ class _ForwardNetReportDetailScreenState
     if (widget.state == 'KL') {
       return [
         const GameFilterOption(
-            key: 'ALL', label: 'ALL KL GAMES', state: 'KL', gameId: null),
+            key: 'KL:ALL', label: 'ALL KL GAMES', state: 'KL', gameId: null),
         ..._games.map((g) => GameFilterOption(
             key: 'KL:${g.id}', label: g.name, state: 'KL', gameId: g.id)),
       ];
     } else if (widget.state == 'TN') {
       return [
         const GameFilterOption(
-            key: 'ALL', label: 'ALL TN GAMES', state: 'TN', gameId: null),
+            key: 'TN:ALL', label: 'ALL TN GAMES', state: 'TN', gameId: null),
         ..._games.map((g) => GameFilterOption(
             key: 'TN:${g.id}', label: g.name, state: 'TN', gameId: g.id)),
       ];
@@ -82,8 +82,16 @@ class _ForwardNetReportDetailScreenState
   void initState() {
     super.initState();
     _reportData = widget.initialReportData;
-    _selectedGameOptionKey = widget.selectedGameOptionKey ?? 'ALL';
     _games = widget.games;
+
+    String initialKey = widget.selectedGameOptionKey ?? 'ALL';
+    if (widget.state == 'KL' && initialKey == 'ALL') {
+      initialKey = 'KL:ALL';
+    } else if (widget.state == 'TN' && initialKey == 'ALL') {
+      initialKey = 'TN:ALL';
+    }
+    _selectedGameOptionKey = initialKey;
+
     if (_games.isEmpty) {
       _loadGames();
     }
@@ -153,6 +161,18 @@ class _ForwardNetReportDetailScreenState
         ? DateFormat('dd MMM yyyy').format(widget.fromDate)
         : '${DateFormat('dd MMM').format(widget.fromDate)} - ${DateFormat('dd MMM yyyy').format(widget.toDate)}';
 
+    final validKeys = _availableGameFilterOptions
+        .where((opt) => !opt.isHeader)
+        .map((opt) => opt.key)
+        .toSet();
+
+    String? currentDropdownValue;
+    if (validKeys.contains(_selectedGameOptionKey)) {
+      currentDropdownValue = _selectedGameOptionKey;
+    } else if (validKeys.isNotEmpty) {
+      currentDropdownValue = validKeys.first;
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
@@ -212,64 +232,65 @@ class _ForwardNetReportDetailScreenState
                   ],
                 ),
                 // Game Selector Dropdown
-                Container(
-                  height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedGameOptionKey,
-                      isDense: true,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                      ),
-                      items: _availableGameFilterOptions.map((opt) {
-                        if (opt.isHeader) {
+                if (currentDropdownValue != null)
+                  Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: currentDropdownValue,
+                        isDense: true,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                        items: _availableGameFilterOptions.map((opt) {
+                          if (opt.isHeader) {
+                            return DropdownMenuItem<String>(
+                              value: opt.key,
+                              enabled: false,
+                              child: Text(
+                                opt.label,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: AppColors.primary,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            );
+                          }
                           return DropdownMenuItem<String>(
                             value: opt.key,
-                            enabled: false,
                             child: Text(
                               opt.label,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                                color: AppColors.primary,
-                                letterSpacing: 0.5,
+                              style: TextStyle(
+                                fontWeight: opt.key == 'ALL' || opt.key.endsWith(':ALL')
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                               ),
                             ),
                           );
-                        }
-                        return DropdownMenuItem<String>(
-                          value: opt.key,
-                          child: Text(
-                            opt.label,
-                            style: TextStyle(
-                              fontWeight: opt.key == 'ALL'
-                                  ? FontWeight.bold
-                                  : FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null &&
-                            !val.startsWith('HEADER_') &&
-                            val != _selectedGameOptionKey) {
-                          setState(() {
-                            _selectedGameOptionKey = val;
-                          });
-                          _fetchReport();
-                        }
-                      },
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null &&
+                              !val.startsWith('HEADER_') &&
+                              val != _selectedGameOptionKey) {
+                            setState(() {
+                              _selectedGameOptionKey = val;
+                            });
+                            _fetchReport();
+                          }
+                        },
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
