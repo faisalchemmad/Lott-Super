@@ -8,6 +8,22 @@ import '../models/user_model.dart';
 import '../utils/constants.dart';
 import 'forward_net_report_detail_screen.dart';
 
+class GameFilterOption {
+  final String key;
+  final String label;
+  final String? state;
+  final int? gameId;
+  final bool isHeader;
+
+  const GameFilterOption({
+    required this.key,
+    required this.label,
+    this.state,
+    this.gameId,
+    this.isHeader = false,
+  });
+}
+
 class ForwardNetReportScreen extends StatefulWidget {
   const ForwardNetReportScreen({super.key});
 
@@ -19,7 +35,7 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
   String _selectedState = 'ALL';
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
-  int? _selectedGameId;
+  String _selectedGameOptionKey = 'ALL';
   int? _selectedAdminId;
   String? _userRole;
 
@@ -27,6 +43,41 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
   List<UserModel> _admins = [];
   bool _isLoadingFilters = true;
   bool _isGenerating = false;
+
+  List<GameFilterOption> get _availableGameFilterOptions {
+    if (_selectedState == 'KL') {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL KL GAMES', state: 'KL', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'KL:${g.id}', label: g.name, state: 'KL', gameId: g.id)),
+      ];
+    } else if (_selectedState == 'TN') {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL TN GAMES', state: 'TN', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'TN:${g.id}', label: g.name, state: 'TN', gameId: g.id)),
+      ];
+    } else {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL GAMES', state: 'ALL', gameId: null),
+        const GameFilterOption(
+            key: 'HEADER_KL', label: '─── KERALA (KL) ───', isHeader: true),
+        const GameFilterOption(
+            key: 'KL:ALL', label: 'ALL KL', state: 'KL', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'KL:${g.id}', label: g.name, state: 'KL', gameId: g.id)),
+        const GameFilterOption(
+            key: 'HEADER_TN', label: '─── TAMIL NADU (TN) ───', isHeader: true),
+        const GameFilterOption(
+            key: 'TN:ALL', label: 'ALL TN', state: 'TN', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'TN:${g.id}', label: g.name, state: 'TN', gameId: g.id)),
+      ];
+    }
+  }
 
   @override
   void initState() {
@@ -76,13 +127,24 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
     setState(() => _isGenerating = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
+    String reqState = _selectedState;
+    int? reqGameId;
+
+    if (_selectedGameOptionKey.contains(':')) {
+      final parts = _selectedGameOptionKey.split(':');
+      reqState = parts[0];
+      reqGameId = parts[1] == 'ALL' ? null : int.tryParse(parts[1]);
+    } else if (_selectedGameOptionKey != 'ALL') {
+      reqGameId = int.tryParse(_selectedGameOptionKey);
+    }
+
     try {
       final data = await apiService.getForwardNetReport(
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
-        gameId: _selectedGameId,
+        gameId: reqGameId,
         userId: _selectedAdminId,
-        state: _selectedState,
+        state: reqState,
       );
 
       setState(() => _isGenerating = false);
@@ -95,9 +157,11 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
               initialReportData: data,
               fromDate: _fromDate,
               toDate: _toDate,
-              gameId: _selectedGameId,
+              gameId: reqGameId,
               adminId: _selectedAdminId,
-              state: _selectedState,
+              state: reqState,
+              selectedGameOptionKey: _selectedGameOptionKey,
+              games: _games,
             ),
           ),
         );
@@ -169,17 +233,43 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Game Dropdown
-                  _buildDropdownTile<int?>(
+                  // Game Dropdown with sectioned KL and TN
+                  _buildDropdownTile<String>(
                     label: 'SELECT GAME',
-                    value: _selectedGameId,
-                    items: [
-                      const DropdownMenuItem(
-                          value: null, child: Text('ALL GAMES')),
-                      ..._games.map((g) =>
-                          DropdownMenuItem(value: g.id, child: Text(g.name))),
-                    ],
-                    onChanged: (val) => setState(() => _selectedGameId = val),
+                    value: _selectedGameOptionKey,
+                    items: _availableGameFilterOptions.map((opt) {
+                      if (opt.isHeader) {
+                        return DropdownMenuItem<String>(
+                          value: opt.key,
+                          enabled: false,
+                          child: Text(
+                            opt.label,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        );
+                      }
+                      return DropdownMenuItem<String>(
+                        value: opt.key,
+                        child: Text(
+                          opt.label,
+                          style: TextStyle(
+                            fontWeight: opt.key == 'ALL'
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null && !val.startsWith('HEADER_')) {
+                        setState(() => _selectedGameOptionKey = val);
+                      }
+                    },
                     icon: Icons.games_rounded,
                   ),
                   const SizedBox(height: 16),
@@ -241,6 +331,7 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
           onChanged: (val) {
             setState(() {
               _selectedState = val!;
+              _selectedGameOptionKey = 'ALL';
             });
           },
         ),

@@ -5,7 +5,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../services/api_service.dart';
+import '../models/game_model.dart';
 import '../utils/constants.dart';
+import 'forward_net_report_screen.dart';
 
 class ForwardNetReportDetailScreen extends StatefulWidget {
   final List<dynamic> initialReportData;
@@ -14,6 +16,8 @@ class ForwardNetReportDetailScreen extends StatefulWidget {
   final int? gameId;
   final int? adminId;
   final String state;
+  final String? selectedGameOptionKey;
+  final List<GameModel> games;
 
   const ForwardNetReportDetailScreen({
     super.key,
@@ -23,6 +27,8 @@ class ForwardNetReportDetailScreen extends StatefulWidget {
     this.gameId,
     this.adminId,
     this.state = 'ALL',
+    this.selectedGameOptionKey,
+    this.games = const [],
   });
 
   @override
@@ -34,23 +40,87 @@ class _ForwardNetReportDetailScreenState
     extends State<ForwardNetReportDetailScreen> {
   late List<dynamic> _reportData;
   bool _isLoading = false;
+  late String _selectedGameOptionKey;
+  late List<GameModel> _games;
+
+  List<GameFilterOption> get _availableGameFilterOptions {
+    if (widget.state == 'KL') {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL KL GAMES', state: 'KL', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'KL:${g.id}', label: g.name, state: 'KL', gameId: g.id)),
+      ];
+    } else if (widget.state == 'TN') {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL TN GAMES', state: 'TN', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'TN:${g.id}', label: g.name, state: 'TN', gameId: g.id)),
+      ];
+    } else {
+      return [
+        const GameFilterOption(
+            key: 'ALL', label: 'ALL GAMES', state: 'ALL', gameId: null),
+        const GameFilterOption(
+            key: 'HEADER_KL', label: '─── KERALA (KL) ───', isHeader: true),
+        const GameFilterOption(
+            key: 'KL:ALL', label: 'ALL KL', state: 'KL', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'KL:${g.id}', label: g.name, state: 'KL', gameId: g.id)),
+        const GameFilterOption(
+            key: 'HEADER_TN', label: '─── TAMIL NADU (TN) ───', isHeader: true),
+        const GameFilterOption(
+            key: 'TN:ALL', label: 'ALL TN', state: 'TN', gameId: null),
+        ..._games.map((g) => GameFilterOption(
+            key: 'TN:${g.id}', label: g.name, state: 'TN', gameId: g.id)),
+      ];
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _reportData = widget.initialReportData;
+    _selectedGameOptionKey = widget.selectedGameOptionKey ?? 'ALL';
+    _games = widget.games;
+    if (_games.isEmpty) {
+      _loadGames();
+    }
+  }
+
+  Future<void> _loadGames() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    try {
+      final games = await apiService.getGames();
+      setState(() {
+        _games = games;
+      });
+    } catch (_) {}
   }
 
   Future<void> _fetchReport() async {
     setState(() => _isLoading = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
+
+    String reqState = widget.state;
+    int? reqGameId;
+
+    if (_selectedGameOptionKey.contains(':')) {
+      final parts = _selectedGameOptionKey.split(':');
+      reqState = parts[0];
+      reqGameId = parts[1] == 'ALL' ? null : int.tryParse(parts[1]);
+    } else if (_selectedGameOptionKey != 'ALL') {
+      reqGameId = int.tryParse(_selectedGameOptionKey);
+    }
+
     try {
       final data = await apiService.getForwardNetReport(
         fromDate: DateFormat('yyyy-MM-dd').format(widget.fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(widget.toDate),
-        gameId: widget.gameId,
+        gameId: reqGameId,
         userId: widget.adminId,
-        state: widget.state,
+        state: reqState,
       );
 
       setState(() {
@@ -89,10 +159,10 @@ class _ForwardNetReportDetailScreenState
       color: Colors.white,
       child: Column(
         children: [
-          // 1. Report Period Card
+          // 1. Report Period Card with Game Dropdown
           Container(
             margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
@@ -117,9 +187,9 @@ class _ForwardNetReportDetailScreenState
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(Icons.calendar_month_rounded,
-                          color: AppColors.primary, size: 18),
+                          color: AppColors.primary, size: 16),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -134,29 +204,72 @@ class _ForwardNetReportDetailScreenState
                           dateRangeStr,
                           style: const TextStyle(
                               color: AppColors.primary,
-                              fontSize: 13,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w900),
                         ),
                       ],
                     ),
                   ],
                 ),
-                if (widget.state != 'ALL')
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      widget.state,
+                // Game Selector Dropdown
+                Container(
+                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedGameOptionKey,
+                      isDense: true,
                       style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                      items: _availableGameFilterOptions.map((opt) {
+                        if (opt.isHeader) {
+                          return DropdownMenuItem<String>(
+                            value: opt.key,
+                            enabled: false,
+                            child: Text(
+                              opt.label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: AppColors.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          );
+                        }
+                        return DropdownMenuItem<String>(
+                          value: opt.key,
+                          child: Text(
+                            opt.label,
+                            style: TextStyle(
+                              fontWeight: opt.key == 'ALL'
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null &&
+                            !val.startsWith('HEADER_') &&
+                            val != _selectedGameOptionKey) {
+                          setState(() {
+                            _selectedGameOptionKey = val;
+                          });
+                          _fetchReport();
+                        }
+                      },
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -437,7 +550,7 @@ class _ForwardNetReportDetailScreenState
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColor.fromHex('#901C22'))),
                     pw.SizedBox(height: 4),
-                    pw.Text('Date: $dateRange',
+                    pw.Text('Date: $dateRange | Option: $_selectedGameOptionKey',
                         style: const pw.TextStyle(
                             fontSize: 11, color: PdfColors.grey700)),
                   ],
