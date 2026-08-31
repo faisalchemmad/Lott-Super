@@ -356,14 +356,29 @@ class _ForwardPurchaseReportScreenState
           ),
           Expanded(
             flex: 3,
-            child: Text(
-              '₹$total',
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 13.5,
-                color: Colors.green,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '₹${(item['total'] ?? 0).toStringAsFixed(2)}',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13.5,
+                    color: Colors.green,
+                  ),
+                ),
+                Text(
+                  '(@ ₹${(item['amount'] ?? 0).toStringAsFixed(2)})',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(
