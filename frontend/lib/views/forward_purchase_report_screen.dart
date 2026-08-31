@@ -92,6 +92,7 @@ class _ForwardPurchaseReportScreenState
       return const [
         GameTypeOption(key: 'ALL', label: 'ALL TYPES', state: 'ALL', type: null),
         GameTypeOption(key: 'HEADER_KL', label: '─── KERALA (KL) ───', isHeader: true),
+        GameTypeOption(key: 'KL:ALL', label: 'ALL KL', state: 'KL', type: null),
         GameTypeOption(key: 'KL:SUPER', label: 'SUPER', state: 'KL', type: 'SUPER'),
         GameTypeOption(key: 'KL:BOX', label: 'BOX', state: 'KL', type: 'BOX'),
         GameTypeOption(key: 'KL:A', label: 'A', state: 'KL', type: 'A'),
@@ -101,6 +102,7 @@ class _ForwardPurchaseReportScreenState
         GameTypeOption(key: 'KL:BC', label: 'BC', state: 'KL', type: 'BC'),
         GameTypeOption(key: 'KL:AC', label: 'AC', state: 'KL', type: 'AC'),
         GameTypeOption(key: 'HEADER_TN', label: '─── TAMIL NADU (TN) ───', isHeader: true),
+        GameTypeOption(key: 'TN:ALL', label: 'ALL TN', state: 'TN', type: null),
         GameTypeOption(key: 'TN:A', label: 'A', state: 'TN', type: 'A'),
         GameTypeOption(key: 'TN:B', label: 'B', state: 'TN', type: 'B'),
         GameTypeOption(key: 'TN:C', label: 'C', state: 'TN', type: 'C'),
@@ -141,7 +143,7 @@ class _ForwardPurchaseReportScreenState
     if (_selectedOptionKey.contains(':')) {
       final parts = _selectedOptionKey.split(':');
       reqState = parts[0];
-      reqType = parts[1];
+      reqType = parts[1] == 'ALL' ? null : parts[1];
     } else if (_selectedOptionKey != 'ALL') {
       reqType = _selectedOptionKey;
     }
