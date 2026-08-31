@@ -306,8 +306,8 @@ class _ForwardPurchaseReportScreenState
               return [
                 item['game'] ?? '',
                 item['type'] ?? '',
-                "${item['number'] ?? ''}  ($rateStr)",
-                item['count']?.toString() ?? '0',
+                item['number'] ?? '',
+                "${item['count'] ?? 0} × $rateStr",
                 "Rs. ${item['total'] ?? 0}",
               ];
             }).toList(),
@@ -365,11 +365,11 @@ class _ForwardPurchaseReportScreenState
                 Text('TYPE', textAlign: TextAlign.center, style: headerStyle),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Text('NUM', textAlign: TextAlign.center, style: headerStyle),
           ),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Text('QTY', textAlign: TextAlign.right, style: headerStyle),
           ),
           Expanded(
@@ -429,41 +429,41 @@ class _ForwardPurchaseReportScreenState
             ),
           ),
           Expanded(
-            flex: 3,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  number,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 15,
-                    color: Colors.black,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '($rateStr)',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
             flex: 2,
             child: Text(
-              '$qty',
-              textAlign: TextAlign.right,
+              number,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 15,
-                color: AppColors.primary,
+                color: Colors.black,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: RichText(
+              textAlign: TextAlign.right,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$qty',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14.5,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' × $rateStr',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
