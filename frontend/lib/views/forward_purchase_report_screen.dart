@@ -212,7 +212,7 @@ class _ForwardPurchaseReportScreenState
               return [
                 item['game'] ?? '',
                 item['type'] ?? '',
-                "${item['number'] ?? ''} ($rateStr)",
+                "${item['number'] ?? ''}  ($rateStr)",
                 item['count']?.toString() ?? '0',
                 "Rs. ${item['total'] ?? 0}",
               ];
@@ -336,29 +336,29 @@ class _ForwardPurchaseReportScreenState
           ),
           Expanded(
             flex: 3,
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: number,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15,
-                      color: Colors.black,
-                      letterSpacing: 0.5,
-                    ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  number,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: Colors.black,
+                    letterSpacing: 0.5,
                   ),
-                  TextSpan(
-                    text: ' ($rateStr)',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
-                    ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '($rateStr)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(
