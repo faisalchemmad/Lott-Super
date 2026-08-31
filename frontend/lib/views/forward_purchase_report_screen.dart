@@ -207,10 +207,12 @@ class _ForwardPurchaseReportScreenState
           pw.Table.fromTextArray(
             headers: ['GAME', 'TYPE', 'NUM', 'QTY', 'AMOUNT'],
             data: items.map((item) {
+              final num rate = item['amount'] ?? 0;
+              final rateStr = (rate % 1 == 0) ? rate.toInt().toString() : rate.toString();
               return [
                 item['game'] ?? '',
                 item['type'] ?? '',
-                item['number'] ?? '',
+                "${item['number'] ?? ''} ($rateStr)",
                 item['count']?.toString() ?? '0',
                 "Rs. ${item['total'] ?? 0}",
               ];
@@ -295,6 +297,9 @@ class _ForwardPurchaseReportScreenState
     final qty = item['count'] ?? 0;
     final total = item['total'] ?? 0;
 
+    final num rate = item['amount'] ?? 0;
+    final rateStr = (rate % 1 == 0) ? rate.toInt().toString() : rate.toString();
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -331,14 +336,28 @@ class _ForwardPurchaseReportScreenState
           ),
           Expanded(
             flex: 3,
-            child: Text(
-              number,
+            child: RichText(
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
-                color: Colors.black,
-                letterSpacing: 0.5,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: number,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      color: Colors.black,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' ($rateStr)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -356,29 +375,14 @@ class _ForwardPurchaseReportScreenState
           ),
           Expanded(
             flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '₹${(item['total'] ?? 0).toStringAsFixed(2)}',
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13.5,
-                    color: Colors.green,
-                  ),
-                ),
-                Text(
-                  '(@ ₹${(item['amount'] ?? 0).toStringAsFixed(2)})',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
+            child: Text(
+              '₹${(item['total'] ?? 0).toStringAsFixed(2)}',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 13.5,
+                color: Colors.green,
+              ),
             ),
           ),
           SizedBox(
