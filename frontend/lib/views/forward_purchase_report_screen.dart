@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
 
@@ -71,7 +74,9 @@ class _ForwardPurchaseReportScreenState
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load report: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to load report: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -85,7 +90,7 @@ class _ForwardPurchaseReportScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Forwarded item deleted successfully'),
+                content: Text('Item deleted successfully'),
                 backgroundColor: Colors.green),
           );
         }
@@ -96,19 +101,23 @@ class _ForwardPurchaseReportScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error deleting: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  Future<void> _confirmDelete(int id, String number, String type, int count) async {
+  Future<void> _confirmDelete(
+      int id, String number, String type, int count) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          title: const Text("Delete Forwarded Bet", style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text("Are you sure you want to delete Number: $number ($type) Qty: $count?"),
+          title: const Text("Delete Forwarded Bet",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(
+              "Are you sure you want to delete Number: $number ($type) Qty: $count?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
@@ -117,7 +126,8 @@ class _ForwardPurchaseReportScreenState
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text("DELETE", style: TextStyle(color: Colors.white)),
+              child:
+                  const Text("DELETE", style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -127,6 +137,253 @@ class _ForwardPurchaseReportScreenState
     if (confirmed == true) {
       _deleteBet(id);
     }
+  }
+
+  Future<void> _generatePDF(List<Map<String, dynamic>> items) async {
+    final pdf = pw.Document();
+    final dateRange =
+        "${DateFormat('dd/MM/yy').format(widget.fromDate)} - ${DateFormat('dd/MM/yy').format(widget.toDate)}";
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        build: (pw.Context context) => [
+          pw.Header(
+            level: 0,
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('FORWARD REPORT',
+                        style: pw.TextStyle(
+                            fontSize: 22,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColor.fromHex('#901C22'))),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Date: $dateRange',
+                        style: const pw.TextStyle(
+                            fontSize: 11, color: PdfColors.grey700)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Lott Super',
+                        style: pw.TextStyle(
+                            fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                        'Printed: ${DateFormat('dd/MM/yy HH:mm').format(DateTime.now())}',
+                        style: const pw.TextStyle(
+                            fontSize: 9, color: PdfColors.grey600)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(8),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey400),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('Total Qty: $_totalCount',
+                    style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                pw.Text('Total Amount: Rs. ${_totalSales.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold, fontSize: 12)),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Table.fromTextArray(
+            headers: ['GAME', 'TYPE', 'NUM', 'QTY', 'AMOUNT'],
+            data: items.map((item) {
+              return [
+                item['game'] ?? '',
+                item['type'] ?? '',
+                item['number'] ?? '',
+                item['count']?.toString() ?? '0',
+                "Rs. ${item['total'] ?? 0}",
+              ];
+            }).toList(),
+            headerStyle: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.white,
+                fontSize: 10),
+            headerDecoration:
+                pw.BoxDecoration(color: PdfColor.fromHex('#901C22')),
+            cellAlignment: pw.Alignment.center,
+            cellAlignments: {
+              0: pw.Alignment.centerLeft,
+              1: pw.Alignment.center,
+              2: pw.Alignment.center,
+              3: pw.Alignment.centerRight,
+              4: pw.Alignment.centerRight,
+            },
+            cellStyle: const pw.TextStyle(fontSize: 9),
+            rowDecoration: const pw.BoxDecoration(
+              border: pw.Border(
+                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name:
+          'Forward_Report_${DateFormat('ddMMyy').format(widget.fromDate)}.pdf',
+    );
+  }
+
+  Widget _buildTableHeader() {
+    const headerStyle = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 12,
+      color: Colors.white,
+      letterSpacing: 0.5,
+    );
+
+    return Container(
+      color: const Color(0xFF901C22),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: const Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text('GAME', textAlign: TextAlign.left, style: headerStyle),
+          ),
+          Expanded(
+            flex: 2,
+            child:
+                Text('TYPE', textAlign: TextAlign.center, style: headerStyle),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text('NUM', textAlign: TextAlign.center, style: headerStyle),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('QTY', textAlign: TextAlign.right, style: headerStyle),
+          ),
+          Expanded(
+            flex: 3,
+            child:
+                Text('AMOUNT', textAlign: TextAlign.right, style: headerStyle),
+          ),
+          SizedBox(width: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRow(Map<String, dynamic> item, int index) {
+    final bool isEven = index % 2 == 0;
+    final gameName = (item['game'] ?? '').toString();
+    final typeName = item['type'].toString().toUpperCase();
+    final number = item['number'].toString();
+    final qty = item['count'] ?? 0;
+    final total = item['total'] ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isEven ? const Color(0xFFF9F9F9) : Colors.white,
+        border:
+            Border(bottom: BorderSide(color: Colors.grey.shade200, width: 0.8)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              gameName,
+              textAlign: TextAlign.left,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12.5,
+                color: AppColors.primary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              typeName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                color: Colors.black,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '$qty',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              '₹$total',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 13.5,
+                color: Colors.green,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 32,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon:
+                  const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+              onPressed: () => _confirmDelete(
+                item['id'],
+                number,
+                typeName,
+                qty as int,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -169,6 +426,11 @@ class _ForwardPurchaseReportScreenState
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+            onPressed: () => _generatePDF(flatItems),
+            tooltip: "Share as PDF",
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchReport,
@@ -276,7 +538,10 @@ class _ForwardPurchaseReportScreenState
             ),
           ),
 
-          // 2. Main List
+          // 2. Table Column Header
+          _buildTableHeader(),
+
+          // 3. Table Rows
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -301,182 +566,9 @@ class _ForwardPurchaseReportScreenState
                     : RefreshIndicator(
                         onRefresh: _fetchReport,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
                           itemCount: flatItems.length,
                           itemBuilder: (context, index) {
-                            final item = flatItems[index];
-                            final dateStr = item['date'] != null
-                                ? DateFormat('dd MMM, hh:mm a')
-                                    .format(DateTime.parse(item['date']).toLocal())
-                                : '';
-
-                            return Dismissible(
-                              key: Key('fwd_${item['id']}'),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade600,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text('DELETE',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold)),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.delete_forever, color: Colors.white),
-                                  ],
-                                ),
-                              ),
-                              confirmDismiss: (direction) async {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Delete Forwarded Bet'),
-                                    content: Text(
-                                        'Delete Number ${item['number']} (${item['type']})?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
-                                        child: const Text('CANCEL'),
-                                      ),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red),
-                                        onPressed: () => Navigator.pop(ctx, true),
-                                        child: const Text('DELETE',
-                                            style: TextStyle(color: Colors.white)),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                return confirmed == true;
-                              },
-                              onDismissed: (direction) {
-                                _deleteBet(item['id']);
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade300),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.02),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    )
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      // Type Badge
-                                      Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            item['type'].toString(),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Details
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  '${item['game']} | ${item['number']}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15,
-                                                    color: Color(0xFF1E293B),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  '₹${item['total']}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w900,
-                                                    fontSize: 15,
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  'Qty: ${item['count']} × ₹${item['amount']}',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.grey.shade700,
-                                                  ),
-                                                ),
-                                                if (item['user'] != null &&
-                                                    item['user'] != 'Forwarded')
-                                                  Text(
-                                                    item['user'],
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.blueGrey.shade700,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              dateStr,
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.grey.shade500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline,
-                                            color: Colors.red, size: 20),
-                                        onPressed: () => _confirmDelete(
-                                          item['id'],
-                                          item['number'].toString(),
-                                          item['type'].toString(),
-                                          item['count'] as int,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
+                            return _buildTableRow(flatItems[index], index);
                           },
                         ),
                       ),
