@@ -81,59 +81,6 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            if (_userRole == 'SUPER_ADMIN' ||
-                (_userRole == 'ADMIN' && _canForward)) ...[
-              _buildReportCard(
-                title: 'Forward Report',
-                subtitle: 'View and delete forwarded bets',
-                icon: Icons.list_alt_rounded,
-                color: Colors.blue.shade700,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const ForwardPurchaseReportScreen()),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildReportCard(
-                title: 'Forward Winning Report',
-                subtitle: 'Track winners from forwarded bets',
-                icon: Icons.military_tech_rounded,
-                color: Colors.orange.shade700,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ForwardWinningReportScreen()),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildReportCard(
-                title: 'Forward Net Report',
-                subtitle: 'Summary of forwarded bets (Purchase - Win - Commi)',
-                icon: Icons.account_balance_wallet_rounded,
-                color: Colors.purple.shade600,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ForwardNetReportScreen()),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildReportCard(
-                title: 'Forward Number Report',
-                subtitle: 'Check total quantities of forwarded numbers',
-                icon: Icons.format_list_numbered_rounded,
-                color: Colors.cyan.shade700,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const NumberReportScreen(isForwardedOnly: true)),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
             _buildReportCard(
               title: 'Number Report',
               subtitle: 'Check total quantity for specific numbers',

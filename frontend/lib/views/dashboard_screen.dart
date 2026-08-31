@@ -1,4 +1,5 @@
 import 'forward_winning_report_screen.dart';
+import 'forward_reports_menu_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
@@ -364,6 +365,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           () => Navigator.push(context,
               MaterialPageRoute(builder: (context) => const ReportScreen())),
         ),
+        if (isSuperAdmin || (isAdmin && (_stats?['can_forward'] == true)))
+          _buildActionCard(
+            'Fwd Reports',
+            Icons.forward_to_inbox_rounded,
+            Colors.teal,
+            () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ForwardReportsMenuScreen())),
+          ),
         if (canManage)
           _buildActionCard(
             isSuperAdmin
