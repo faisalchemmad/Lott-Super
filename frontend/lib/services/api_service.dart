@@ -871,6 +871,8 @@ class ApiService {
     String? fromDate,
     String? toDate,
     int? gameId,
+    int? userId,
+    String state = 'ALL',
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -879,6 +881,8 @@ class ApiService {
       if (fromDate != null) url += 'from=$fromDate&';
       if (toDate != null) url += 'to=$toDate&';
       if (gameId != null) url += 'game=$gameId&';
+      if (userId != null) url += 'user=$userId&';
+      if (state != 'ALL') url += 'state=$state&';
 
       final response = await http.get(
         Uri.parse(url),

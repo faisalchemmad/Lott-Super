@@ -3563,6 +3563,8 @@ class ForwardNetReportView(views.APIView):
         from_date = request.query_params.get('from')
         to_date = request.query_params.get('to')
         game_id = request.query_params.get('game')
+        state = request.query_params.get('state')
+        user_id = request.query_params.get('user')
         
         from .models import ForwardedBet
         from decimal import Decimal
@@ -3570,9 +3572,13 @@ class ForwardNetReportView(views.APIView):
         # If Admin, they forward out. If Super Admin, they forward in.
         if user.role == 'SUPER_ADMIN':
             qs = ForwardedBet.objects.filter(forwarded_to=user)
+            if user_id:
+                qs = qs.filter(forwarded_by_id=user_id)
         else:
             qs = ForwardedBet.objects.filter(forwarded_by=user)
             
+        if state and state.upper() in ['KL', 'TN']:
+            qs = qs.filter(state=state.upper())
         if from_date:
             qs = qs.filter(date__gte=from_date)
         if to_date:
