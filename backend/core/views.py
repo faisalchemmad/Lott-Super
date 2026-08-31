@@ -3250,6 +3250,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         search_number = request.query_params.get('number')
         user_id = request.query_params.get('user')
         state = request.query_params.get('state')
+        bet_type = request.query_params.get('type') or request.query_params.get('bet_type')
         
         if user.role == 'SUPER_ADMIN':
             qs = ForwardedBet.objects.filter(forwarded_to=user)
@@ -3264,6 +3265,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if to_date: qs = qs.filter(date__lte=to_date)
         if game_id: qs = qs.filter(game_id=game_id)
         if search_number: qs = qs.filter(number=search_number)
+        if bet_type and bet_type != 'ALL': qs = qs.filter(type=bet_type)
         
         # Format with Net Rate & Net Amount (Gross Price - Sales Commission)
         from decimal import Decimal

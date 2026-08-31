@@ -22,6 +22,7 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
   int? _selectedGameId;
   int? _selectedAdminId;
   String _selectedState = 'ALL';
+  String _selectedGameType = 'ALL';
   String? _userRole;
 
   List<GameModel> _games = [];
@@ -29,6 +30,58 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
   bool _isLoadingFilters = true;
   bool _isGenerating = false;
   final TextEditingController _numberController = TextEditingController();
+
+  List<String> get _availableGameTypes {
+    if (_selectedState == 'TN') {
+      return [
+        'ALL',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+        '3D-10',
+        '3D-25',
+        '3D-30',
+        '3D-60',
+        '4D-110',
+        '4D-55',
+        '4D-20',
+      ];
+    } else if (_selectedState == 'KL') {
+      return [
+        'ALL',
+        'SUPER',
+        'BOX',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+      ];
+    } else {
+      return [
+        'ALL',
+        'SUPER',
+        'BOX',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+        '3D-10',
+        '3D-25',
+        '3D-30',
+        '3D-60',
+        '4D-110',
+        '4D-55',
+        '4D-20',
+      ];
+    }
+  }
 
   @override
   void initState() {
@@ -92,6 +145,7 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
         userId: _selectedAdminId,
         number:
             _numberController.text.trim().isNotEmpty ? _numberController.text.trim() : null,
+        betType: _selectedGameType != 'ALL' ? _selectedGameType : null,
         state: _selectedState,
       );
 
@@ -110,6 +164,7 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
               searchNumber: _numberController.text.trim().isNotEmpty
                   ? _numberController.text.trim()
                   : null,
+              betType: _selectedGameType,
               state: _selectedState,
             ),
           ),
@@ -189,6 +244,17 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
                     icon: Icons.games_rounded,
                   ),
                   const SizedBox(height: 16),
+                  _buildDropdownTile<String>(
+                    label: 'SELECT GAME TYPE',
+                    value: _selectedGameType,
+                    items: _availableGameTypes
+                        .map((t) => DropdownMenuItem(
+                            value: t, child: Text(t == 'ALL' ? 'ALL GAME TYPES' : t)))
+                        .toList(),
+                    onChanged: (val) => setState(() => _selectedGameType = val ?? 'ALL'),
+                    icon: Icons.category_rounded,
+                  ),
+                  const SizedBox(height: 16),
                   if (_userRole == 'SUPER_ADMIN') ...[
                     _buildDropdownTile<int?>(
                       label: 'SELECT ADMIN',
@@ -248,6 +314,9 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
           onChanged: (val) {
             setState(() {
               _selectedState = val!;
+              if (!_availableGameTypes.contains(_selectedGameType)) {
+                _selectedGameType = 'ALL';
+              }
             });
           },
         ),

@@ -988,6 +988,7 @@ class ApiService {
     int? gameId,
     int? userId,
     String? number,
+    String? betType,
     String state = 'ALL',
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -998,6 +999,7 @@ class ApiService {
     if (gameId != null) url += 'game=$gameId&';
     if (userId != null) url += 'user=$userId&';
     if (number != null && number.isNotEmpty) url += 'number=$number&';
+    if (betType != null && betType.isNotEmpty && betType != 'ALL') url += 'type=$betType&';
     if (state != 'ALL') url += 'state=$state&';
 
     final response = await http.get(

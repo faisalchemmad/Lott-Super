@@ -14,6 +14,7 @@ class ForwardPurchaseReportScreen extends StatefulWidget {
   final int? gameId;
   final int? adminId;
   final String? searchNumber;
+  final String? betType;
   final String state;
 
   const ForwardPurchaseReportScreen({
@@ -24,6 +25,7 @@ class ForwardPurchaseReportScreen extends StatefulWidget {
     this.gameId,
     this.adminId,
     this.searchNumber,
+    this.betType,
     this.state = 'ALL',
   });
 
@@ -38,11 +40,65 @@ class _ForwardPurchaseReportScreenState
   List<dynamic> _invoices = [];
   double _totalSales = 0;
   int _totalCount = 0;
+  late String _selectedGameType;
+
+  List<String> get _availableGameTypes {
+    if (widget.state == 'TN') {
+      return [
+        'ALL',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+        '3D-10',
+        '3D-25',
+        '3D-30',
+        '3D-60',
+        '4D-110',
+        '4D-55',
+        '4D-20',
+      ];
+    } else if (widget.state == 'KL') {
+      return [
+        'ALL',
+        'SUPER',
+        'BOX',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+      ];
+    } else {
+      return [
+        'ALL',
+        'SUPER',
+        'BOX',
+        'A',
+        'B',
+        'C',
+        'AB',
+        'BC',
+        'AC',
+        '3D-10',
+        '3D-25',
+        '3D-30',
+        '3D-60',
+        '4D-110',
+        '4D-55',
+        '4D-20',
+      ];
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialData != null) {
+    _selectedGameType = widget.betType ?? 'ALL';
+    if (widget.initialData != null && _selectedGameType == (widget.betType ?? 'ALL')) {
       _invoices = widget.initialData!['invoices'] ?? [];
       _totalSales = (widget.initialData!['sales'] ?? 0).toDouble();
       _totalCount = (widget.initialData!['count'] ?? 0).toInt();
@@ -61,6 +117,7 @@ class _ForwardPurchaseReportScreenState
         gameId: widget.gameId,
         userId: widget.adminId,
         number: widget.searchNumber,
+        betType: _selectedGameType != 'ALL' ? _selectedGameType : null,
         state: widget.state,
       );
 
@@ -163,7 +220,7 @@ class _ForwardPurchaseReportScreenState
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColor.fromHex('#901C22'))),
                     pw.SizedBox(height: 4),
-                    pw.Text('Date: $dateRange',
+                    pw.Text('Date: $dateRange | Type: $_selectedGameType',
                         style: const pw.TextStyle(
                             fontSize: 11, color: PdfColors.grey700)),
                   ],
@@ -208,7 +265,8 @@ class _ForwardPurchaseReportScreenState
             headers: ['GAME', 'TYPE', 'NUM', 'QTY', 'AMOUNT'],
             data: items.map((item) {
               final num rate = item['amount'] ?? 0;
-              final rateStr = (rate % 1 == 0) ? rate.toInt().toString() : rate.toString();
+              final rateStr =
+                  (rate % 1 == 0) ? rate.toInt().toString() : rate.toString();
               return [
                 item['game'] ?? '',
                 item['type'] ?? '',
@@ -458,7 +516,7 @@ class _ForwardPurchaseReportScreenState
       ),
       body: Column(
         children: [
-          // 1. Period & Summary Header Card
+          // 1. Period & Summary Header Card with Game Type Selector
           Container(
             width: double.infinity,
             color: Colors.white,
@@ -496,22 +554,41 @@ class _ForwardPurchaseReportScreenState
                           ),
                         ],
                       ),
-                      if (widget.state != 'ALL')
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            widget.state,
+                      // Game Type Select Dropdown at top
+                      Container(
+                        height: 32,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedGameType,
+                            isDense: true,
                             style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                            items: _availableGameTypes.map((t) {
+                              return DropdownMenuItem(
+                                value: t,
+                                child: Text(t == 'ALL' ? 'ALL TYPES' : t),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null && val != _selectedGameType) {
+                                setState(() {
+                                  _selectedGameType = val;
+                                });
+                                _fetchReport();
+                              }
+                            },
                           ),
                         ),
+                      ),
                     ],
                   ),
                   const Divider(height: 14, thickness: 0.5),
