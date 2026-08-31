@@ -84,7 +84,7 @@ class _ReportScreenState extends State<ReportScreen> {
             if (_userRole == 'SUPER_ADMIN' ||
                 (_userRole == 'ADMIN' && _canForward)) ...[
               _buildReportCard(
-                title: 'Forward Purchase Report',
+                title: 'Forward Report',
                 subtitle: 'View and delete forwarded bets',
                 icon: Icons.list_alt_rounded,
                 color: Colors.blue.shade700,
@@ -130,18 +130,6 @@ class _ReportScreenState extends State<ReportScreen> {
                   MaterialPageRoute(
                       builder: (context) =>
                           const NumberReportScreen(isForwardedOnly: true)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildReportCard(
-                title: 'Purchase Report',
-                subtitle: 'View forwarded numbers and total purchase amount',
-                icon: Icons.shopping_cart_checkout_rounded,
-                color: Colors.pinkAccent,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const PurchaseReportScreen()),
                 ),
               ),
               const SizedBox(height: 8),

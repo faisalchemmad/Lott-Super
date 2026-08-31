@@ -9,10 +9,12 @@ class ForwardPurchaseReportScreen extends StatefulWidget {
   const ForwardPurchaseReportScreen({super.key});
 
   @override
-  State<ForwardPurchaseReportScreen> createState() => _ForwardPurchaseReportScreenState();
+  State<ForwardPurchaseReportScreen> createState() =>
+      _ForwardPurchaseReportScreenState();
 }
 
-class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScreen> {
+class _ForwardPurchaseReportScreenState
+    extends State<ForwardPurchaseReportScreen> {
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
   int? _selectedGameId;
@@ -21,7 +23,7 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
   bool _isLoadingGames = true;
   bool _isGenerating = false;
   List<dynamic> _invoices = [];
-  
+
   double _totalSales = 0;
   int _totalCount = 0;
 
@@ -51,7 +53,7 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
     setState(() {
       _isGenerating = true;
     });
-    
+
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getForwardPurchaseReport(
@@ -60,7 +62,7 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
         gameId: _selectedGameId,
         number: _searchNumber,
       );
-      
+
       setState(() {
         _invoices = data['invoices'] ?? [];
         _totalSales = (data['sales'] ?? 0).toDouble();
@@ -81,7 +83,7 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
       }
     }
   }
-  
+
   Future<void> _deleteBet(int id, int itemIndex, int invoiceIndex) async {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
@@ -89,7 +91,9 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Item deleted successfully'), backgroundColor: Colors.green),
+            const SnackBar(
+                content: Text('Item deleted successfully'),
+                backgroundColor: Colors.green),
           );
         }
         _generateReport(); // Refresh the list to update totals
@@ -99,7 +103,9 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting item: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error deleting item: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -133,7 +139,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                       decoration: const InputDecoration(
                         labelText: 'From Date',
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       child: Text(DateFormat('dd-MM-yyyy').format(_fromDate)),
                     ),
@@ -157,7 +164,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                       decoration: const InputDecoration(
                         labelText: 'To Date',
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       child: Text(DateFormat('dd-MM-yyyy').format(_toDate)),
                     ),
@@ -173,7 +181,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                     decoration: const InputDecoration(
                       labelText: 'Select Game',
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     value: _selectedGameId,
                     items: [
@@ -199,7 +208,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                     decoration: const InputDecoration(
                       labelText: 'Number',
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (val) {
@@ -217,9 +227,11 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('GENERATE', style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: const Text('GENERATE',
+                    style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ],
@@ -233,11 +245,12 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32.0),
-          child: Text('No forwarded items found.', style: TextStyle(fontSize: 16)),
+          child:
+              Text('No forwarded items found.', style: TextStyle(fontSize: 16)),
         ),
       );
     }
-    
+
     // Flatten invoices to just a list of items for easier swiping
     List<Map<String, dynamic>> flatItems = [];
     for (int i = 0; i < _invoices.length; i++) {
@@ -268,8 +281,10 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Count: $_totalCount', style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text('Total Amt: ${_totalSales.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('Total Count: $_totalCount',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('Total Amt: ${_totalSales.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -278,8 +293,11 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
             itemCount: flatItems.length,
             itemBuilder: (context, index) {
               final item = flatItems[index];
-              final dateStr = item['date'] != null ? DateFormat('dd/MM HH:mm').format(DateTime.parse(item['date'])) : '';
-              
+              final dateStr = item['date'] != null
+                  ? DateFormat('dd/MM HH:mm')
+                      .format(DateTime.parse(item['date']))
+                  : '';
+
               return Dismissible(
                 key: Key(item['id'].toString()),
                 direction: DismissDirection.endToStart,
@@ -295,7 +313,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                     builder: (BuildContext context) {
                       return AlertDialog(
                         title: const Text("Confirm Delete"),
-                        content: const Text("Are you sure you want to delete this forwarded bet?"),
+                        content: const Text(
+                            "Are you sure you want to delete this forwarded bet?"),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
@@ -303,7 +322,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text("DELETE", style: TextStyle(color: Colors.red)),
+                            child: const Text("DELETE",
+                                style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       );
@@ -314,15 +334,22 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
                   _deleteBet(item['id'], item['itemIndex'], item['invIndex']);
                 },
                 child: Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppColors.primary.withOpacity(0.1),
-                      child: Text(item['type'].toString(), style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                      child: Text(item['type'].toString(),
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold)),
                     ),
-                    title: Text('${item['game']} - Number: ${item['number']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Count: ${item["count"]} x ${item["amount"]} = ${item["total"]} \n$dateStr'),
-                    trailing: const Icon(Icons.swipe_left, color: Colors.grey, size: 16),
+                    title: Text('${item['game']} - Number: ${item['number']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        'Count: ${item["count"]} x ${item["amount"]} = ${item["total"]} \n$dateStr'),
+                    trailing: const Icon(Icons.swipe_left,
+                        color: Colors.grey, size: 16),
                   ),
                 ),
               );
@@ -337,7 +364,8 @@ class _ForwardPurchaseReportScreenState extends State<ForwardPurchaseReportScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forwarded Purchase Report', style: TextStyle(color: Colors.white)),
+        title: const Text('Forward Report',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
