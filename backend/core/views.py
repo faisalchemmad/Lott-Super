@@ -3182,6 +3182,52 @@ class ForwardLimitViewSet(viewsets.ModelViewSet):
             return ForwardLimit.objects.all()
         return ForwardLimit.objects.filter(admin=user)
 
+def get_forwarded_bet_net_rate(fwd_user, state, btype):
+    from decimal import Decimal
+    state = (state or 'KL').upper()
+    btype = (btype or '').upper()
+    
+    # 1. Gross Price
+    if state == 'TN':
+        if btype in ['A', 'B', 'C']: gross = Decimal(str(getattr(fwd_user, 'tn_price_abc', 12.0) or 12.0))
+        elif btype in ['AB', 'BC', 'AC']: gross = Decimal(str(getattr(fwd_user, 'tn_price_ab_bc_ac', 10.0) or 10.0))
+        elif btype == '3D-10': gross = Decimal(str(getattr(fwd_user, 'tn_price_3d_10', 10.0) or 10.0))
+        elif btype == '3D-25': gross = Decimal(str(getattr(fwd_user, 'tn_price_3d_25', 25.0) or 25.0))
+        elif btype == '3D-30': gross = Decimal(str(getattr(fwd_user, 'tn_price_3d_30', 30.0) or 30.0))
+        elif btype == '3D-60': gross = Decimal(str(getattr(fwd_user, 'tn_price_3d_60', 60.0) or 60.0))
+        elif btype == '4D-110': gross = Decimal(str(getattr(fwd_user, 'tn_price_4d_110', 110.0) or 110.0))
+        elif btype == '4D-55': gross = Decimal(str(getattr(fwd_user, 'tn_price_4d_55', 55.0) or 55.0))
+        elif btype == '4D-20': gross = Decimal(str(getattr(fwd_user, 'tn_price_4d_20', 20.0) or 20.0))
+        else: gross = Decimal('10.0')
+    else:
+        if btype in ['A', 'B', 'C']: gross = Decimal(str(fwd_user.price_abc or 12.0))
+        elif btype in ['AB', 'BC', 'AC']: gross = Decimal(str(fwd_user.price_ab_bc_ac or 10.0))
+        elif btype == 'SUPER': gross = Decimal(str(fwd_user.price_super or 40.0))
+        elif btype == 'BOX': gross = Decimal(str(fwd_user.price_box or 40.0))
+        else: gross = Decimal('10.0')
+
+    # 2. Sales Commission Rate (What Super Admin gives to this Admin)
+    if state == 'TN':
+        if btype in ['A', 'B', 'C']: comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_abc', 0.0) or 0.0))
+        elif btype in ['AB', 'BC', 'AC']: comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_ab_bc_ac', 0.0) or 0.0))
+        elif btype == '3D-10': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_3d_10', 0.0) or 0.0))
+        elif btype == '3D-25': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_3d_25', 0.0) or 0.0))
+        elif btype == '3D-30': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_3d_30', 0.0) or 0.0))
+        elif btype == '3D-60': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_3d_60', 0.0) or 0.0))
+        elif btype == '4D-110': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_4d_110', 0.0) or 0.0))
+        elif btype == '4D-55': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_4d_55', 0.0) or 0.0))
+        elif btype == '4D-20': comm = Decimal(str(getattr(fwd_user, 'tn_sales_comm_4d_20', 0.0) or 0.0))
+        else: comm = Decimal('0.0')
+    else:
+        if btype in ['A', 'B', 'C']: comm = Decimal(str(fwd_user.sales_comm_abc or 0.0))
+        elif btype in ['AB', 'BC', 'AC']: comm = Decimal(str(fwd_user.sales_comm_ab_bc_ac or 0.0))
+        elif btype == 'SUPER': comm = Decimal(str(fwd_user.sales_comm_super or 0.0))
+        elif btype == 'BOX': comm = Decimal(str(fwd_user.sales_comm_box or 0.0))
+        else: comm = Decimal('0.0')
+
+    net_rate = gross - comm
+    return net_rate, gross, comm
+
 class ForwardedBetViewSet(viewsets.ModelViewSet):
     queryset = ForwardedBet.objects.all()
     serializer_class = type('ForwardedBetSerializer', (serializers.ModelSerializer,), {
@@ -3219,14 +3265,15 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if game_id: qs = qs.filter(game_id=game_id)
         if search_number: qs = qs.filter(number=search_number)
         
-        # Format similar to PurchaseReport (invoices list)
+        # Format with Net Rate & Net Amount (Gross Price - Sales Commission)
         from decimal import Decimal
         total_sales = Decimal('0.00')
         total_count = 0
         
         invoice_map = {}
-        for bet in qs:
-            bet_sale = Decimal(str(bet.price_per_count)) * Decimal(str(bet.count))
+        for bet in qs.select_related('forwarded_by', 'game'):
+            net_rate, gross, comm = get_forwarded_bet_net_rate(bet.forwarded_by, bet.state, bet.type)
+            bet_sale = net_rate * Decimal(str(bet.count))
             total_sales += bet_sale
             total_count += bet.count
             
@@ -3251,7 +3298,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
                 'type': bet.type,
                 'number': bet.number,
                 'count': bet.count,
-                'amount': float(bet.price_per_count),
+                'amount': float(net_rate),
                 'total': float(bet_sale),
             })
 
@@ -3516,7 +3563,7 @@ class ForwardNetReportView(views.APIView):
         game_id = request.query_params.get('game')
         
         from .models import ForwardedBet
-        from django.db.models import Sum, F
+        from decimal import Decimal
         
         # If Admin, they forward out. If Super Admin, they forward in.
         if user.role == 'SUPER_ADMIN':
@@ -3531,28 +3578,32 @@ class ForwardNetReportView(views.APIView):
         if game_id:
             qs = qs.filter(game_id=game_id)
             
-        daily_stats = qs.values('date').annotate(
-            total_purchase=Sum(F('price_per_count') * F('count')),
-            total_commission=Sum(F('comm_per_count') * F('count')),
-            total_winning=Sum('winning_amount')
-        ).order_by('-date')
+        daily_map = {}
+        for bet in qs.select_related('forwarded_by', 'game'):
+            d_str = bet.date.strftime('%Y-%m-%d')
+            if d_str not in daily_map:
+                daily_map[d_str] = {
+                    'date': d_str,
+                    'purchase': Decimal('0.00'),
+                    'winning': Decimal('0.00'),
+                }
+            net_rate, gross, comm = get_forwarded_bet_net_rate(bet.forwarded_by, bet.state, bet.type)
+            daily_map[d_str]['purchase'] += net_rate * Decimal(str(bet.count))
+            daily_map[d_str]['winning'] += Decimal(str(bet.winning_amount or 0.0))
         
         data = []
-        for idx, stat in enumerate(daily_stats):
-            purchase = float(stat['total_purchase'] or 0)
-            comm = float(stat['total_commission'] or 0)
-            win = float(stat['total_winning'] or 0)
-            
-            fwd_win_commi = win + comm
-            balance = purchase - fwd_win_commi
-            
+        for idx, d_str in enumerate(sorted(daily_map.keys(), reverse=True)):
+            stat = daily_map[d_str]
+            purchase = float(stat['purchase'])
+            win = float(stat['winning'])
+            balance = purchase - win
             data.append({
                 'logid': idx + 1,
-                'date': stat['date'].strftime('%Y-%m-%d'),
+                'date': stat['date'],
                 'purchase': purchase,
-                'fwd_winning_commi': fwd_win_commi,
+                'fwd_winning_commi': win,
                 'balance': balance,
-                'raw_commission': comm,
+                'raw_commission': 0,
                 'raw_winning': win
             })
             
