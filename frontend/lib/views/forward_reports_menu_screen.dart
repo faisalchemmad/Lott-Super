@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
-import 'forward_purchase_report_screen.dart';
+import 'forward_report_filter_screen.dart';
 import 'forward_winning_report_screen.dart';
 import 'forward_net_report_screen.dart';
 import 'number_report_screen.dart';
@@ -113,7 +113,7 @@ class ForwardReportsMenuScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const ForwardPurchaseReportScreen()),
+                    builder: (context) => const ForwardReportFilterScreen()),
               ),
             ),
             const SizedBox(height: 8),

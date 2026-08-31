@@ -986,7 +986,9 @@ class ApiService {
     String? fromDate,
     String? toDate,
     int? gameId,
+    int? userId,
     String? number,
+    String state = 'ALL',
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -994,7 +996,9 @@ class ApiService {
     if (fromDate != null) url += 'from=$fromDate&';
     if (toDate != null) url += 'to=$toDate&';
     if (gameId != null) url += 'game=$gameId&';
+    if (userId != null) url += 'user=$userId&';
     if (number != null && number.isNotEmpty) url += 'number=$number&';
+    if (state != 'ALL') url += 'state=$state&';
 
     final response = await http.get(
       Uri.parse(url),
@@ -1003,7 +1007,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load forward purchase report');
+      throw Exception('Failed to load forward report');
     }
   }
 
