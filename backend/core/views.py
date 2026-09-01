@@ -2192,6 +2192,7 @@ class WinningReportView(views.APIView):
             if from_date: fwd_qs = fwd_qs.filter(date__gte=from_date)
             if to_date: fwd_qs = fwd_qs.filter(date__lte=to_date)
             if game_id: fwd_qs = fwd_qs.filter(game_id=game_id)
+            if state and state.upper() in ['KL', 'TN']: fwd_qs = fwd_qs.filter(state=state.upper())
             if search_number: fwd_qs = fwd_qs.filter(number=search_number)
         else:
             fwd_qs = ForwardedBet.objects.none()
@@ -2580,22 +2581,14 @@ class GameResultViewSet(viewsets.ModelViewSet):
         all_bets_qs = Bet.objects.filter(game=game, state=res_state, created_at__date__gte=date_from, created_at__date__lte=date)
         all_bets_qs.update(is_winner=False, winning_amount=0, winning_commission=0, winning_prize_type=None)
 
-        # 3. Find potential bets
-        # We check all bets that aren't empty
-        potential_winners = all_bets_qs.exclude(number="").select_related('user')
-
+        # 3. Define win evaluation logic for both Bets and ForwardedBets
         def get_sorted_num(n):
             return "".join(sorted(n)) if n else None
 
-        for b in potential_winners:
-            u = b.user
-            b_num = b.number.strip()
-            b_type = b.type.upper()
+        def evaluate_wins(u, b_num, b_type, state):
             wins = [] # List of (display_name, prize_amount, comm_amount)
-
             for tier_name, win_num in prizes:
                 if not win_num: continue
-                
                 match = False
                 p, c = 0.0, 0.0
                 
@@ -2603,7 +2596,6 @@ class GameResultViewSet(viewsets.ModelViewSet):
                 if b_type == 'SUPER':
                     if b_num == win_num:
                         match = True
-                        # SUPER has distinct prizes for 1-5
                         if tier_name == "1ST PRIZE": p, c = u.prize_super_1, u.comm_super_1
                         elif tier_name == "2ND PRIZE": p, c = u.prize_super_2, u.comm_super_2
                         elif tier_name == "3RD PRIZE": p, c = u.prize_super_3, u.comm_super_3
@@ -2612,10 +2604,8 @@ class GameResultViewSet(viewsets.ModelViewSet):
                         else: p, c = u.prize_6th, u.comm_6th # COMPLIMENT
                 
                 elif b_type == 'BOX':
-                    # BOX only matches against the 1ST PRIZE number.
-                    # No match against 2nd, 3rd, 4th, 5th, or Compliment prizes.
                     if tier_name != "1ST PRIZE":
-                        continue  # Skip this tier entirely for BOX bets
+                        continue
 
                     s_b = get_sorted_num(b_num)
                     s_w = get_sorted_num(win_num)
@@ -2623,19 +2613,16 @@ class GameResultViewSet(viewsets.ModelViewSet):
                     if s_b and s_w and s_b == s_w:
                         match = True
                         distinct = len(set(b_num))
-
-                        # BOX-1: Exact match (b_num == win_num) → 1st BOX prize & commission
-                        # BOX-2: Permutation match (same digits, different order) → 2nd BOX prize & commission
                         is_exact = (b_num == win_num)
                         box_level = 1 if is_exact else 2
 
-                        if distinct == 3:      # All digits different (e.g. 325)
+                        if distinct == 3:
                             p = float(u.prize_box_3d_1) if box_level == 1 else float(u.prize_box_3d_2)
-                            c = float(u.comm_box_3d_1)  if box_level == 1 else float(u.comm_box_3d_2)
-                        elif distinct == 2:    # Two same, one different (e.g. 332)
+                            c = float(u.comm_box_3d_1) if box_level == 1 else float(u.comm_box_3d_2)
+                        elif distinct == 2:
                             p = float(u.prize_box_2s_1) if box_level == 1 else float(u.prize_box_2s_2)
-                            c = float(u.comm_box_2s_1)  if box_level == 1 else float(u.comm_box_2s_2)
-                        else:                  # All same (e.g. 333) — triple, single prize level
+                            c = float(u.comm_box_2s_1) if box_level == 1 else float(u.comm_box_2s_2)
+                        else:
                             p = float(u.prize_box_3s_1)
                             c = float(u.comm_box_3s_1)
 
@@ -2643,10 +2630,8 @@ class GameResultViewSet(viewsets.ModelViewSet):
                     if tier_name != "1ST PRIZE":
                         continue
 
-                    # Derived match logic
                     target = ""
                     base_win = win_num[-3:] if len(win_num) >= 3 else win_num
-                    # Normalize type for matching (strip TN- prefix)
                     norm_type = b_type.replace('TN-', '')
                     is_tn_type = b_type.startswith('TN-')
 
@@ -2666,7 +2651,7 @@ class GameResultViewSet(viewsets.ModelViewSet):
 
                     if target and b_num == target:
                         match = True
-                        if is_tn_type or b.state == 'TN':
+                        if is_tn_type or state == 'TN':
                             if norm_type in ['AB', 'BC', 'AC']:
                                 p, c = float(u.tn_prize_ab_bc_ac), 0.0
                             else:
@@ -2678,13 +2663,11 @@ class GameResultViewSet(viewsets.ModelViewSet):
                                 p, c = float(u.prize_abc_1), float(u.comm_abc_1)
 
                 elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
-                    # 3D games check against 2nd PRIZE (which in TN is the last 3 digits of 1st PRIZE)
                     if tier_name != "2ND PRIZE":
                         continue
                     if not win_num or len(win_num) < 3:
                         continue
                     
-                    # Exact Match
                     if b_num == win_num:
                         match = True
                         c = 0.0
@@ -2692,7 +2675,6 @@ class GameResultViewSet(viewsets.ModelViewSet):
                         elif b_type == '3D-25': p = u.tn_prize_3d_25
                         elif b_type == '3D-30': p = u.tn_prize_3d_30
                         elif b_type == '3D-60': p = u.tn_prize_3d_60
-                    # BC Match (last 2 digits)
                     elif len(b_num) >= 2 and b_num[-2:] == win_num[-2:]:
                         match = True
                         c = 0.0
@@ -2700,7 +2682,6 @@ class GameResultViewSet(viewsets.ModelViewSet):
                         elif b_type == '3D-25': p = u.tn_prize_3d_25_bc
                         elif b_type == '3D-30': p = u.tn_prize_3d_30_bc
                         elif b_type == '3D-60': p = u.tn_prize_3d_60_bc
-                    # C Match (last 1 digit)
                     elif len(b_num) >= 1 and b_num[-1:] == win_num[-1:] and b_type in ['3D-30', '3D-60']:
                         match = True
                         c = 0.0
@@ -2708,32 +2689,27 @@ class GameResultViewSet(viewsets.ModelViewSet):
                         elif b_type == '3D-60': p = u.tn_prize_3d_60_c
 
                 elif b_type in ['4D-110', '4D-55', '4D-20']:
-                    # 4D games match against 1ST PRIZE
                     if tier_name != "1ST PRIZE":
                         continue
                     if not win_num or len(win_num) < 4:
                         continue
                     
-                    # Exact match (1st Prize)
                     if b_num == win_num:
                         match = True
                         c = 0.0
                         if b_type == '4D-110': p = u.tn_prize_4d_110_1
                         elif b_type == '4D-55': p = u.tn_prize_4d_55_1
                         elif b_type == '4D-20': p = u.tn_prize_4d_20_1
-                    # 2nd Prize match (last 3 digits)
                     elif b_num[-3:] == win_num[-3:] and b_type in ['4D-110', '4D-55']:
                         match = True
                         c = 0.0
                         if b_type == '4D-110': p = u.tn_prize_4d_110_2
                         elif b_type == '4D-55': p = u.tn_prize_4d_55_2
-                    # 3rd Prize match (last 2 digits)
                     elif b_num[-2:] == win_num[-2:] and b_type in ['4D-110', '4D-55']:
                         match = True
                         c = 0.0
                         if b_type == '4D-110': p = u.tn_prize_4d_110_3
                         elif b_type == '4D-55': p = u.tn_prize_4d_55_3
-                    # 4th Prize match (last 1 digit)
                     elif b_num[-1:] == win_num[-1:] and b_type in ['4D-110', '4D-55']:
                         match = True
                         c = 0.0
@@ -2744,9 +2720,6 @@ class GameResultViewSet(viewsets.ModelViewSet):
                     if b_type == 'SUPER':
                         display_name = tier_name
                     elif b_type == 'BOX':
-                        # Since BOX only reaches here for 1ST PRIZE tier,
-                        # exact match → BOX (1ST PRIZE) EXACT
-                        # permutation match → BOX2 (1ND PRIZE)
                         is_exact_match = (b_num == win_num)
                         display_name = "BOX (1ST PRIZE) EXACT" if is_exact_match else "BOX2 (1ND PRIZE)"
                     elif b_type in ['3D-10', '3D-25', '3D-30', '3D-60']:
@@ -2772,8 +2745,14 @@ class GameResultViewSet(viewsets.ModelViewSet):
                     else:
                         display_name = f"{tier_name} ({b_type})"
                     
-                    wins.append((display_name, p, c))
+                    wins.append((display_name, float(p), float(c)))
 
+            return wins
+
+        # 4. Evaluate regular bets
+        potential_winners = all_bets_qs.exclude(number="").select_related('user')
+        for b in potential_winners:
+            wins = evaluate_wins(b.user, b.number.strip(), b.type.upper(), b.state)
             if wins:
                 b.is_winner = True
                 b.winning_amount = sum(w[1] for w in wins) * b.count
@@ -2781,85 +2760,14 @@ class GameResultViewSet(viewsets.ModelViewSet):
                 b.winning_prize_type = "|".join(w[0] for w in wins)
                 b.save()
                 
-        # 4. Update ForwardedBets
+        # 5. Evaluate ForwardedBets
         from .models import ForwardedBet
         all_fwd_bets = ForwardedBet.objects.filter(game=game, state=res_state, date=date)
-        all_fwd_bets.update(is_winner=False, winning_amount=0)
+        all_fwd_bets.update(is_winner=False, winning_amount=0, winning_prize_type=None)
         
         potential_fwd_winners = all_fwd_bets.exclude(number="").select_related('forwarded_by')
         for fb in potential_fwd_winners:
-            u = fb.forwarded_by
-            b_num = fb.number.strip()
-            b_type = fb.type.upper()
-            wins = []
-
-            for tier_name, win_num in prizes:
-                if not win_num: continue
-                match = False
-                p = 0.0
-                
-                if b_type == 'SUPER':
-                    if b_num == win_num:
-                        match = True
-                        if tier_name == "1ST PRIZE": p = u.prize_super_1
-                        elif tier_name == "2ND PRIZE": p = u.prize_super_2
-                        elif tier_name == "3RD PRIZE": p = u.prize_super_3
-                        elif tier_name == "4TH PRIZE": p = u.prize_super_4
-                        elif tier_name == "5TH PRIZE": p = u.prize_super_5
-                        else: p = u.prize_6th
-                elif b_type == 'BOX':
-                    if tier_name != "1ST PRIZE": continue
-                    s_b = get_sorted_num(b_num)
-                    s_w = get_sorted_num(win_num)
-                    if s_b and s_w and s_b == s_w:
-                        match = True
-                        distinct = len(set(b_num))
-                        is_exact = (b_num == win_num)
-                        box_level = 1 if is_exact else 2
-                        if distinct == 3:
-                            p = float(u.prize_box_3d_1) if box_level == 1 else float(u.prize_box_3d_2)
-                        elif distinct == 2:
-                            p = float(u.prize_box_2s_1) if box_level == 1 else float(u.prize_box_2s_2)
-                        else:
-                            p = float(u.prize_box_3s_1)
-                elif b_type in ['AB', 'BC', 'AC', 'A', 'B', 'C', 'TN-AB', 'TN-BC', 'TN-AC', 'TN-A', 'TN-B', 'TN-C']:
-                    if tier_name != "1ST PRIZE": continue
-                    target = ""
-                    norm_type = b_type.replace('TN-', '')
-                    is_tn_type = b_type.startswith('TN-')
-                    base_win = win_num[-3:] if len(win_num) >= 3 else win_num
-                    if len(base_win) >= 3:
-                        if norm_type == 'AB': target = base_win[0:2]
-                        elif norm_type == 'BC': target = base_win[1:3]
-                        elif norm_type == 'AC': target = base_win[0] + base_win[2]
-                        elif norm_type == 'A': target = base_win[0]
-                        elif norm_type == 'B': target = base_win[1]
-                        elif norm_type == 'C': target = base_win[2]
-                    elif len(base_win) == 2:
-                        if norm_type == 'AB': target = base_win
-                        elif norm_type == 'A': target = base_win[0]
-                        elif norm_type == 'B': target = base_win[1]
-                    elif len(base_win) == 1:
-                        if norm_type == 'A': target = base_win
-                    if target and b_num == target:
-                        match = True
-                        if is_tn_type or b.state == 'TN':
-                            if norm_type in ['AB', 'BC', 'AC']: p = float(u.tn_prize_ab_bc_ac)
-                            else: p = float(u.tn_prize_abc)
-                        else:
-                            if norm_type in ['AB', 'BC', 'AC']: p = float(u.prize_ab_bc_ac_1)
-                            else: p = float(u.prize_abc_1)
-
-                if match:
-                    if b_type == 'SUPER':
-                        display_name = tier_name
-                    elif b_type == 'BOX':
-                        is_exact_match = (b_num == win_num)
-                        display_name = "BOX (1ST PRIZE) EXACT" if is_exact_match else "BOX2 (1ND PRIZE)"
-                    else:
-                        display_name = f"{tier_name} ({b_type})"
-                    wins.append((display_name, p))
-
+            wins = evaluate_wins(fb.forwarded_by, fb.number.strip(), fb.type.upper(), fb.state)
             if wins:
                 fb.is_winner = True
                 fb.winning_amount = sum(w[1] for w in wins) * fb.count
@@ -3020,6 +2928,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         to_date = request.query_params.get('to')
         game_id = request.query_params.get('game')
         search_number = request.query_params.get('number')
+        state = request.query_params.get('state')
         
         if user.role == 'SUPER_ADMIN':
             qs = ForwardedBet.objects.filter(forwarded_to=user, is_winner=True)
@@ -3029,6 +2938,7 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
         if from_date: qs = qs.filter(date__gte=from_date)
         if to_date: qs = qs.filter(date__lte=to_date)
         if game_id: qs = qs.filter(game_id=game_id)
+        if state and state.upper() in ['KL', 'TN']: qs = qs.filter(state=state.upper())
         if search_number: qs = qs.filter(number=search_number)
         
         total_winning_amount = 0.0
