@@ -2212,6 +2212,8 @@ class WinningReportView(views.APIView):
                 results.append({
                     'id': f"fwd_{b.id}",
                     'game': b.game.name,
+                    'game_name': b.game.name,
+                    'state': b.state,
                     'type': b.type,
                     'number': b.number,
                     'count': b.count,
@@ -3347,6 +3349,8 @@ class ForwardedBetViewSet(viewsets.ModelViewSet):
                 unfolded_results.append({
                     'id': b.id,
                     'game': b.game.name,
+                    'game_name': b.game.name,
+                    'state': b.state,
                     'type': b.type,
                     'number': b.number,
                     'count': b.count,

@@ -139,17 +139,22 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
     for (var win in _winners) {
       String prizeType = (win['winning_prize_type'] ?? 'WIN').toUpperCase();
       String number = win['number'] ?? 'N/A';
-      int gameId = win['game'] ?? 0;
+      dynamic rawGame = win['game'];
+      int gameId = (rawGame is int) ? rawGame : 0;
+      String gameName = (win['game_name'] ?? (rawGame is String ? rawGame : 'GAME')).toString();
+      String state = (win['state'] ?? 'KL').toString().toUpperCase();
+      String betType = (win['type'] ?? '').toString().toUpperCase();
 
-      // Grouping key: (Game + Category + Number)
-      String key = "${gameId}_${prizeType}_$number";
+      // Grouping key: (Game + State + Type + PrizeType + Number)
+      String key = "${gameId}_${state}_${betType}_${prizeType}_$number";
 
       if (!groups.containsKey(key)) {
         groups[key] = {
-          'game_name': win['game_name'],
+          'game_name': gameName,
+          'state': state,
           'number': number,
           'winning_prize_type': prizeType,
-          'type': win['type'],
+          'type': betType,
           'total_count': 0,
           'total_prize': 0.0,
           'total_comm': 0.0,
@@ -165,9 +170,14 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
     }
 
     _groupedWinners = groups.values.toList();
-    // Sort logic: 1st Prize at top, then by number
     // Sort logic
     _groupedWinners.sort((a, b) {
+      String stateA = a['state'] ?? '';
+      String stateB = b['state'] ?? '';
+      if (stateA != stateB) {
+        return stateA.compareTo(stateB);
+      }
+
       String ptA = a['winning_prize_type'].toUpperCase();
       String ptB = b['winning_prize_type'].toUpperCase();
 
@@ -885,21 +895,45 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        prizeType,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          letterSpacing: 0.5,
-                          color: (prizeType.contains('1ST') ||
-                                  prizeType.contains('BOX') ||
-                                  prizeType.contains('2ND') ||
-                                  prizeType.contains('3RD') ||
-                                  prizeType.contains('4TH') ||
-                                  prizeType.contains('5TH'))
-                              ? Colors.white
-                              : Colors.black87,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            prizeType,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 15,
+                              letterSpacing: 0.5,
+                              color: (prizeType.contains('1ST') ||
+                                      prizeType.contains('BOX') ||
+                                      prizeType.contains('2ND') ||
+                                      prizeType.contains('3RD') ||
+                                      prizeType.contains('4TH') ||
+                                      prizeType.contains('5TH'))
+                                  ? Colors.white
+                                  : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.35),
+                                  width: 0.8),
+                            ),
+                            child: Text(
+                              (group['state'] ?? 'KL').toString().toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       Row(
                         children: [
@@ -1012,14 +1046,22 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
                       ),
                       Row(
                         children: [
-                          Text(
-                            (group['type'] ?? '').toUpperCase(),
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary.withOpacity(0.5)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              "${group['state'] ?? 'KL'} - ${(group['type'] ?? '').toUpperCase()}",
+                              style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary),
+                            ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Text(
                             (group['game_name'] ?? 'GAME').toUpperCase(),
                             style: TextStyle(
