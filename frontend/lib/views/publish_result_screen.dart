@@ -42,9 +42,13 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
     super.initState();
     if (widget.resultData != null) {
       _selectedGameId = widget.resultData!['game'];
-      String winNum = widget.resultData!['winning_number'] ?? '';
-      if (winNum.length == 4) {
-        _resultType = 'TN';
+      if (widget.resultData!['state'] != null) {
+        _resultType = widget.resultData!['state'];
+      } else {
+        String winNum = widget.resultData!['winning_number'] ?? '';
+        if (winNum.length == 4) {
+          _resultType = 'TN';
+        }
       }
       _selectedDate = DateTime.parse(widget.resultData!['date']);
       _p1Controller.text = widget.resultData!['winning_number'] ?? '';
@@ -168,6 +172,7 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
 
       final response = await apiService.publishResult({
         'game': _selectedGameId,
+        'state': _resultType,
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate),
         'winning_number': _p1Controller.text,
         'second_prize': _p2Controller.text,

@@ -272,7 +272,12 @@ class Bet(models.Model):
         return f"{self.user.username} - {self.number} - {self.amount}"
 
 class GameResult(models.Model):
+    STATE_CHOICES = [
+        ('KL', 'Kerala'),
+        ('TN', 'Tamil Nadu'),
+    ]
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='results')
+    state = models.CharField(max_length=10, choices=STATE_CHOICES, default='KL')
     date = models.DateField(default=timezone.now)
     winning_number = models.CharField(max_length=10, help_text="1st Prize")
     second_prize = models.CharField(max_length=10, blank=True, null=True)
@@ -283,10 +288,10 @@ class GameResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('game', 'date')
+        unique_together = ('game', 'date', 'state')
 
     def __str__(self):
-        return f"{self.game.name} - {self.date} - {self.winning_number}"
+        return f"{self.game.name} ({self.state}) - {self.date} - {self.winning_number}"
 
 class NumberLimit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='number_limits', default=1)

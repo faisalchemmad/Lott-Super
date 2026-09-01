@@ -60,9 +60,6 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     final games = await apiService.getGames();
     setState(() {
       _games = games;
-      if (_games.isNotEmpty && _selectedGameId == null) {
-        _selectedGameId = _games.first.id;
-      }
     });
     _fetchResults();
   }
@@ -89,11 +86,29 @@ class _ResultViewScreenState extends State<ResultViewScreen>
   }
 
   List<dynamic> get _klResults => _results.where((res) {
+        final state = (res['state'] ?? '').toString().toUpperCase();
+        if (state == 'KL') return true;
+        if (state == 'TN') return false;
+        final compStr = (res['complimentary_numbers'] ?? '').toString().trim();
+        final fifthPrize = (res['fifth_prize'] ?? '').toString().trim();
+        final gameName = (res['game_name'] ?? '').toString().toUpperCase();
+        if (compStr.isNotEmpty || fifthPrize.isNotEmpty || gameName.startsWith('KL')) {
+          return true;
+        }
         final winNum = (res['winning_number'] ?? '').toString().trim();
         return winNum.length != 4;
       }).toList();
 
   List<dynamic> get _tnResults => _results.where((res) {
+        final state = (res['state'] ?? '').toString().toUpperCase();
+        if (state == 'TN') return true;
+        if (state == 'KL') return false;
+        final compStr = (res['complimentary_numbers'] ?? '').toString().trim();
+        final fifthPrize = (res['fifth_prize'] ?? '').toString().trim();
+        final gameName = (res['game_name'] ?? '').toString().toUpperCase();
+        if (compStr.isNotEmpty || fifthPrize.isNotEmpty || gameName.startsWith('KL')) {
+          return false;
+        }
         final winNum = (res['winning_number'] ?? '').toString().trim();
         return winNum.length == 4;
       }).toList();
@@ -381,27 +396,31 @@ class _ResultViewScreenState extends State<ResultViewScreen>
             Expanded(
               flex: 4,
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
+                child: DropdownButton<int?>(
                   value: _games.any((g) => g.id == _selectedGameId)
                       ? _selectedGameId
-                      : (_games.isNotEmpty ? _games.first.id : null),
+                      : null,
                   isExpanded: true,
                   isDense: true,
                   icon: const Icon(Icons.arrow_drop_down,
                       color: Colors.blueAccent, size: 20),
-                  items: _games
-                      .map((g) => DropdownMenuItem<int>(
-                          value: g.id,
-                          child: Text(g.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 13))))
-                      .toList(),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('ALL GAMES',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                    ..._games.map((g) => DropdownMenuItem<int?>(
+                        value: g.id,
+                        child: Text(g.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13)))),
+                  ],
                   onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _selectedGameId = val);
-                      _fetchResults();
-                    }
+                    setState(() => _selectedGameId = val);
+                    _fetchResults();
                   },
                   style: const TextStyle(
                       color: Colors.blueAccent,
