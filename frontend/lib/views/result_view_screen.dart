@@ -465,16 +465,14 @@ class _ResultViewScreenState extends State<ResultViewScreen>
       return _buildNoResults(isTN: isTN);
     }
 
-    return Screenshot(
-      controller: _screenshotController,
-      child: Container(
-        color: Colors.white,
-        child: ListView.builder(
-          padding: EdgeInsets.zero,
-          itemCount: results.length,
-          itemBuilder: (context, index) =>
-              _buildStyledResultBlock(results[index], isTN: isTN),
-        ),
+    return Container(
+      color: Colors.white,
+      child: ListView.builder(
+        key: PageStorageKey<String>('result_list_${isTN ? 'tn' : 'kl'}'),
+        padding: EdgeInsets.zero,
+        itemCount: results.length,
+        itemBuilder: (context, index) =>
+            _buildStyledResultBlock(results[index], isTN: isTN),
       ),
     );
   }
