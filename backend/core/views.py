@@ -398,8 +398,43 @@ class BetViewSet(viewsets.ModelViewSet):
                 label = "Your" if p == user else f"{p.username}'s"
                 raise drf_serializers.ValidationError(f"{label} Weekly credit limit exceeded. Available: ₹{max(0, available):.2f}")
 
+        # Calculate Admin Count & Cut Count (RF Model)
+        orig_cnt = Decimal(str(count))
+        admin_cnt = orig_cnt
+        cut_cnt = Decimal('0')
+
+        target_admin = None
+        for p in hierarchy:
+            if p.role == 'ADMIN' and getattr(p, 'cut_enabled', False):
+                target_admin = p
+                break
+
+        if target_admin:
+            c_type = getattr(target_admin, 'cut_type', 'percent')
+            c_val = Decimal(str(getattr(target_admin, 'cut_value', 0) or 0))
+            c_cats = getattr(target_admin, 'cut_category_values', {}) or {}
+            norm_c_cats = {str(k).upper(): v for k, v in c_cats.items()} if isinstance(c_cats, dict) else {}
+
+            if c_type == 'percent':
+                if c_val > Decimal('0'):
+                    cut_cnt = (orig_cnt * c_val) / Decimal('100')
+                    admin_cnt = orig_cnt - cut_cnt
+            elif c_type == 'fixed_count':
+                cat_cut = Decimal('0')
+                try:
+                    cat_cut = Decimal(str(norm_c_cats.get(bet_type.upper(), 0) or 0))
+                except:
+                    cat_cut = Decimal('0')
+                if cat_cut > Decimal('0'):
+                    if orig_cnt > cat_cut:
+                        admin_cnt = cat_cut
+                        cut_cnt = orig_cnt - cat_cut
+                    else:
+                        admin_cnt = orig_cnt
+                        cut_cnt = Decimal('0')
+
         # Save the bet
-        serializer.save(user=user, amount=amount)
+        serializer.save(user=user, amount=amount, admin_count=admin_cnt, cut_count=cut_cnt)
 
     @action(detail=False, methods=['post'], url_path='bulk-create')
     def bulk_create(self, request):
@@ -642,6 +677,42 @@ class BetViewSet(viewsets.ModelViewSet):
                         mark_failed(f"Total Limit Reached. {max(0, game_type_limit - (tot_type - t_clr + current_session_n))} Only")
                         continue
 
+                        # Calculate Admin Count & Cut Count (RF Model)
+            orig_cnt = Decimal(str(count))
+            admin_cnt = orig_cnt
+            cut_cnt = Decimal('0')
+
+            target_admin = None
+            for info in hierarchy_info:
+                p = info['user']
+                if p.role == 'ADMIN' and getattr(p, 'cut_enabled', False):
+                    target_admin = p
+                    break
+
+            if target_admin:
+                c_type = getattr(target_admin, 'cut_type', 'percent')
+                c_val = Decimal(str(getattr(target_admin, 'cut_value', 0) or 0))
+                c_cats = getattr(target_admin, 'cut_category_values', {}) or {}
+                norm_c_cats = {str(k).upper(): v for k, v in c_cats.items()} if isinstance(c_cats, dict) else {}
+
+                if c_type == 'percent':
+                    if c_val > Decimal('0'):
+                        cut_cnt = (orig_cnt * c_val) / Decimal('100')
+                        admin_cnt = orig_cnt - cut_cnt
+                elif c_type == 'fixed_count':
+                    cat_cut = Decimal('0')
+                    try:
+                        cat_cut = Decimal(str(norm_c_cats.get(bet_type.upper(), 0) or 0))
+                    except:
+                        cat_cut = Decimal('0')
+                    if cat_cut > Decimal('0'):
+                        if orig_cnt > cat_cut:
+                            admin_cnt = cat_cut
+                            cut_cnt = orig_cnt - cat_cut
+                        else:
+                            admin_cnt = orig_cnt
+                            cut_cnt = Decimal('0')
+
             # All checks passed!
             bet_obj = Bet.objects.create(
                 user=user,
@@ -652,79 +723,12 @@ class BetViewSet(viewsets.ModelViewSet):
                 count=count,
                 state=state,
                 invoice_id=invoice_id,
-                customer_name=customer_name or None
+                customer_name=customer_name or None,
+                admin_count=admin_cnt,
+                cut_count=cut_cnt
             )
             created_bets_count += 1
             total_created_amount += amount * count
-            
-            # Auto Forward Logic (Cut-out)
-            # Evaluate after each bet creation
-            try:
-                from .models import ForwardLimit, ForwardedBet
-                for info in hierarchy_info:
-                    p = info['user']
-                    if p.role != 'ADMIN' or not getattr(p, 'can_forward', False):
-                        continue # Only Admins with can_forward=True can forward
-                    
-                    d_ids = info['descendant_ids']
-                    
-                    # 1. Fetch any applicable ForwardLimit (Specific Number or Generic Type)
-                    fwd_limit = ForwardLimit.objects.filter(
-                        admin=p, game=game, state=state, type=bet_type
-                    ).filter(Q(number=number) | Q(number='') | Q(number__isnull=True)).order_by('-number').first()
-                    
-                    # 2. Calculate current total count for THIS number
-                    tot_db = Bet.objects.filter(user__id__in=d_ids, game=game, state=state, type=bet_type, number=number, created_at__date=today).aggregate(t=Sum('count'))['t'] or 0
-                    fwd_out = ForwardedBet.objects.filter(forwarded_by=p, game=game, state=state, type=bet_type, number=number, date=today).aggregate(t=Sum('count'))['t'] or 0
-                    
-                    if fwd_limit:
-                        limit_val = fwd_limit.max_retained_count
-                    else:
-                        limit_val = 0
-                        
-                    retained = tot_db - fwd_out
-                    
-                    if retained > limit_val:
-                        excess = retained - limit_val
-                        forward_count = min(excess, count)
-                        if forward_count > 0:
-                        
-                            forward_to = p.parent
-                            if forward_to:
-                                p_price_map = {
-                                    'A': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                    'B': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                    'C': p.price_abc if state == 'KL' else getattr(p, 'tn_price_abc', 12.0),
-                                    'AB': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                    'BC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                    'AC': p.price_ab_bc_ac if state == 'KL' else getattr(p, 'tn_price_ab_bc_ac', 10.0),
-                                    'SUPER': p.price_super,
-                                    'BOX': p.price_box,
-                                }
-                                if state == 'TN':
-                                    if bet_type == '3D-10': p_price_map['3D-10'] = getattr(p, 'tn_price_3d_10', 10.0)
-                                    elif bet_type == '3D-25': p_price_map['3D-25'] = getattr(p, 'tn_price_3d_25', 25.0)
-                                    elif bet_type == '3D-30': p_price_map['3D-30'] = getattr(p, 'tn_price_3d_30', 30.0)
-                                    elif bet_type == '3D-60': p_price_map['3D-60'] = getattr(p, 'tn_price_3d_60', 60.0)
-                                    elif bet_type == '4D-110': p_price_map['4D-110'] = getattr(p, 'tn_price_4d_110', 110.0)
-                                    elif bet_type == '4D-55': p_price_map['4D-55'] = getattr(p, 'tn_price_4d_55', 55.0)
-                                    elif bet_type == '4D-20': p_price_map['4D-20'] = getattr(p, 'tn_price_4d_20', 20.0)
-                                
-                                p_amount = Decimal(str(p_price_map.get(bet_type, 1.0)))
-                            
-                                ForwardedBet.objects.create(
-                                    forwarded_by=p,
-                                    forwarded_to=forward_to,
-                                    game=game,
-                                    state=state,
-                                    type=bet_type,
-                                    number=number,
-                                        count=excess,
-                                        price_per_count=p_amount,
-                                        is_auto=True
-                                    )
-            except Exception as e:
-                print("Auto Forward Error:", e)
                 
             # Update session tracking for ALL levels in the hierarchy
             for p in hierarchy:
@@ -899,6 +903,138 @@ class BetViewSet(viewsets.ModelViewSet):
         return Response(data)
 
 
+
+
+    @action(detail=False, methods=['get'], url_path='cut-report')
+    def cut_report(self, request):
+        user = request.user
+        if user.role not in ['SUPER_ADMIN', 'ADMIN']:
+            return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+        from_date = request.query_params.get('from_date') or request.query_params.get('date') or timezone.now().strftime('%Y-%m-%d')
+        to_date = request.query_params.get('to_date') or from_date
+        game_id = request.query_params.get('game')
+        admin_id = request.query_params.get('admin_id')
+
+        bets_qs = Bet.objects.filter(
+            created_at__date__gte=from_date,
+            created_at__date__lte=to_date,
+            cut_count__gt=0
+        ).select_related('user', 'game')
+
+        if game_id and str(game_id).upper() != 'ALL':
+            bets_qs = bets_qs.filter(game_id=game_id)
+
+        if user.role == 'ADMIN':
+            descendants = user.get_descendant_ids()
+            bets_qs = bets_qs.filter(user_id__in=descendants)
+        elif user.role == 'SUPER_ADMIN':
+            if admin_id and str(admin_id).upper() != 'ALL':
+                try:
+                    target_admin = User.objects.get(id=int(admin_id), role='ADMIN')
+                    bets_qs = bets_qs.filter(user_id__in=target_admin.get_descendant_ids())
+                except User.DoesNotExist:
+                    pass
+
+        all_admins = {a.id: a for a in User.objects.filter(role='ADMIN')}
+        user_to_admin = {}
+        for a in all_admins.values():
+            for d in a.get_descendant_ids():
+                user_to_admin[d] = a
+
+        admin_buckets = {}
+        total_gross_count = Decimal('0')
+        total_cut_count = Decimal('0')
+        total_cut_sales = Decimal('0')
+        total_cut_winnings = Decimal('0')
+
+        for bet in bets_qs:
+            admin_obj = user_to_admin.get(bet.user_id)
+            if not admin_obj:
+                continue
+
+            a_id = admin_obj.id
+            a_name = admin_obj.username.upper()
+
+            if a_id not in admin_buckets:
+                admin_buckets[a_id] = {
+                    'admin_id': a_id,
+                    'admin_name': a_name,
+                    'total_gross_count': 0.0,
+                    'total_cut_count': 0.0,
+                    'total_cut_sales': 0.0,
+                    'total_cut_winning': 0.0,
+                    'categories': {},
+                    'top_numbers': {}
+                }
+
+            b_cnt = float(bet.count or 0)
+            c_cnt = float(bet.cut_count or 0)
+            amt = float(bet.amount or 0)
+            cut_sale = c_cnt * amt
+
+            cut_win = 0.0
+            if bet.is_winner and b_cnt > 0:
+                cut_win = (c_cnt / b_cnt) * float(bet.winning_amount or 0)
+
+            total_gross_count += Decimal(str(b_cnt))
+            total_cut_count += Decimal(str(c_cnt))
+            total_cut_sales += Decimal(str(cut_sale))
+            total_cut_winnings += Decimal(str(cut_win))
+
+            admin_buckets[a_id]['total_gross_count'] += b_cnt
+            admin_buckets[a_id]['total_cut_count'] += c_cnt
+            admin_buckets[a_id]['total_cut_sales'] += cut_sale
+            admin_buckets[a_id]['total_cut_winning'] += cut_win
+
+            cat = str(bet.type or '').strip().upper()
+            if cat not in admin_buckets[a_id]['categories']:
+                admin_buckets[a_id]['categories'][cat] = {
+                    'count': 0.0,
+                    'sales': 0.0,
+                    'winning': 0.0
+                }
+            admin_buckets[a_id]['categories'][cat]['count'] += c_cnt
+            admin_buckets[a_id]['categories'][cat]['sales'] += cut_sale
+            admin_buckets[a_id]['categories'][cat]['winning'] += cut_win
+
+            num_k = f"{cat} {bet.number}"
+            if num_k not in admin_buckets[a_id]['top_numbers']:
+                admin_buckets[a_id]['top_numbers'][num_k] = {
+                    'type': cat,
+                    'number': bet.number,
+                    'count': 0.0,
+                    'sales': 0.0,
+                    'winning': 0.0
+                }
+            admin_buckets[a_id]['top_numbers'][num_k]['count'] += c_cnt
+            admin_buckets[a_id]['top_numbers'][num_k]['sales'] += cut_sale
+            admin_buckets[a_id]['top_numbers'][num_k]['winning'] += cut_win
+
+        admins_list = []
+        for a_id, data in admin_buckets.items():
+            data['net_balance'] = data['total_cut_sales'] - data['total_cut_winning']
+            nums = list(data['top_numbers'].values())
+            nums.sort(key=lambda x: x['count'], reverse=True)
+            data['top_numbers'] = nums[:50]
+            admins_list.append(data)
+
+        admins_list.sort(key=lambda x: x['admin_name'])
+
+        return Response({
+            'from_date': from_date,
+            'to_date': to_date,
+            'game_id': game_id or 'ALL',
+            'summary': {
+                'total_admins': len(admins_list),
+                'total_gross_count': float(total_gross_count),
+                'total_cut_count': float(total_cut_count),
+                'total_cut_sales': float(total_cut_sales),
+                'total_cut_winnings': float(total_cut_winnings),
+                'net_balance': float(total_cut_sales - total_cut_winnings)
+            },
+            'admins': admins_list
+        })
 
 
 class ReportView(views.APIView):

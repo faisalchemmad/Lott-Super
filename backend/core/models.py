@@ -19,6 +19,12 @@ class User(AbstractUser):
     can_forward = models.BooleanField(default=False)
     allowed_games = models.ManyToManyField('Game', blank=True, related_name='allowed_users')
 
+    # Cut System Settings (RF Model)
+    cut_enabled = models.BooleanField(default=False)
+    cut_type = models.CharField(max_length=20, default='percent') # 'percent' or 'fixed_count'
+    cut_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    cut_category_values = models.JSONField(default=dict)
+
     def get_descendant_ids(self):
         """Returns a list of IDs for all descendants (children, grandchildren, etc.) including self."""
         descendants = [self.id]
@@ -267,6 +273,8 @@ class Bet(models.Model):
     winning_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     winning_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     winning_prize_type = models.CharField(max_length=200, blank=True, null=True)
+    admin_count = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    cut_count = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f"{self.user.username} - {self.number} - {self.amount}"

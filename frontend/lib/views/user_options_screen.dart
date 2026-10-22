@@ -112,26 +112,11 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
               if (userToShow.role == 'ADMIN' && isSuperAdmin) ...[
                 _buildOption(
                   context,
-                  icon: Icons.forward_to_inbox_rounded,
+                  icon: Icons.content_cut_rounded,
                   label:
-                      'Forward Option: ${userToShow.canForward ? "ENABLED" : "DISABLED"}',
-                  onTap: () async {
-                    final apiService =
-                        Provider.of<ApiService>(context, listen: false);
-                    final newStatus = !userToShow.canForward;
-                    final success = await apiService
-                        .updateUser(userToShow.id, {'can_forward': newStatus});
-                    if (success) {
-                      _loadUserData();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              'Forward option ${newStatus ? "enabled" : "disabled"} for ${userToShow.username}'),
-                          backgroundColor:
-                              newStatus ? Colors.green : Colors.orange,
-                        ));
-                      }
-                    }
+                      'Cut Settings: ${userToShow.cutEnabled ? (userToShow.cutType == "percent" ? "${userToShow.cutValue}% Cut" : "Fixed Count") : "DISABLED"}',
+                  onTap: () {
+                    _showCutSettingsDialog(context, userToShow);
                   },
                 ),
                 const SizedBox(height: 8),
@@ -492,4 +477,190 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
       ),
     );
   }
+
+  void _showCutSettingsDialog(BuildContext context, UserModel userToShow) {
+    bool cutEnabled = userToShow.cutEnabled;
+    String cutType = userToShow.cutType;
+    final cutValCtrl = TextEditingController(text: userToShow.cutValue.toString());
+    final List<String> categories = [
+      'SUPER', 'BOX', 'AB', 'BC', 'AC', 'A', 'B', 'C',
+      '3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20'
+    ];
+    final Map<String, TextEditingController> catControllers = {
+      for (var c in categories)
+        c: TextEditingController(text: (userToShow.cutCategoryValues[c] ?? 0).toString())
+    };
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text('Cut Settings - ${userToShow.username.toUpperCase()}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Enable Cut Option', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      subtitle: const Text('Cut bets to Super Admin', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      value: cutEnabled,
+                      activeColor: AppColors.primary,
+                      onChanged: (val) => setDialogState(() => cutEnabled = val),
+                    ),
+                    if (cutEnabled) ...[
+                      const Divider(),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => setDialogState(() => cutType = 'percent'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: cutType == 'percent' ? AppColors.primary : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Percentage (%)',
+                                  style: TextStyle(
+                                    color: cutType == 'percent' ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => setDialogState(() => cutType = 'fixed_count'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: cutType == 'fixed_count' ? AppColors.primary : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Fixed Count',
+                                  style: TextStyle(
+                                    color: cutType == 'fixed_count' ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (cutType == 'percent') ...[
+                        const Text('Cut Percentage to Super Admin (%):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: cutValCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            suffixText: '%',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          ),
+                        ),
+                      ] else ...[
+                        const Text('Retained Limit per Category (Excess cuts):', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                        const SizedBox(height: 6),
+                        ...categories.map((cat) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              SizedBox(width: 75, child: Text(cat, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 34,
+                                  child: TextField(
+                                    controller: catControllers[cat],
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: '0 (No cut)',
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        setDialogState(() => isSubmitting = true);
+                        final apiService = Provider.of<ApiService>(context, listen: false);
+                        final catCuts = {
+                          for (var e in catControllers.entries)
+                            if ((double.tryParse(e.value.text.trim()) ?? 0.0) > 0)
+                              e.key: double.tryParse(e.value.text.trim()) ?? 0.0
+                        };
+                        final payload = {
+                          'cut_enabled': cutEnabled,
+                          'cut_type': cutType,
+                          'cut_value': double.tryParse(cutValCtrl.text.trim()) ?? 0.0,
+                          'cut_category_values': catCuts,
+                        };
+                        final success = await apiService.updateUser(userToShow.id, payload);
+                        if (success) {
+                          _loadUserData();
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text('Cut settings updated successfully'),
+                              backgroundColor: Colors.green,
+                            ));
+                          }
+                        } else {
+                          setDialogState(() => isSubmitting = false);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text('Failed to update cut settings'),
+                              backgroundColor: Colors.red,
+                            ));
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                child: isSubmitting ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('SAVE'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
 }

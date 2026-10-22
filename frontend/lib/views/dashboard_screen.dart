@@ -1,5 +1,4 @@
-import 'forward_winning_report_screen.dart';
-import 'forward_reports_menu_screen.dart';
+import 'cut_report_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
@@ -19,8 +18,6 @@ import '../models/user_model.dart';
 import 'user_options_screen.dart';
 import 'settings_screen.dart';
 import 'system_settings_screen.dart';
-import 'manage_forward_limits_screen.dart';
-import 'manual_forwarding_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -365,15 +362,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           () => Navigator.push(context,
               MaterialPageRoute(builder: (context) => const ReportScreen())),
         ),
-        if (isSuperAdmin || (isAdmin && (_stats?['can_forward'] == true)))
+        if (isSuperAdmin || isAdmin)
           _buildActionCard(
-            'Fwd Reports',
-            Icons.forward_to_inbox_rounded,
+            'Cut Report',
+            Icons.content_cut_rounded,
             Colors.teal,
             () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const ForwardReportsMenuScreen())),
+                    builder: (context) => const CutReportScreen())),
           ),
         if (canManage)
           _buildActionCard(
@@ -416,16 +413,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 MaterialPageRoute(
                     builder: (context) => const PriceSettingScreen())),
           ),
-        if (isAdmin && (_stats?['can_forward'] == true))
-          _buildActionCard(
-            'Auto Forward',
-            Icons.forward_to_inbox,
-            Colors.blueGrey,
-            () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ManageForwardLimitsScreen())),
-          ),
+
         if (isSuperAdmin)
           _buildActionCard(
             'Global Limit',

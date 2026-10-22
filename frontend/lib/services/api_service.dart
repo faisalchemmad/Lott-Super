@@ -549,6 +549,34 @@ class ApiService {
     return {};
   }
 
+  Future<Map<String, dynamic>> getCutReport({
+    String? fromDate,
+    String? toDate,
+    String? gameId,
+    String? adminId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final queryParams = <String, String>{};
+    if (fromDate != null) queryParams['from_date'] = fromDate;
+    if (toDate != null) queryParams['to_date'] = toDate;
+    if (gameId != null && gameId != 'ALL') queryParams['game'] = gameId;
+    if (adminId != null && adminId != 'ALL') queryParams['admin_id'] = adminId;
+
+    final uri = Uri.parse('$baseUrl/bets/cut-report/').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Token $token',
+    });
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load cut report');
+    }
+  }
+
   Future<dynamic> getDailyReport({
     String state = 'ALL',
     required String fromDate,

@@ -21,7 +21,14 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
 
   bool _isLoading = false;
   bool _isDefault = false;
-  bool _canForward = false;
+  bool _cutEnabled = false;
+  String _cutType = 'percent';
+  final TextEditingController _cutValueController = TextEditingController(text: '0');
+  final List<String> _cutCategories = [
+    'SUPER', 'BOX', 'AB', 'BC', 'AC', 'A', 'B', 'C',
+    '3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20'
+  ];
+  final Map<String, TextEditingController> _cutCatControllers = {};
   String _roleToSet = 'AGENT';
   String? _currentUserRole;
 
@@ -36,7 +43,18 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     if (widget.user != null) {
       _roleToSet = widget.user!.role;
       _isDefault = widget.user!.isDefault;
-      _canForward = widget.user!.canForward;
+      _cutEnabled = widget.user!.cutEnabled;
+      _cutType = widget.user!.cutType;
+      _cutValueController.text = widget.user!.cutValue.toString();
+      final rawCats = widget.user!.cutCategoryValues;
+      for (var cat in _cutCategories) {
+        final val = rawCats[cat] ?? 0;
+        _cutCatControllers[cat] = TextEditingController(text: val.toString());
+      }
+    } else {
+      for (var cat in _cutCategories) {
+        _cutCatControllers[cat] = TextEditingController(text: '0');
+      }
     }
     _loadCurrentUserRole();
   }
@@ -74,7 +92,15 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
       'role': _roleToSet,
       'weekly_credit_limit': double.tryParse(_creditLimitController.text) ?? 0,
       'is_default': _isDefault,
-      'can_forward': _canForward,
+      'can_forward': false,
+      'cut_enabled': _cutEnabled,
+      'cut_type': _cutType,
+      'cut_value': double.tryParse(_cutValueController.text.trim()) ?? 0.0,
+      'cut_category_values': {
+        for (var e in _cutCatControllers.entries)
+          if ((double.tryParse(e.value.text.trim()) ?? 0.0) > 0)
+            e.key: double.tryParse(e.value.text.trim()) ?? 0.0
+      },
     };
 
     if (!isEditing) {
@@ -150,27 +176,138 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                   isNumber: true),
               const SizedBox(height: 20),
               if (_roleToSet == 'ADMIN') ...[
-                _buildSectionTitle('Forward Option'),
+                _buildSectionTitle('Cut Settings (കട്ട് സെറ്റിംഗ്സ്)'),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: SwitchListTile(
-                    title: const Text('Forward Option',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
-                    subtitle: const Text(
-                        'Allow this Admin to auto-forward bets to Super Admin and access forward reports',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    value: _canForward,
-                    activeColor: AppColors.primary,
-                    onChanged: (val) {
-                      setState(() {
-                        _canForward = val;
-                      });
-                    },
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: const Text('Enable Cut Option',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15)),
+                        subtitle: const Text(
+                            'Automatically cut a portion of bets from this Admin to Super Admin',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        value: _cutEnabled,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setState(() {
+                            _cutEnabled = val;
+                          });
+                        },
+                      ),
+                      if (_cutEnabled) ...[
+                        const Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => setState(() => _cutType = 'percent'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: _cutType == 'percent' ? AppColors.primary : Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          'Percentage (%)',
+                                          style: TextStyle(
+                                            color: _cutType == 'percent' ? Colors.white : Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => setState(() => _cutType = 'fixed_count'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: _cutType == 'fixed_count' ? AppColors.primary : Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          'Fixed Count Limit',
+                                          style: TextStyle(
+                                            color: _cutType == 'fixed_count' ? Colors.white : Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              if (_cutType == 'percent') ...[
+                                const Text('Cut Percentage to Super Admin (%):',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 6),
+                                TextFormField(
+                                  controller: _cutValueController,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: InputDecoration(
+                                    suffixText: '%',
+                                    hintText: 'e.g. 20',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  ),
+                                ),
+                              ] else ...[
+                                const Text('Maximum Retained Count per Category (Excess cuts to Super Admin):',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                                const SizedBox(height: 8),
+                                ..._cutCategories.map((cat) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 80,
+                                          child: Text(cat, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                        ),
+                                        Expanded(
+                                          child: SizedBox(
+                                            height: 38,
+                                            child: TextFormField(
+                                              controller: _cutCatControllers[cat],
+                                              keyboardType: TextInputType.number,
+                                              decoration: InputDecoration(
+                                                hintText: '0 (No cut)',
+                                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),

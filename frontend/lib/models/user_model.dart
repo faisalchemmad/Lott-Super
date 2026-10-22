@@ -8,6 +8,10 @@ class UserModel {
   final int? parent;
   final bool isDefault;
   final bool canForward;
+  final bool cutEnabled;
+  final String cutType;
+  final double cutValue;
+  final Map<String, dynamic> cutCategoryValues;
   final List<int> allowedGames;
 
   // Count Limits
@@ -230,6 +234,10 @@ class UserModel {
     this.isBlocked = false,
     this.isDefault = false,
     this.canForward = false,
+    this.cutEnabled = false,
+    this.cutType = 'percent',
+    this.cutValue = 0.0,
+    this.cutCategoryValues = const {},
     this.parent,
     this.allowedGames = const [],
   });
@@ -373,6 +381,10 @@ class UserModel {
       isBlocked: json['is_blocked'] ?? false,
       isDefault: json['is_default'] ?? false,
       canForward: json['can_forward'] ?? false,
+      cutEnabled: json['cut_enabled'] ?? false,
+      cutType: json['cut_type'] ?? 'percent',
+      cutValue: double.parse(json['cut_value']?.toString() ?? '0.0'),
+      cutCategoryValues: json['cut_category_values'] is Map ? Map<String, dynamic>.from(json['cut_category_values']) : {},
       parent: json['parent'],
       allowedGames:
           (json['allowed_games'] as List?)?.map((e) => e as int).toList() ?? [],
@@ -386,6 +398,10 @@ class UserModel {
       'role': role,
       'parent': parent,
       'can_forward': canForward,
+      'cut_enabled': cutEnabled,
+      'cut_type': cutType,
+      'cut_value': cutValue,
+      'cut_category_values': cutCategoryValues,
       'weekly_credit_limit': weeklyCreditLimit,
       'remaining_credit': remainingCredit,
       'date_joined': dateJoined,

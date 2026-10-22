@@ -1,7 +1,5 @@
-import 'forward_purchase_report_screen.dart';
-import 'forward_net_report_screen.dart';
+import 'cut_report_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'forward_winning_report_screen.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import 'sales_report_screen.dart';
@@ -9,7 +7,6 @@ import 'count_report_screen.dart';
 import 'daily_report_screen.dart';
 import 'number_report_screen.dart';
 import 'winning_report_filter_screen.dart';
-import 'purchase_report_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -20,7 +17,6 @@ class ReportScreen extends StatefulWidget {
 
 class _ReportScreenState extends State<ReportScreen> {
   String _userRole = '';
-  bool _canForward = false;
 
   @override
   void initState() {
@@ -32,7 +28,6 @@ class _ReportScreenState extends State<ReportScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userRole = prefs.getString('role') ?? '';
-      _canForward = prefs.getBool('can_forward') ?? false;
     });
   }
 
@@ -116,6 +111,20 @@ class _ReportScreenState extends State<ReportScreen> {
                     builder: (context) => const DailyReportScreen()),
               ),
             ),
+            if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') ...[
+              const SizedBox(height: 8),
+              _buildReportCard(
+                title: 'Cut Report',
+                subtitle: 'Summary of cut sales, winnings and retention balance',
+                icon: Icons.content_cut_rounded,
+                color: Colors.teal.shade700,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const CutReportScreen()),
+                ),
+              ),
+            ],
             const SizedBox(height: 50),
           ],
         ),
