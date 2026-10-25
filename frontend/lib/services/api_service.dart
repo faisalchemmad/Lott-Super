@@ -860,19 +860,25 @@ class ApiService {
     };
   }
 
-  Future<List<dynamic>> getMonitorData({
+  Future<Map<String, dynamic>> getMonitorData({
     String? date,
     int? gameId,
+    String? state,
     String? number,
     String? digits,
+    String? type,
+    bool excessOnly = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     Map<String, String> queryParams = {};
     if (date != null) queryParams['date'] = date;
     if (gameId != null) queryParams['game'] = gameId.toString();
-    if (number != null) queryParams['number'] = number;
+    if (state != null) queryParams['state'] = state;
+    if (number != null && number.isNotEmpty) queryParams['number'] = number;
     if (digits != null) queryParams['digits'] = digits;
+    if (type != null) queryParams['type'] = type;
+    if (excessOnly) queryParams['excess_only'] = 'true';
 
     final uri =
         Uri.parse('$baseUrl/monitor/').replace(queryParameters: queryParams);
@@ -882,9 +888,91 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      } else if (decoded is List) {
+        return {'data': decoded, 'summary': {}, 'active_hold_limits': {}};
+      }
     }
-    return [];
+    return {'data': [], 'summary': {}, 'active_hold_limits': {}};
+  }
+
+  Future<bool> setMonitoringHoldLimits({
+    required int gameId,
+    required String state,
+    required Map<String, int> limits,
+    bool applyToAllGames = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/monitor/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'action': 'set_bulk_hold_limits',
+        'game_id': gameId,
+        'state': state,
+        'limits': limits,
+        'apply_to_all_games': applyToAllGames,
+      }),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<bool> setMonitoringNumberLimit({
+    required int gameId,
+    required String state,
+    required String type,
+    required String number,
+    required int maxRetainedCount,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/monitor/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'action': 'set_number_hold_limit',
+        'game_id': gameId,
+        'state': state,
+        'type': type,
+        'number': number,
+        'max_retained_count': maxRetainedCount,
+      }),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<bool> deleteMonitoringNumberLimit({
+    required int gameId,
+    required String state,
+    required String type,
+    required String number,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/monitor/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'action': 'delete_number_hold_limit',
+        'game_id': gameId,
+        'state': state,
+        'type': type,
+        'number': number,
+      }),
+    );
+    return response.statusCode == 200;
   }
 
   Future<bool> clearMonitorEntry(Map<String, dynamic> data) async {

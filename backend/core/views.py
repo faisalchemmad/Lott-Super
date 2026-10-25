@@ -2677,11 +2677,17 @@ class WinningReportView(views.APIView):
 
 class MonitorView(views.APIView):
     def get(self, request):
+        user = request.user
         date_str = request.query_params.get('date')
         game_id = request.query_params.get('game')
-        search_num = request.query_params.get('number')
-        digits = request.query_params.get('digits') # 1, 2, 3, ALL
-        
+        state = (request.query_params.get('state') or 'KL').upper()
+        if state not in ['KL', 'TN']:
+            state = 'KL'
+        search_num = (request.query_params.get('number') or '').strip()
+        digits = request.query_params.get('digits', 'ALL')  # ALL, 1, 2, 3, 4
+        bet_type = request.query_params.get('type', 'ALL')
+        excess_only = request.query_params.get('excess_only', 'false').lower() == 'true'
+
         if not date_str:
             date = timezone.localtime().date()
         else:
@@ -2689,116 +2695,303 @@ class MonitorView(views.APIView):
                 date = datetime.strptime(date_str, '%Y-%m-%d').date()
             except:
                 date = timezone.localtime().date()
-            
-        bets = Bet.objects.filter(created_at__date=date).distinct()
-        if game_id:
-            bets = bets.filter(game_id=game_id)
-        if search_num:
-            bets = bets.filter(number__icontains=search_num)
-        
-        # Filter by digits length
-        if digits == '1':
-            bets = bets.filter(Q(type='A') | Q(type='B') | Q(type='C'))
-        elif digits == '2':
-            bets = bets.filter(Q(type='AB') | Q(type='BC') | Q(type='AC'))
-        elif digits == '3':
-            bets = bets.filter(Q(type='SUPER') | Q(type='BOX'))
 
-        results = bets.values(
-            'user__id', 'user__username', 
-            'game__id', 'game__name', 
-            'number', 'type'
+        # Admin branch scoping
+        if user.role == 'ADMIN':
+            admin_user = user
+            descendants = [user.id] + list(user.get_descendant_ids())
+        elif user.role == 'SUPER_ADMIN':
+            admin_param = request.query_params.get('admin')
+            if admin_param:
+                try:
+                    admin_user = User.objects.get(id=admin_param)
+                    descendants = [admin_user.id] + list(admin_user.get_descendant_ids())
+                except User.DoesNotExist:
+                    admin_user = user
+                    descendants = list(User.objects.values_list('id', flat=True))
+            else:
+                admin_user = user
+                descendants = list(User.objects.values_list('id', flat=True))
+        else:
+            admin_user = user
+            descendants = [user.id] + list(user.get_descendant_ids())
+
+        # Base bets queryset for this date & state
+        bets_qs = Bet.objects.filter(
+            user_id__in=descendants,
+            created_at__date=date,
+            state=state
+        )
+
+        if game_id:
+            bets_qs = bets_qs.filter(game_id=game_id)
+        if search_num:
+            bets_qs = bets_qs.filter(number__icontains=search_num)
+
+        # Digits filter
+        if digits == '1':
+            bets_qs = bets_qs.filter(Q(type__in=['A', 'B', 'C', 'TN-A', 'TN-B', 'TN-C']))
+        elif digits == '2':
+            bets_qs = bets_qs.filter(Q(type__in=['AB', 'BC', 'AC', 'TN-AB', 'TN-BC', 'TN-AC']))
+        elif digits == '3':
+            bets_qs = bets_qs.filter(Q(type__in=[
+                'SUPER', 'BOX', '3D-10', '3D-25', '3D-30', '3D-60',
+                'TN-3D-10', 'TN-3D-25', 'TN-3D-30', 'TN-3D-60'
+            ]))
+        elif digits == '4':
+            bets_qs = bets_qs.filter(Q(type__in=[
+                '4D-110', '4D-55', '4D-20',
+                'TN-4D-110', 'TN-4D-55', 'TN-4D-20'
+            ]))
+
+        # Type filter
+        if bet_type and bet_type != 'ALL':
+            norm_b = bet_type.replace('TN-', '')
+            bets_qs = bets_qs.filter(Q(type=norm_b) | Q(type=f'TN-{norm_b}'))
+
+        # Aggregate total counts by game, state, type, number
+        results = bets_qs.values(
+            'game_id', 'game__name', 'state', 'type', 'number'
         ).annotate(
             total_count=Sum('count')
-        )
-        
-        data = []
-        # Pre-fetch users for efficiency since we need their individual limits if NumberLimit doesn't exist
-        user_ids = [res['user__id'] for res in results]
-        users_map = {u.id: u for u in User.objects.filter(id__in=user_ids)}
-        
-        for res in results:
-            u_id = res['user__id']
-            g_id = res['game__id']
-            num = res['number']
-            b_type = res['type']
-            t_cnt = res['total_count']
-            
-            # Get individual limit
-            try:
-                limit_obj = NumberLimit.objects.get(user_id=u_id, game_id=g_id, number=num, type=b_type)
-                limit = limit_obj.max_count
-            except NumberLimit.DoesNotExist:
-                user = users_map.get(u_id)
-                limit = get_user_type_count_limit(user, b_type)
-                
-            # Get cleared count
-            try:
-                cleared = ClearedExposure.objects.get(user_id=u_id, game_id=g_id, number=num, type=b_type, date=date).count
-            except ClearedExposure.DoesNotExist:
-                cleared = 0
-                
-            # Prepare base row
-            base_row = {
-                'name': res['user__username'],
-                'ticket': f"{res['game__name']}-{b_type}",
-                'no': num,
-                'cnt': t_cnt,
-                'clr': cleared,
-                'lim': limit,
-                'user_id': u_id,
-                'game_id': g_id,
-                'type': b_type,
-                'is_winner': bool(res['is_winner']),
-                'win_prize_total': float(res['win_amount'] or 0),
-            }
-            
-            # Multi-win unfolding
-            prize_type_str = res.get('win_prize_type') or ""
-            tiers = [t.strip() for t in prize_type_str.split("|") if t.strip()]
-            
-            if not tiers and res.get('is_winner'):
-                tiers = ["WINNER"]
-            
-            if not tiers:
-                base_row['win_prize_type'] = ""
-                data.append(base_row)
+        ).order_by('-total_count', 'number')
+
+        # Load hold limits (ForwardLimit) for this admin & state
+        limits_qs = ForwardLimit.objects.filter(admin=admin_user, state=state)
+        if game_id:
+            limits_qs = limits_qs.filter(game_id=game_id)
+
+        type_limits_map = {}
+        number_limits_map = {}
+        for fl in limits_qs:
+            g_id = fl.game_id
+            norm_t = fl.type.replace('TN-', '')
+            if fl.number and fl.number.strip():
+                number_limits_map[(g_id, norm_t, fl.number.strip())] = fl.max_retained_count
             else:
-                for t in tiers:
-                    unfolded = dict(base_row)
-                    unfolded['win_prize_type'] = t
-                    data.append(unfolded)
-            
-        return Response(data)
+                type_limits_map[(g_id, norm_t)] = fl.max_retained_count
+
+        # Default fallback limits per bet type
+        default_limits = {
+            'A': 100, 'B': 100, 'C': 100,
+            'AB': 50, 'BC': 50, 'AC': 50,
+            'SUPER': 25, 'BOX': 25,
+            '3D-10': 25, '3D-25': 25, '3D-30': 25, '3D-60': 25,
+            '4D-110': 10, '4D-55': 10, '4D-20': 10
+        }
+
+        data = []
+        tot_received = 0
+        tot_retained = 0
+        tot_excess = 0
+        tot_numbers = 0
+        excess_numbers = 0
+
+        for res in results:
+            g_id = res['game_id']
+            b_type = res['type']
+            norm_type = b_type.replace('TN-', '')
+            num = res['number']
+            cnt = int(res['total_count'] or 0)
+
+            # Check hold limit: 1) specific number -> 2) type limit -> 3) default
+            if (g_id, norm_type, num) in number_limits_map:
+                hold_limit = number_limits_map[(g_id, norm_type, num)]
+                is_custom_num = True
+            elif (g_id, norm_type) in type_limits_map:
+                hold_limit = type_limits_map[(g_id, norm_type)]
+                is_custom_num = False
+            else:
+                hold_limit = default_limits.get(norm_type, 25)
+                is_custom_num = False
+
+            excess = max(0, cnt - hold_limit)
+            retained = min(cnt, hold_limit)
+
+            tot_received += cnt
+            tot_retained += retained
+            tot_excess += excess
+            tot_numbers += 1
+            if excess > 0:
+                excess_numbers += 1
+
+            if excess_only and excess <= 0:
+                continue
+
+            data.append({
+                'game_id': g_id,
+                'game_name': res['game__name'],
+                'state': res['state'],
+                'type': norm_type,
+                'raw_type': b_type,
+                'number': num,
+                'total_count': cnt,
+                'hold_limit': hold_limit,
+                'retained_count': retained,
+                'excess_count': excess,
+                'is_custom_number_limit': is_custom_num,
+            })
+
+        # Load active limits for current game (or first game)
+        active_limits = {}
+        types_for_state = (
+            ['A', 'B', 'C', 'AB', 'BC', 'AC', 'SUPER', 'BOX']
+            if state == 'KL'
+            else ['A', 'B', 'C', 'AB', 'BC', 'AC', '3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20']
+        )
+        if game_id:
+            try:
+                g_id_int = int(game_id)
+                for t in types_for_state:
+                    active_limits[t] = type_limits_map.get((g_id_int, t), default_limits.get(t, 25))
+            except:
+                pass
+        else:
+            for t in types_for_state:
+                active_limits[t] = default_limits.get(t, 25)
+
+        return Response({
+            'summary': {
+                'total_received_count': tot_received,
+                'total_retained_count': tot_retained,
+                'total_excess_count': tot_excess,
+                'total_numbers_count': tot_numbers,
+                'excess_numbers_count': excess_numbers,
+            },
+            'active_hold_limits': active_limits,
+            'data': data
+        })
 
     def post(self, request):
+        user = request.user
+        action = request.data.get('action')
+
+        if user.role == 'ADMIN':
+            admin_user = user
+        elif user.role == 'SUPER_ADMIN':
+            admin_id = request.data.get('admin')
+            if admin_id:
+                try:
+                    admin_user = User.objects.get(id=admin_id)
+                except User.DoesNotExist:
+                    admin_user = user
+            else:
+                admin_user = user
+        else:
+            admin_user = user
+
+        if action == 'set_bulk_hold_limits':
+            game_id = request.data.get('game_id')
+            state = (request.data.get('state') or 'KL').upper()
+            limits = request.data.get('limits', {})
+            apply_to_all_games = request.data.get('apply_to_all_games', False)
+
+            if not limits:
+                return Response({'error': 'No limits provided'}, status=400)
+
+            target_game_ids = []
+            if apply_to_all_games:
+                if user.role == 'ADMIN':
+                    target_game_ids = list(Game.objects.filter(admin=admin_user).values_list('id', flat=True))
+                else:
+                    target_game_ids = list(Game.objects.all().values_list('id', flat=True))
+            elif game_id:
+                target_game_ids = [int(game_id)]
+
+            if not target_game_ids and game_id:
+                target_game_ids = [int(game_id)]
+
+            for gid in target_game_ids:
+                try:
+                    g = Game.objects.get(id=gid)
+                except Game.DoesNotExist:
+                    continue
+
+                for t, val in limits.items():
+                    try:
+                        val_int = int(val)
+                    except:
+                        continue
+                    norm_t = str(t).replace('TN-', '')
+                    # Store as norm_t (or with prefix if needed by game state)
+                    fl, _ = ForwardLimit.objects.get_or_create(
+                        admin=admin_user,
+                        game=g,
+                        type=norm_t,
+                        state=state,
+                        number=''
+                    )
+                    fl.max_retained_count = val_int
+                    fl.save()
+
+            return Response({'success': True, 'updated_games_count': len(target_game_ids)})
+
+        elif action == 'set_number_hold_limit':
+            game_id = request.data.get('game_id')
+            state = (request.data.get('state') or 'KL').upper()
+            bet_type = request.data.get('type')
+            number = str(request.data.get('number') or '').strip()
+            max_retained = int(request.data.get('max_retained_count', 0))
+
+            if not game_id or not bet_type or not number:
+                return Response({'error': 'game_id, type, and number are required'}, status=400)
+
+            try:
+                g = Game.objects.get(id=game_id)
+            except Game.DoesNotExist:
+                return Response({'error': 'Game not found'}, status=404)
+
+            norm_t = bet_type.replace('TN-', '')
+            fl, _ = ForwardLimit.objects.get_or_create(
+                admin=admin_user,
+                game=g,
+                type=norm_t,
+                state=state,
+                number=number
+            )
+            fl.max_retained_count = max_retained
+            fl.save()
+
+            return Response({'success': True, 'hold_limit': max_retained})
+
+        elif action == 'delete_number_hold_limit':
+            game_id = request.data.get('game_id')
+            state = (request.data.get('state') or 'KL').upper()
+            bet_type = request.data.get('type')
+            number = str(request.data.get('number') or '').strip()
+
+            if game_id and bet_type and number:
+                norm_t = bet_type.replace('TN-', '')
+                ForwardLimit.objects.filter(
+                    admin=admin_user,
+                    game_id=game_id,
+                    type=norm_t,
+                    state=state,
+                    number=number
+                ).delete()
+
+            return Response({'success': True})
+
+        # Backward compatibility with clear exposure
         user_id = request.data.get('user_id')
         game_id = request.data.get('game_id')
         number = request.data.get('no')
         bet_type = request.data.get('type')
         date_str = request.data.get('date')
         amount = int(request.data.get('amount', 0))
-        
-        if not date_str:
-            date = timezone.now().date()
-        else:
+        if user_id and game_id and number and bet_type:
             try:
-                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else timezone.now().date()
             except:
                 date = timezone.now().date()
-            
-        cleared, created = ClearedExposure.objects.get_or_create(
-            user_id=user_id, game_id=game_id, number=number, type=bet_type, date=date
-        )
-        if amount > 0:
-            cleared.count += amount
-        else:
-            # If no amount provided, assume clearing the entire excess
-            # or just default increment
-            cleared.count += 1 
-            
-        cleared.save()
-        return Response({'success': True, 'new_cleared': cleared.count})
+            cleared, _ = ClearedExposure.objects.get_or_create(
+                user_id=user_id, game_id=game_id, number=number, type=bet_type, date=date
+            )
+            cleared.count += (amount if amount > 0 else 1)
+            cleared.save()
+            return Response({'success': True, 'new_cleared': cleared.count})
+
+        return Response({'error': 'Invalid action'}, status=400)
 
 class DashboardView(views.APIView):
     def get(self, request):

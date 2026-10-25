@@ -1,4 +1,5 @@
 import 'cut_report_screen.dart';
+import 'monitor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
@@ -833,6 +834,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         if (isAdmin)
           _buildActionCard(
+            'Monitoring',
+            Icons.remove_red_eye_rounded,
+            Colors.deepOrange,
+            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MonitorScreen())),
+          ),
+        if (isAdmin)
+          _buildActionCard(
             'Cut Report',
             Icons.content_cut_rounded,
             Colors.teal,
@@ -963,6 +971,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildDrawer() {
     bool isSuperAdmin = _stats?['role'] == 'SUPER_ADMIN';
+    bool isAdmin = _stats?['role'] == 'ADMIN';
     return Drawer(
       child: Column(
         children: [
@@ -983,6 +992,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             title: const Text('Dashboard'),
             onTap: () => Navigator.pop(context),
           ),
+          if (isAdmin)
+            ListTile(
+              leading: const Icon(Icons.remove_red_eye_rounded, color: Colors.deepOrange),
+              title: const Text('Monitoring'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const MonitorScreen()));
+              },
+            ),
           if (isSuperAdmin)
             ListTile(
               leading: const Icon(Icons.person_add_rounded, color: AppColors.primary),
