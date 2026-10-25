@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             _buildProfileHeader(_user!),
             const SizedBox(height: 24),
-            if (_user!.role != 'SUPER_ADMIN') ...[
+            if (_user!.role != 'SUPER_ADMIN' && _user!.role != 'ADMIN') ...[
               _buildOption(
                 context,
                 icon: Icons.currency_rupee_rounded,
