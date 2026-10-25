@@ -96,6 +96,7 @@ class _GlobalCountLimitDetailScreenState
   bool _isQuickSubmitting = false;
   final Set<int> _selectedLimitIds = {};
   bool _isBulkDeleting = false;
+  int _selectedFilterTab = 3; // 0: ALL, 1: 1D, 2: 2D, 3: 3D, 4: 4D
 
   List<String> _getPermutations(String s) {
     if (s.length <= 1) return [s];
@@ -979,6 +980,75 @@ class _GlobalCountLimitDetailScreenState
     '4D-20'
   };
 
+  Widget _buildFilterTabItem({
+    required String title,
+    required int count,
+    required int index,
+    required Color activeColor,
+  }) {
+    final bool isSelected = _selectedFilterTab == index;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () {
+          setState(() {
+            _selectedFilterTab = index;
+            if (index >= 1) {
+              _selectedDigitTab = index - 1;
+              if (_is111Checked) {
+                String label = _selectedDigitTab == 3
+                    ? '1111 (0000-9999)'
+                    : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                _quickNumberController.text = label;
+              } else {
+                _quickNumberController.clear();
+              }
+            }
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    )
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                  color: isSelected ? activeColor : Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                '($count)',
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? activeColor : Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNumberCountTab() {
     final klLimits =
         _globalNumberLimits.where((l) => _klTypes.contains(l['type'])).toList();
@@ -988,6 +1058,28 @@ class _GlobalCountLimitDetailScreenState
     final isTn = _selectedNumberLimitTab == 1;
     final currentLimits = isTn ? tnLimits : klLimits;
     final activeColor = isTn ? Colors.deepOrange : AppColors.primary;
+
+    final limits1D = currentLimits.where((l) => l['number'].toString().length == 1).toList();
+    final limits2D = currentLimits.where((l) => l['number'].toString().length == 2).toList();
+    final limits3D = currentLimits.where((l) => l['number'].toString().length == 3).toList();
+    final limits4D = currentLimits.where((l) => l['number'].toString().length == 4).toList();
+
+    if (!isTn && _selectedFilterTab == 4) {
+      _selectedFilterTab = 3;
+    }
+
+    List<dynamic> displayedLimits;
+    if (_selectedFilterTab == 1) {
+      displayedLimits = limits1D;
+    } else if (_selectedFilterTab == 2) {
+      displayedLimits = limits2D;
+    } else if (_selectedFilterTab == 3) {
+      displayedLimits = limits3D;
+    } else if (_selectedFilterTab == 4) {
+      displayedLimits = limits4D;
+    } else {
+      displayedLimits = currentLimits;
+    }
 
     if (_user != null && _user!.effectiveGameMode == 'TN') {
       _selectedNumberLimitTab = 1;
@@ -1138,19 +1230,39 @@ class _GlobalCountLimitDetailScreenState
             ),
           ),
         ],
-        if (currentLimits.isNotEmpty) _buildTableHeader(activeColor, currentLimits),
+        // 1, 2, 3, 4 Digit Filter Tabs
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(3),
+          child: Row(
+            children: [
+              _buildFilterTabItem(title: 'ALL', count: currentLimits.length, index: 0, activeColor: activeColor),
+              _buildFilterTabItem(title: '1 DIGIT', count: limits1D.length, index: 1, activeColor: activeColor),
+              _buildFilterTabItem(title: '2 DIGIT', count: limits2D.length, index: 2, activeColor: activeColor),
+              _buildFilterTabItem(title: '3 DIGIT', count: limits3D.length, index: 3, activeColor: activeColor),
+              if (isTn)
+                _buildFilterTabItem(title: '4 DIGIT', count: limits4D.length, index: 4, activeColor: activeColor),
+            ],
+          ),
+        ),
+
+        if (displayedLimits.isNotEmpty) _buildTableHeader(activeColor, displayedLimits),
         Expanded(
           child: _isLoadingNumbers
               ? const Center(child: CircularProgressIndicator())
-              : currentLimits.isEmpty
+              : displayedLimits.isEmpty
                   ? _buildEmptyState(isTn
-                      ? 'No TN Number Limits Set'
-                      : 'No KL Number Limits Set')
+                      ? 'No ${_selectedFilterTab == 0 ? "" : (_selectedFilterTab.toString() + "D ")}TN Limits Set'
+                      : 'No ${_selectedFilterTab == 0 ? "" : (_selectedFilterTab.toString() + "D ")}KL Limits Set')
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      itemCount: currentLimits.length,
+                      itemCount: displayedLimits.length,
                       itemBuilder: (context, index) {
-                        final limit = currentLimits[index];
+                        final limit = displayedLimits[index];
                         return _buildNumberLimitCard(limit, activeColor);
                       },
                     ),
@@ -1259,6 +1371,7 @@ class _GlobalCountLimitDetailScreenState
                           onTap: () {
                             setState(() {
                               _selectedDigitTab = index;
+                              _selectedFilterTab = index + 1;
                               if (_is111Checked) {
                                 String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
                                 _quickNumberController.text = label;
