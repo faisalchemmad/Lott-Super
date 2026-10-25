@@ -132,102 +132,104 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 const SizedBox(height: 8),
               ],
             ],
-            _buildOption(
-              context,
-              icon: Icons.currency_rupee_rounded,
-              label: 'Prize & Commission',
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ManagePrizeCommissionScreen(
-                          user: _user ?? widget.user)),
-                );
-                if (result == true) {
-                  _loadUserData();
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildOption(
-              context,
-              icon: Icons.percent_rounded,
-              label: 'Sales Commission',
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          SalesCommissionScreen(user: userToShow)),
-                );
-                if (result == true) {
-                  _loadUserData();
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildOption(
-              context,
-              icon: Icons.format_list_numbered_rounded,
-              label: 'User Count Limit',
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          UserGameLimitScreen(user: userToShow)),
-                );
-                if (result == true) {
-                  _loadUserData();
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildOption(
-              context,
-              icon: Icons.settings_suggest_rounded,
-              label: 'Price Setting',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          PriceSettingScreen(user: userToShow)),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildOption(
-              context,
-              icon: Icons.timer_rounded,
-              label: 'Game Betting Window',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          ManageUserGameTimingsScreen(user: widget.user)),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildOption(
-              context,
-              icon: Icons.videogame_asset_rounded,
-              label: 'Game Permission',
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          ManageUserGamePermissionsScreen(user: userToShow)),
-                );
-                if (result == true) {
-                  _loadUserData();
-                }
-              },
-            ),
-            const SizedBox(height: 16),
+            if (!isSuperAdmin) ...[
+              _buildOption(
+                context,
+                icon: Icons.currency_rupee_rounded,
+                label: 'Prize & Commission',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ManagePrizeCommissionScreen(
+                            user: _user ?? widget.user)),
+                  );
+                  if (result == true) {
+                    _loadUserData();
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildOption(
+                context,
+                icon: Icons.percent_rounded,
+                label: 'Sales Commission',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SalesCommissionScreen(user: userToShow)),
+                  );
+                  if (result == true) {
+                    _loadUserData();
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildOption(
+                context,
+                icon: Icons.format_list_numbered_rounded,
+                label: 'User Count Limit',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            UserGameLimitScreen(user: userToShow)),
+                  );
+                  if (result == true) {
+                    _loadUserData();
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildOption(
+                context,
+                icon: Icons.settings_suggest_rounded,
+                label: 'Price Setting',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            PriceSettingScreen(user: userToShow)),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildOption(
+                context,
+                icon: Icons.timer_rounded,
+                label: 'Game Betting Window',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            ManageUserGameTimingsScreen(user: widget.user)),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildOption(
+                context,
+                icon: Icons.videogame_asset_rounded,
+                label: 'Game Permission',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            ManageUserGamePermissionsScreen(user: userToShow)),
+                  );
+                  if (result == true) {
+                    _loadUserData();
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
             if (canEdit)
               _buildOption(
                 context,

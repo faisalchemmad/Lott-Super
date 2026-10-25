@@ -166,57 +166,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             _buildProfileHeader(_user!),
             const SizedBox(height: 24),
-            _buildOption(
-              context,
-              icon: Icons.currency_rupee_rounded,
-              label: 'My Prize & Commission',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ManagePrizeCommissionScreen(
-                      user: _user!,
-                      isReadOnly: true,
+            if (_user!.role != 'SUPER_ADMIN') ...[
+              _buildOption(
+                context,
+                icon: Icons.currency_rupee_rounded,
+                label: 'My Prize & Commission',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ManagePrizeCommissionScreen(
+                        user: _user!,
+                        isReadOnly: true,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildOption(
-              context,
-              icon: Icons.format_list_numbered_rounded,
-              label: 'My Count Limits',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ManageUserCountLimitsScreen(
-                      user: _user!,
-                      isReadOnly: true,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildOption(
+                context,
+                icon: Icons.format_list_numbered_rounded,
+                label: 'My Count Limits',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ManageUserCountLimitsScreen(
+                        user: _user!,
+                        isReadOnly: true,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildOption(
-              context,
-              icon: Icons.numbers_rounded,
-              label: 'My Number Limits',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ManageUserNumberLimitsScreen(
-                      user: _user!,
-                      isReadOnly: true,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildOption(
+                context,
+                icon: Icons.numbers_rounded,
+                label: 'My Number Limits',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ManageUserNumberLimitsScreen(
+                        user: _user!,
+                        isReadOnly: true,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
             _buildOption(
               context,
               icon: Icons.lock_reset_rounded,
