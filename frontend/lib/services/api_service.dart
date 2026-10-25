@@ -10,6 +10,11 @@ import 'package:flutter/foundation.dart';
 class ApiService {
   static String get baseUrl {
     if (kIsWeb) {
+      if (Uri.base.host.isNotEmpty &&
+          !Uri.base.host.contains('localhost') &&
+          !Uri.base.host.contains('127.0.0.1')) {
+        return '/api';
+      }
       return 'http://13.233.196.135/api';
     }
     if (defaultTargetPlatform == TargetPlatform.android ||
