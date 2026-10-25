@@ -116,7 +116,6 @@ class _MonitorScreenState extends State<MonitorScreen> {
 
     Widget content = Column(
       children: [
-        
         _buildSearchAndOptions(isDesktop),
         _buildTableHeader(isDesktop),
         Expanded(
@@ -231,7 +230,8 @@ class _MonitorScreenState extends State<MonitorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 15),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -242,7 +242,8 @@ class _MonitorScreenState extends State<MonitorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 15),
                   ),
                 ),
               ],
@@ -277,7 +278,8 @@ class _MonitorScreenState extends State<MonitorScreen> {
         children: [
           Expanded(
               flex: isDesktop ? 4 : 2,
-              child: const Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
+              child: const Text('Name',
+                  style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
               flex: isDesktop ? 6 : 3,
               child: const Text('Ticket',
@@ -287,13 +289,16 @@ class _MonitorScreenState extends State<MonitorScreen> {
               child: Text('No', style: TextStyle(fontWeight: FontWeight.bold))),
           const Expanded(
               flex: 1,
-              child: Text('Cnt', style: TextStyle(fontWeight: FontWeight.bold))),
+              child:
+                  Text('Cnt', style: TextStyle(fontWeight: FontWeight.bold))),
           const Expanded(
               flex: 1,
-              child: Text('Clr', style: TextStyle(fontWeight: FontWeight.bold))),
+              child:
+                  Text('Clr', style: TextStyle(fontWeight: FontWeight.bold))),
           const Expanded(
               flex: 1,
-              child: Text('Lim', style: TextStyle(fontWeight: FontWeight.bold))),
+              child:
+                  Text('Lim', style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
               flex: isDesktop ? 1 : 2,
               child: const Text('Action',

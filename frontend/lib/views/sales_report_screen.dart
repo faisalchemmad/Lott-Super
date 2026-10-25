@@ -161,7 +161,6 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   Row(
                     children: [
                       Expanded(
@@ -175,7 +174,6 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       })),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -213,7 +211,6 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                           setState(() => _selectedAgentId = val),
                       icon: Icons.person_search_rounded,
                     ),
-                  
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -227,7 +224,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         )
                       ],
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -301,15 +299,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           state,
           style: TextStyle(
             fontSize: 15,
-            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
             color: _selectedState == state ? AppColors.primary : Colors.black87,
           ),
         ),
       ],
     );
   }
-
-  
 
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
@@ -320,7 +317,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -355,7 +353,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -382,7 +381,8 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),

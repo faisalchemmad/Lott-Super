@@ -122,93 +122,95 @@ class PurchaseReportDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: reportData.length,
-              separatorBuilder: (context, index) =>
-                  Divider(height: 1, color: Colors.grey[200]),
-              itemBuilder: (context, index) {
-                final item = reportData[index];
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12)),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 35,
-                        height: 35,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: reportData.length,
+                    separatorBuilder: (context, index) =>
+                        Divider(height: 1, color: Colors.grey[200]),
+                    itemBuilder: (context, index) {
+                      final item = reportData[index];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
                         decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Center(
-                          child: Text(
-                              item['type']
-                                  .toString()
-                                  .toUpperCase()
-                                  .substring(0, 1),
-                              style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Row(
                           children: [
-                            Text(item['type'].toString().toUpperCase(),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                    fontSize: 13)),
-                            const SizedBox(height: 2),
-                            const SizedBox(height: 2),
-                            Text(item['game__name'] ?? '',
-                                style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(item['number'],
-                            style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black,
-                                letterSpacing: 1)),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Qty: ${item['total_qty']}',
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87)),
-                            const SizedBox(height: 2),
-                            Text('Net: ₹${item['net_amount'] ?? item['total_price']}',
-                                  style: TextStyle(
-                                      fontSize: 15,
+                            Container(
+                              width: 35,
+                              height: 35,
+                              decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Center(
+                                child: Text(
+                                    item['type']
+                                        .toString()
+                                        .toUpperCase()
+                                        .substring(0, 1),
+                                    style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(item['type'].toString().toUpperCase(),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                          fontSize: 13)),
+                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 2),
+                                  Text(item['game__name'] ?? '',
+                                      style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(item['number'],
+                                  style: const TextStyle(
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w900,
-                                      color: Colors.red[700])),
+                                      color: Colors.black,
+                                      letterSpacing: 1)),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Qty: ${item['total_qty']}',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                      'Net: ₹${item['net_amount'] ?? item['total_price']}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.red[700])),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            ),
                 ),
                 _buildTotalBar(),
               ],
@@ -220,7 +222,10 @@ class PurchaseReportDetailScreen extends StatelessWidget {
     double grandTotal = 0;
     int totalQty = 0;
     for (var item in reportData) {
-      grandTotal += double.tryParse(item['net_amount']?.toString() ?? item['total_price']?.toString() ?? '0') ?? 0;
+      grandTotal += double.tryParse(item['net_amount']?.toString() ??
+              item['total_price']?.toString() ??
+              '0') ??
+          0;
       totalQty += int.tryParse(item['total_qty']?.toString() ?? '0') ?? 0;
     }
 
@@ -244,16 +249,32 @@ class PurchaseReportDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Total Quantity', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
-              Text('$totalQty', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const Text('Total Quantity',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold)),
+              Text('$totalQty',
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Total Net Amount', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
-              Text('₹${grandTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.primary)),
+              const Text('Total Net Amount',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold)),
+              Text('₹${grandTotal.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary)),
             ],
           ),
         ],

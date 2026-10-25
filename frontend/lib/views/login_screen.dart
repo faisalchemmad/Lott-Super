@@ -72,7 +72,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Container(
-                padding: isDesktop ? const EdgeInsets.all(40.0) : EdgeInsets.zero,
+                padding:
+                    isDesktop ? const EdgeInsets.all(40.0) : EdgeInsets.zero,
                 decoration: isDesktop
                     ? BoxDecoration(
                         color: Colors.white,
@@ -93,7 +94,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset('assets/icon.jpg', width: 80, height: 80),
+                      child:
+                          Image.asset('assets/icon.jpg', width: 80, height: 80),
                     ),
                     const SizedBox(height: 16),
                     const Text(

@@ -95,7 +95,7 @@ class _CountReportScreenState extends State<CountReportScreen> {
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final data = await apiService.getCountReport(
-          state: _selectedState,
+        state: _selectedState,
         fromDate: DateFormat('yyyy-MM-dd').format(_fromDate),
         toDate: DateFormat('yyyy-MM-dd').format(_toDate),
         gameId: _selectedGameId,
@@ -122,7 +122,6 @@ class _CountReportScreenState extends State<CountReportScreen> {
   }
 
   @override
-  
   Widget _buildStateRadio(String state) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -141,7 +140,8 @@ class _CountReportScreenState extends State<CountReportScreen> {
           state,
           style: TextStyle(
             fontSize: 15,
-            fontWeight: _selectedState == state ? FontWeight.bold : FontWeight.w500,
+            fontWeight:
+                _selectedState == state ? FontWeight.bold : FontWeight.w500,
             color: _selectedState == state ? AppColors.primary : Colors.black87,
           ),
         ),
@@ -149,7 +149,7 @@ class _CountReportScreenState extends State<CountReportScreen> {
     );
   }
 
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -166,10 +166,10 @@ Widget build(BuildContext context) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 24),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
@@ -184,7 +184,6 @@ Widget build(BuildContext context) {
                       ],
                     ),
                   ),
-
                   Row(
                     children: [
                       Expanded(
@@ -196,7 +195,6 @@ Widget build(BuildContext context) {
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -272,8 +270,6 @@ Widget build(BuildContext context) {
     );
   }
 
-  
-
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -283,7 +279,8 @@ Widget build(BuildContext context) {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -318,7 +315,8 @@ Widget build(BuildContext context) {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),

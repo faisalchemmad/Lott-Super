@@ -132,8 +132,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
                   ? const Center(child: Text('No data found'))
                   : ListView.separated(
                       itemCount: _reportData.length,
-                      separatorBuilder: (c, i) => const Divider(
-                          height: 1, color: Color(0xFFEEEEEE)),
+                      separatorBuilder: (c, i) =>
+                          const Divider(height: 1, color: Color(0xFFEEEEEE)),
                       itemBuilder: (context, index) =>
                           _buildReportRow(_reportData[index], isDesktop),
                     ),
@@ -177,7 +177,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
                 children: [
                   SizedBox(
                     width: 300,
-                    child: SingleChildScrollView(child: _buildFilterSection(isDesktop)),
+                    child: SingleChildScrollView(
+                        child: _buildFilterSection(isDesktop)),
                   ),
                   const VerticalDivider(width: 1),
                   Expanded(child: content),
@@ -192,7 +193,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
     final fmt = DateFormat('dd MMM yyyy');
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: isDesktop ? 24 : 16),
+      padding:
+          EdgeInsets.symmetric(vertical: 12, horizontal: isDesktop ? 24 : 16),
       color: Colors.white,
       child: Row(
         children: [
@@ -201,12 +203,16 @@ class _NetReportScreenState extends State<NetReportScreen> {
           Text(
             'REPORT PERIOD: ',
             style: TextStyle(
-                fontSize: isDesktop ? 11 : 9, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+                fontSize: isDesktop ? 11 : 9,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600]),
           ),
           Text(
             '${fmt.format(_fromDate)} - ${fmt.format(_toDate)}',
             style: TextStyle(
-                fontSize: isDesktop ? 12 : 10, fontWeight: FontWeight.w900, color: Colors.black),
+                fontSize: isDesktop ? 12 : 10,
+                fontWeight: FontWeight.w900,
+                color: Colors.black),
           ),
         ],
       ),
@@ -225,22 +231,30 @@ class _NetReportScreenState extends State<NetReportScreen> {
           Expanded(
               flex: isDesktop ? 5 : 3,
               child: Text('USER',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11))),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isDesktop ? 13 : 11))),
           Expanded(
               flex: 2,
               child: Text('SALES',
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11))),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isDesktop ? 13 : 11))),
           Expanded(
               flex: 2,
               child: Text('WIN/CO',
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11))),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isDesktop ? 13 : 11))),
           Expanded(
               flex: 2,
               child: Text('BALANCE',
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11))),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isDesktop ? 13 : 11))),
         ],
       ),
     );
@@ -254,7 +268,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
       onTap:
           isDrillable ? () => _generateReport(userId: item['user_id']) : null,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: isDesktop ? 18 : 14),
+        padding:
+            EdgeInsets.symmetric(horizontal: 16, vertical: isDesktop ? 18 : 14),
         child: Row(
           children: [
             Expanded(
@@ -274,8 +289,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
               child: Text(
                 '₹${(item['gross_sale'] ?? 0).toStringAsFixed(0)}',
                 textAlign: TextAlign.right,
-                style:
-                    TextStyle(fontSize: isDesktop ? 14 : 12, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: isDesktop ? 14 : 12, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -350,7 +365,9 @@ class _NetReportScreenState extends State<NetReportScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isDesktop) ...[
-            const Text('FILTERS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+            const Text('FILTERS',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
             const SizedBox(height: 16),
           ],
           Wrap(
@@ -359,7 +376,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
             children: [
               SizedBox(
                 width: isDesktop ? 260 : 110,
-                child: _buildDateTile('FROM', _fromDate, () => _selectDate(true)),
+                child:
+                    _buildDateTile('FROM', _fromDate, () => _selectDate(true)),
               ),
               SizedBox(
                 width: isDesktop ? 260 : 110,
@@ -383,8 +401,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
                       items: [
                         const DropdownMenuItem(
                             value: null, child: Text('ALL GAMES')),
-                        ..._games.map((g) => DropdownMenuItem(
-                            value: g.id, child: Text(g.name))),
+                        ..._games.map((g) =>
+                            DropdownMenuItem(value: g.id, child: Text(g.name))),
                       ],
                       onChanged: (val) {
                         setState(() => _selectedGameId = val);
@@ -412,7 +430,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -443,7 +462,8 @@ class _NetReportScreenState extends State<NetReportScreen> {
     double totalBalance = totalNet - totalWin;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 30 : 16, vertical: 15),
+      padding:
+          EdgeInsets.symmetric(horizontal: isDesktop ? 30 : 16, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey[300]!, width: 2)),
@@ -460,13 +480,15 @@ class _NetReportScreenState extends State<NetReportScreen> {
           _summaryItem('TOTAL SALES', totalGross, Colors.blueGrey, isDesktop),
           _summaryItem('TOTAL WIN/CO', totalWinCo, Colors.red, isDesktop),
           _summaryItem('NET BALANCE', totalBalance,
-              totalBalance >= 0 ? Colors.green : Colors.red, isDesktop, isMain: true),
+              totalBalance >= 0 ? Colors.green : Colors.red, isDesktop,
+              isMain: true),
         ],
       ),
     );
   }
 
-  Widget _summaryItem(String label, double value, Color color, bool isDesktop, {bool isMain = false}) {
+  Widget _summaryItem(String label, double value, Color color, bool isDesktop,
+      {bool isMain = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -478,8 +500,9 @@ class _NetReportScreenState extends State<NetReportScreen> {
                 fontWeight: FontWeight.bold)),
         Text('₹${value.toStringAsFixed(0)}',
             style: TextStyle(
-                fontSize: isMain ? (isDesktop ? 20 : 14) : (isDesktop ? 16 : 12), 
-                fontWeight: FontWeight.w900, 
+                fontSize:
+                    isMain ? (isDesktop ? 20 : 14) : (isDesktop ? 16 : 12),
+                fontWeight: FontWeight.w900,
                 color: color)),
       ],
     );

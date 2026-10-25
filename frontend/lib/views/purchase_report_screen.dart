@@ -145,7 +145,6 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   Row(
                     children: [
                       Expanded(
@@ -157,7 +156,6 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
                               'TO', _toDate, () => _selectDate(false))),
                     ],
                   ),
-                  
                   const SizedBox(height: 8),
                   _buildDropdownTile<int?>(
                     label: 'SELECT GAME',
@@ -184,7 +182,6 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
                     onChanged: (val) => setState(() => _selectedType = val),
                     icon: Icons.category_rounded,
                   ),
-
                   const SizedBox(height: 48),
                   SizedBox(
                     width: double.infinity,
@@ -211,8 +208,6 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
     );
   }
 
-  
-
   Widget _buildDateTile(String label, DateTime date, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -222,7 +217,8 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -257,7 +253,8 @@ class _PurchaseReportScreenState extends State<PurchaseReportScreen> {
         filled: true,
         fillColor: Colors.white,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: BorderSide(color: Colors.grey.shade300),

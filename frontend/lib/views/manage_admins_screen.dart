@@ -42,7 +42,7 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
     }
 
     final users = await apiService.getUsers(createdByMe: true);
-    
+
     // Define the custom order for roles
     final Map<String, int> roleOrder = {
       'ADMIN': 1,
@@ -54,14 +54,14 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
     setState(() {
       _userRole = role;
       _admins = users.where((u) => u.username != currentUsername).toList();
-      
+
       // Sort the list based on the predefined role order
       _admins.sort((a, b) {
         int orderA = roleOrder[a.role] ?? 99;
         int orderB = roleOrder[b.role] ?? 99;
         return orderA.compareTo(orderB);
       });
-      
+
       _isLoading = false;
     });
   }
@@ -212,7 +212,8 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 tooltip: 'Delete User',
                                 onPressed: () => _deleteUser(admin.id),
                               ),

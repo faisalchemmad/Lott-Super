@@ -24,8 +24,21 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
   final _maxRetainedController = TextEditingController();
 
   final List<String> _betTypes = [
-    'A', 'B', 'C', 'AB', 'BC', 'AC', 'SUPER', 'BOX',
-    '3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20'
+    'A',
+    'B',
+    'C',
+    'AB',
+    'BC',
+    'AC',
+    'SUPER',
+    'BOX',
+    '3D-10',
+    '3D-25',
+    '3D-30',
+    '3D-60',
+    '4D-110',
+    '4D-55',
+    '4D-20'
   ];
   String? _selectedType;
 
@@ -44,18 +57,16 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
         _games = games;
         if (_games.isNotEmpty) _selectedGameId = _games.first.id;
         if (user != null) {
-          _user = {
-            'id': user.id,
-            'role': user.role,
-            'username': user.username
-          };
+          _user = {'id': user.id, 'role': user.role, 'username': user.username};
         }
       });
       if (_selectedGameId != null) {
         await _fetchLimits();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -66,16 +77,24 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
     try {
       final limits = await apiService.getForwardLimits();
       setState(() {
-        _limits = limits.where((l) => l['game'] == _selectedGameId && l['state'] == _selectedState).toList();
+        _limits = limits
+            .where((l) =>
+                l['game'] == _selectedGameId && l['state'] == _selectedState)
+            .toList();
       });
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   Future<void> _addLimit() async {
-    if (_selectedGameId == null || _selectedType == null || _maxRetainedController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill required fields')));
+    if (_selectedGameId == null ||
+        _selectedType == null ||
+        _maxRetainedController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill required fields')));
       return;
     }
     final apiService = Provider.of<ApiService>(context, listen: false);
@@ -93,9 +112,11 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
       _numberController.clear();
       _selectedType = null;
       await _fetchLimits();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Limit Added')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Limit Added')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -107,9 +128,11 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
     try {
       await apiService.deleteForwardLimit(id);
       await _fetchLimits();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Limit Deleted')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Limit Deleted')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -117,7 +140,8 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading && _games.isEmpty) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading && _games.isEmpty)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Auto Forward Limits')),
@@ -129,9 +153,13 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(labelText: 'Game', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                        labelText: 'Game', border: OutlineInputBorder()),
                     value: _selectedGameId,
-                    items: _games.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name))).toList(),
+                    items: _games
+                        .map((g) =>
+                            DropdownMenuItem(value: g.id, child: Text(g.name)))
+                        .toList(),
                     onChanged: (val) {
                       setState(() => _selectedGameId = val);
                       _fetchLimits();
@@ -141,9 +169,12 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                        labelText: 'State', border: OutlineInputBorder()),
                     value: _selectedState,
-                    items: ['KL', 'TN'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                    items: ['KL', 'TN']
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
                     onChanged: (val) {
                       setState(() => _selectedState = val!);
                       _fetchLimits();
@@ -157,9 +188,12 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Type*', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                        labelText: 'Type*', border: OutlineInputBorder()),
                     value: _selectedType,
-                    items: _betTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                    items: _betTypes
+                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                        .toList(),
                     onChanged: (val) => setState(() => _selectedType = val),
                   ),
                 ),
@@ -167,38 +201,43 @@ class _ManageForwardLimitsScreenState extends State<ManageForwardLimitsScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _maxRetainedController,
-                    decoration: const InputDecoration(labelText: 'Retained Limit*', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                        labelText: 'Retained Limit*',
+                        border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                   ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _addLimit,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(20)),
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(20)),
                   child: const Text('ADD'),
                 ),
               ],
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _limits.length,
-                    itemBuilder: (context, index) {
-                      final item = _limits[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text('Type: ${item['type']} | Limit: ${item['max_retained_count']}'),
-                          subtitle: const Text('Applies to all numbers of this type'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteLimit(item['id']),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _limits.length,
+                      itemBuilder: (context, index) {
+                        final item = _limits[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text(
+                                'Type: ${item['type']} | Limit: ${item['max_retained_count']}'),
+                            subtitle: const Text(
+                                'Applies to all numbers of this type'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteLimit(item['id']),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

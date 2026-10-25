@@ -13,7 +13,8 @@ class UserLimitMenuScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: Text('${user.username} Limits',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -31,8 +32,8 @@ class UserLimitMenuScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ManageUserNumberLimitsScreen(
-                        user: user)),
+                    builder: (context) =>
+                        ManageUserNumberLimitsScreen(user: user)),
               ),
             ),
           ],

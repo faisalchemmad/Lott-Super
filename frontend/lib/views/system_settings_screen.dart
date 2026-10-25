@@ -44,7 +44,7 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
   Future<void> _saveSettings() async {
     setState(() => _isSaving = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
-    
+
     // Format TimeOfDay to HH:mm:ss
     final hour = _limitTime.hour.toString().padLeft(2, '0');
     final minute = _limitTime.minute.toString().padLeft(2, '0');
@@ -59,7 +59,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Settings updated' : 'Failed to update settings'),
+          content:
+              Text(success ? 'Settings updated' : 'Failed to update settings'),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
@@ -97,7 +98,10 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'Note: If this is OFF, edit/delete is disabled for ALL games regardless of individual game settings.',
-                            style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 40),
@@ -124,7 +128,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.settings_suggest_rounded, size: 48, color: Colors.white),
+          const Icon(Icons.settings_suggest_rounded,
+              size: 48, color: Colors.white),
           const SizedBox(height: 12),
           const Text(
             'Control Panel',
@@ -181,7 +186,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
               color: Colors.blue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.edit_document, color: Colors.blue, size: 24),
+            child:
+                const Icon(Icons.edit_document, color: Colors.blue, size: 24),
           ),
           const SizedBox(width: 16),
           const Expanded(
@@ -233,7 +239,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                   color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.timer_rounded, color: Colors.orange, size: 24),
+                child: const Icon(Icons.timer_rounded,
+                    color: Colors.orange, size: 24),
               ),
               const SizedBox(width: 16),
               const Expanded(
@@ -242,7 +249,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
                   children: [
                     Text(
                       'Deadline Time',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Past this time, no edits allowed',
@@ -278,7 +286,8 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
               label: const Text('CHANGE TIME'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -296,18 +305,23 @@ class _SystemSettingsScreenState extends State<SystemSettingsScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 2,
         ),
         child: _isSaving
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2),
               )
             : const Text(
                 'SAVE SETTINGS',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1),
               ),
       ),
     );
