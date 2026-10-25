@@ -96,7 +96,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     final userData = {
       'username': _usernameController.text,
       'role': _roleToSet,
-      'weekly_credit_limit': double.tryParse(_creditLimitController.text) ?? 0,
+      'weekly_credit_limit': _roleToSet == 'ADMIN' ? 0.0 : (double.tryParse(_creditLimitController.text) ?? 0.0),
       'is_default': _isDefault,
       'can_forward': false,
       'subscription_plan': _subscriptionPlan,
@@ -179,11 +179,13 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
               const SizedBox(height: 20),
               _buildRoleDropdown(),
               const SizedBox(height: 20),
-              _buildSectionTitle('Financial Limits'),
-              _buildTextField(_creditLimitController, 'Weekly Credit Limit',
-                  Icons.account_balance,
-                  isNumber: true),
-              const SizedBox(height: 20),
+              if (_roleToSet != 'ADMIN') ...[
+                _buildSectionTitle('Financial Limits'),
+                _buildTextField(_creditLimitController, 'Weekly Credit Limit',
+                    Icons.account_balance,
+                    isNumber: true),
+                const SizedBox(height: 20),
+              ],
               if (_roleToSet == 'ADMIN') ...[
                 _buildSectionTitle('Subscription & Game Package (സബ്സ്ക്രിപ്ഷൻ)'),
                 Container(

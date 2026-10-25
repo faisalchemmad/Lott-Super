@@ -100,15 +100,17 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                 },
               ),
               const SizedBox(height: 8),
-              _buildOption(
-                context,
-                icon: Icons.account_balance_wallet_rounded,
-                label: 'Weekly Credit Limit',
-                onTap: () {
-                  _showCreditLimitDialog(context, userToShow);
-                },
-              ),
-              const SizedBox(height: 8),
+              if (!isSuperAdmin) ...[
+                _buildOption(
+                  context,
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'Weekly Credit Limit',
+                  onTap: () {
+                    _showCreditLimitDialog(context, userToShow);
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
               if (userToShow.role == 'ADMIN' && isSuperAdmin) ...[
                 _buildOption(
                   context,
