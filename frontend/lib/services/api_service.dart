@@ -460,6 +460,24 @@ class ApiService {
     return response.statusCode == 204;
   }
 
+
+  Future<bool> bulkDeleteNumberLimits(List<int> ids, {bool allGames = false, int? userId}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/number-limits/bulk-delete/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'ids': ids,
+        'all_games': allGames,
+        if (userId != null) 'user_id': userId,
+      }),
+    );
+    return response.statusCode == 200;
+  }
   Future<bool> updateUser(int id, Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -771,6 +789,23 @@ class ApiService {
     return response.statusCode == 204;
   }
 
+
+  Future<bool> bulkDeleteGlobalNumberLimits(List<int> ids, {bool allGames = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse('$baseUrl/global-number-limits/bulk-delete/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'ids': ids,
+        'all_games': allGames,
+      }),
+    );
+    return response.statusCode == 200;
+  }
   Future<bool> updateGlobalNumberLimit(
       int id, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();

@@ -2914,6 +2914,31 @@ class NumberLimitViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status_code)
         return super().create(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        ids = request.data.get('ids', [])
+        all_games = request.data.get('all_games', False)
+        user_id = request.data.get('user_id')
+        
+        if not ids:
+            return Response({'error': 'No ids provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        limits = NumberLimit.objects.filter(id__in=ids)
+        if user_id:
+            limits = limits.filter(user_id=user_id)
+            
+        deleted_count = 0
+        if all_games:
+            items = list(limits.values('user_id', 'number', 'type').distinct())
+            for item in items:
+                qs = NumberLimit.objects.filter(user_id=item['user_id'], number=item['number'], type=item['type'])
+                count, _ = qs.delete()
+                deleted_count += count
+        else:
+            deleted_count, _ = limits.delete()
+            
+        return Response({'success': True, 'deleted_count': deleted_count}, status=status.HTTP_200_OK)
+
 class GlobalNumberLimitViewSet(viewsets.ModelViewSet):
     queryset = GlobalNumberLimit.objects.all()
     serializer_class = GlobalNumberLimitSerializer
@@ -2952,6 +2977,34 @@ class GlobalNumberLimitViewSet(viewsets.ModelViewSet):
             status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
             return Response(serializer.data, status=status_code)
         return super().create(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        user = self.request.user
+        ids = request.data.get('ids', [])
+        all_games = request.data.get('all_games', False)
+        
+        if not ids:
+            return Response({'error': 'No ids provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user.role == 'SUPER_ADMIN':
+            limits = GlobalNumberLimit.objects.filter(id__in=ids)
+        else:
+            limits = GlobalNumberLimit.objects.filter(id__in=ids).filter(Q(admin=user) | Q(admin__isnull=True))
+            
+        deleted_count = 0
+        if all_games:
+            items = list(limits.values('number', 'type').distinct())
+            for item in items:
+                qs = GlobalNumberLimit.objects.filter(number=item['number'], type=item['type'])
+                if user.role != 'SUPER_ADMIN':
+                    qs = qs.filter(Q(admin=user) | Q(admin__isnull=True))
+                count, _ = qs.delete()
+                deleted_count += count
+        else:
+            deleted_count, _ = limits.delete()
+            
+        return Response({'success': True, 'deleted_count': deleted_count}, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         # Assign current user as owner of the limit they are creating

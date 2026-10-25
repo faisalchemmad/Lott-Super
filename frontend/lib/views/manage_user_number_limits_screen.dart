@@ -61,6 +61,8 @@ class _ManageUserNumberLimitsScreenState
   final FocusNode _quickNumberFocusNode = FocusNode();
   final FocusNode _quickCountFocusNode = FocusNode();
   bool _isQuickSubmitting = false;
+  final Set<int> _selectedLimitIds = {};
+  bool _isBulkDeleting = false;
   bool _quickAllGames = false;
   int? _quickSelectedGameId;
 
@@ -329,27 +331,158 @@ class _ManageUserNumberLimitsScreenState
     );
   }
 
-  Future<void> _confirmDelete(int id) async {
+  Future<void> _confirmDelete(NumberLimitModel limit) async {
+    final int limitId = limit.id;
+    final String number = limit.number;
+    final String type = limit.type;
+    bool allGames = false;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          title: Text('Delete Limit: $number ($type)?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Are you sure you want to remove this number limit?'),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () => setDlgState(() => allGames = !allGames),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: allGames ? Colors.purple.shade50 : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: allGames ? Colors.purple.shade300 : Colors.grey.shade300,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: allGames,
+                        activeColor: Colors.purple.shade700,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        onChanged: (val) => setDlgState(() => allGames = val ?? false),
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Delete from ALL GAMES',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: allGames ? Colors.purple.shade800 : Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(allGames ? 'DELETE (ALL GAMES)' : 'DELETE'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirm == true) {
+      final apiService = Provider.of<ApiService>(context, listen: false);
+      bool success;
+      if (allGames) {
+        success = await apiService.bulkDeleteNumberLimits([limitId], allGames: true, userId: widget.user.id);
+      } else {
+        success = await apiService.deleteNumberLimit(limitId);
+      }
+      if (success) {
+        _selectedLimitIds.remove(limitId);
+        _loadData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(allGames ? 'Limit deleted from ALL GAMES' : 'Limit deleted'),
+              duration: const Duration(milliseconds: 1200),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleBulkDelete({required bool allGames}) async {
+    if (_selectedLimitIds.isEmpty) return;
+    final int count = _selectedLimitIds.length;
+    final String title = allGames ? 'Delete from ALL GAMES?' : 'Delete Selected Limits?';
+    final String message = allGames
+        ? 'Are you sure you want to delete these $count selected limit(s) for ${widget.user.username} across ALL GAMES?'
+        : 'Are you sure you want to delete these $count selected limit(s) for ${widget.user.username}?';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Limit?'),
-        content:
-            const Text('Are you sure you want to remove this number limit?'),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('CANCEL')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('DELETE', style: TextStyle(color: Colors.red))),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: allGames ? Colors.purple.shade800 : Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(allGames ? 'DELETE ALL GAMES' : 'DELETE'),
+          ),
         ],
       ),
     );
+
     if (confirm == true) {
+      setState(() => _isBulkDeleting = true);
       final apiService = Provider.of<ApiService>(context, listen: false);
-      if (await apiService.deleteNumberLimit(id)) {
-        _loadData();
+      try {
+        final success = await apiService.bulkDeleteNumberLimits(
+          _selectedLimitIds.toList(),
+          allGames: allGames,
+          userId: widget.user.id,
+        );
+        if (success) {
+          _selectedLimitIds.clear();
+          await _loadData();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(allGames
+                    ? '$count limit(s) deleted across ALL GAMES'
+                    : '$count limit(s) deleted successfully'),
+                duration: const Duration(milliseconds: 1500),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting limits: $e'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isBulkDeleting = false);
       }
     }
   }
@@ -439,7 +572,62 @@ class _ManageUserNumberLimitsScreenState
             ),
           ),
         ],
-        if (limits.isNotEmpty) _buildTableHeader(badgeColor),
+        if (!widget.isReadOnly && _selectedLimitIds.isNotEmpty) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red.shade300),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '${_selectedLimitIds.length} Selected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.5,
+                    color: Colors.red.shade900,
+                  ),
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: _isBulkDeleting ? null : () => _handleBulkDelete(allGames: false),
+                  icon: const Icon(Icons.delete_outline, size: 15),
+                  label: const Text('DELETE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                ElevatedButton.icon(
+                  onPressed: _isBulkDeleting ? null : () => _handleBulkDelete(allGames: true),
+                  icon: const Icon(Icons.delete_forever, size: 15),
+                  label: const Text('ALL GAME DELETE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.shade800,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Clear Selection',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => setState(() => _selectedLimitIds.clear()),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (limits.isNotEmpty) _buildTableHeader(badgeColor, limits),
         Expanded(
           child: limits.isEmpty
               ? _buildEmptyState(
@@ -905,18 +1093,50 @@ class _ManageUserNumberLimitsScreenState
     }
   }
 
-  Widget _buildTableHeader(Color color) {
+  Widget _buildTableHeader(Color color, List<NumberLimitModel> limits) {
+    final allCurrentSelected = limits.isNotEmpty &&
+        limits.every((l) => _selectedLimitIds.contains(l.id));
+    final someCurrentSelected =
+        limits.any((l) => _selectedLimitIds.contains(l.id));
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Expanded(
+          if (!widget.isReadOnly) ...[
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: allCurrentSelected ? true : (someCurrentSelected ? null : false),
+                tristate: true,
+                activeColor: color,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                onChanged: (val) {
+                  setState(() {
+                    if (allCurrentSelected) {
+                      for (var l in limits) {
+                        _selectedLimitIds.remove(l.id);
+                      }
+                    } else {
+                      for (var l in limits) {
+                        _selectedLimitIds.add(l.id);
+                      }
+                    }
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          const Expanded(
             flex: 2,
             child: Text(
               'TYPE',
@@ -927,7 +1147,7 @@ class _ManageUserNumberLimitsScreenState
                   letterSpacing: 0.5),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 3,
             child: Text(
               'NUMBER',
@@ -939,7 +1159,7 @@ class _ManageUserNumberLimitsScreenState
                   letterSpacing: 0.5),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text(
               'CNT',
@@ -951,7 +1171,7 @@ class _ManageUserNumberLimitsScreenState
                   letterSpacing: 0.5),
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: Text(
               'ACTION',
@@ -969,77 +1189,118 @@ class _ManageUserNumberLimitsScreenState
   }
 
   Widget _buildNumberLimitCard(NumberLimitModel limit, Color badgeColor) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 3,
-              offset: const Offset(0, 1)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _buildTypeBadge(limit.type, badgeColor),
-            ),
+    final int limitId = limit.id;
+    final bool isSelected = _selectedLimitIds.contains(limitId);
+
+    return InkWell(
+      onTap: widget.isReadOnly
+          ? null
+          : () {
+              setState(() {
+                if (isSelected) {
+                  _selectedLimitIds.remove(limitId);
+                } else {
+                  _selectedLimitIds.add(limitId);
+                }
+              });
+            },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.red.shade50.withValues(alpha: 0.5) : Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? Colors.red.shade300 : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1.0,
           ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              limit.number,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 3,
+                offset: const Offset(0, 1)),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (!widget.isReadOnly) ...[
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Checkbox(
+                  value: isSelected,
+                  activeColor: Colors.red.shade700,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  onChanged: (val) {
+                    setState(() {
+                      if (val == true) {
+                        _selectedLimitIds.add(limitId);
+                      } else {
+                        _selectedLimitIds.remove(limitId);
+                      }
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _buildTypeBadge(limit.type, badgeColor),
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              '${limit.maxCount}',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w900, color: badgeColor),
+            Expanded(
+              flex: 3,
+              child: Text(
+                limit.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3E50)),
+              ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!widget.isReadOnly) ...[
-                  InkWell(
-                    onTap: () => _showAddNumberLimitDialog(limit: limit),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.edit_outlined,
-                          color: Colors.blue, size: 18),
+            Expanded(
+              flex: 2,
+              child: Text(
+                '${limit.maxCount}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w900, color: badgeColor),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (!widget.isReadOnly) ...[
+                    InkWell(
+                      onTap: () => _showAddNumberLimitDialog(limit: limit),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.edit_outlined,
+                            color: Colors.blue, size: 18),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  InkWell(
-                    onTap: () => _confirmDelete(limit.id),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.delete_outline_rounded,
-                          color: Colors.red, size: 18),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () => _confirmDelete(limit),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.delete_outline_rounded,
+                            color: Colors.red, size: 18),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
