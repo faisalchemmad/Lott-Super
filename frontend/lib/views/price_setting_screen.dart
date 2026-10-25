@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'admin_net_rate_screen.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/user_model.dart';
@@ -164,6 +165,28 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminNetRateScreen(user: _user),
+                ),
+              );
+            },
+            icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
+            label: const Text(
+              'NET RATE',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../models/user_model.dart';
 import '../utils/constants.dart';
 import 'manage_prize_commission_screen.dart';
+import 'admin_net_rate_screen.dart';
 import 'manage_user_count_limits_screen.dart';
 import 'manage_user_number_limits_screen.dart';
 
@@ -166,6 +167,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             _buildProfileHeader(_user!),
             const SizedBox(height: 24),
+            if (_user!.role == 'ADMIN') ...[
+              _buildOption(
+                context,
+                icon: Icons.tune_rounded,
+                label: 'My Net Rate',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdminNetRateScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
             if (_user!.role != 'SUPER_ADMIN' && _user!.role != 'ADMIN') ...[
               _buildOption(
                 context,

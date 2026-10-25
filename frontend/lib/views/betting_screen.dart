@@ -435,9 +435,10 @@ class _BettingScreenState extends State<BettingScreen>
             List<String> perms = _getPermutations(baseNum);
 
             // 1. All SUPER permutations
+            final spData = _getPriceAndComm(selectedUser, 'SUPER');
+            final spPrice = spData['price']!;
+            final spComm = spData['comm']!;
             for (String perm in perms) {
-              double unitPrice = selectedUser?.priceSuper ?? 10.0;
-              double commRate = selectedUser?.salesCommSuper ?? 0.0;
               int count = int.parse(_countController.text);
               if (count > 0) {
                 _draftBets.insert(0, {
@@ -445,8 +446,8 @@ class _BettingScreenState extends State<BettingScreen>
                   'number': perm,
                   'count': count,
                   'type': 'SUPER',
-                  'price': unitPrice * count,
-                  'net_price': (unitPrice - commRate) * count,
+                  'price': spPrice * count,
+                  'net_price': (spPrice - spComm) * count,
                 });
               }
             }
@@ -454,16 +455,17 @@ class _BettingScreenState extends State<BettingScreen>
             // 2. All BOX permutations
             int boxCount = int.tryParse(_boxCountController.text) ?? 0;
             if (boxCount > 0) {
+              final boxData = _getPriceAndComm(selectedUser, 'BOX');
+              final boxPrice = boxData['price']!;
+              final boxComm = boxData['comm']!;
               for (String perm in perms) {
-                double unitPrice = selectedUser?.priceBox ?? 10.0;
-                double commRate = selectedUser?.salesCommBox ?? 0.0;
                 _draftBets.insert(0, {
                   'state': _selectedStateCode,
                   'number': perm,
                   'count': boxCount,
                   'type': 'BOX',
-                  'price': unitPrice * boxCount,
-                  'net_price': (unitPrice - commRate) * boxCount,
+                  'price': boxPrice * boxCount,
+                  'net_price': (boxPrice - boxComm) * boxCount,
                 });
               }
             }
@@ -565,9 +567,10 @@ class _BettingScreenState extends State<BettingScreen>
 
         if (type == 'SET') {
           // 1. Add all SUPER permutations
+          final spData = _getPriceAndComm(selectedUser, 'SUPER');
+          final spPrice = spData['price']!;
+          final spComm = spData['comm']!;
           for (String num in perms) {
-            double unitPrice = selectedUser?.priceSuper ?? 10.0;
-            double commRate = selectedUser?.salesCommSuper ?? 0.0;
             int count = int.parse(_countController.text);
 
             if (count > 0) {
@@ -576,8 +579,8 @@ class _BettingScreenState extends State<BettingScreen>
                 'number': num,
                 'count': count,
                 'type': 'SUPER',
-                'price': unitPrice * count,
-                'net_price': (unitPrice - commRate) * count,
+                'price': spPrice * count,
+                'net_price': (spPrice - spComm) * count,
               });
             }
           }
@@ -585,48 +588,26 @@ class _BettingScreenState extends State<BettingScreen>
           // 2. Add all BOX permutations
           int boxCount = int.tryParse(_boxCountController.text) ?? 0;
           if (boxCount > 0) {
+            final boxData = _getPriceAndComm(selectedUser, 'BOX');
+            final boxPrice = boxData['price']!;
+            final boxComm = boxData['comm']!;
             for (String num in perms) {
-              double unitPrice = selectedUser?.priceBox ?? 10.0;
-              double commRate = selectedUser?.salesCommBox ?? 0.0;
               _draftBets.insert(0, {
                 'state': _selectedStateCode,
                 'number': num,
                 'count': boxCount,
                 'type': 'BOX',
-                'price': unitPrice * boxCount,
-                'net_price': (unitPrice - commRate) * boxCount,
+                'price': boxPrice * boxCount,
+                'net_price': (boxPrice - boxComm) * boxCount,
               });
             }
           }
         } else {
           // TN Custom Type Permutations (e.g. 3D-10)
+          final typeData = _getPriceAndComm(selectedUser, type);
+          final unitPrice = typeData['price']!;
+          final commRate = typeData['comm']!;
           for (String num in perms) {
-            double unitPrice = 0.0;
-            double commRate = 0.0;
-            if (selectedUser != null) {
-              if (type == '3D-10') {
-                unitPrice = selectedUser.tnPrice3d10;
-                commRate = selectedUser.tnSalesComm3d10;
-              } else if (type == '3D-25') {
-                unitPrice = selectedUser.tnPrice3d25;
-                commRate = selectedUser.tnSalesComm3d25;
-              } else if (type == '3D-30') {
-                unitPrice = selectedUser.tnPrice3d30;
-                commRate = selectedUser.tnSalesComm3d30;
-              } else if (type == '3D-60') {
-                unitPrice = selectedUser.tnPrice3d60;
-                commRate = selectedUser.tnSalesComm3d60;
-              } else if (type == '4D-110') {
-                unitPrice = selectedUser.tnPrice4d110;
-                commRate = selectedUser.tnSalesComm4d110;
-              } else if (type == '4D-55') {
-                unitPrice = selectedUser.tnPrice4d55;
-                commRate = selectedUser.tnSalesComm4d55;
-              } else if (type == '4D-20') {
-                unitPrice = selectedUser.tnPrice4d20;
-                commRate = selectedUser.tnSalesComm4d20;
-              }
-            }
             int count = int.parse(_countController.text);
 
             if (count > 0) {
@@ -723,9 +704,12 @@ class _BettingScreenState extends State<BettingScreen>
       // Find the selected user's ID
       int? targetUserId;
       try {
-        targetUserId =
-            _users.firstWhere((u) => u.username == _userController.text).id;
-      } catch (_) {}
+        targetUserId = _users.firstWhere((u) =>
+            u.username == _userController.text ||
+            (_userController.text == 'SELF' && u.id == _user?.id)).id;
+      } catch (_) {
+        targetUserId = _user?.id;
+      }
 
       final result = await apiService.placeBulkBets(widget.game.id, _draftBets,
           userId: targetUserId, customerName: _customerController.text.trim());
@@ -1364,14 +1348,12 @@ class _BettingScreenState extends State<BettingScreen>
         } else if (type == '4D-20') {
           unitPrice = user.tnPrice4d20;
           commRate = user.tnSalesComm4d20;
-        } else if (['A', 'B', 'C'].contains(type)) {
+        } else if (['A', 'B', 'C', 'TN-A', 'TN-B', 'TN-C'].contains(type)) {
           unitPrice = user.tnPriceAbc;
           commRate = user.tnSalesCommAbc;
-          type = 'TN-$type'; // Save as TN-A, TN-B, TN-C
-        } else if (['AB', 'BC', 'AC'].contains(type)) {
+        } else if (['AB', 'BC', 'AC', 'TN-AB', 'TN-BC', 'TN-AC'].contains(type)) {
           unitPrice = user.tnPriceAbBcAc;
           commRate = user.tnSalesCommAbBcAc;
-          type = 'TN-$type'; // Save as TN-AB, TN-BC, TN-AC
         } else if (type == 'SUPER') {
           unitPrice = user.priceSuper;
           commRate = user.salesCommSuper;

@@ -11,6 +11,7 @@ import 'select_game_screen.dart';
 import 'publish_result_screen.dart';
 import 'result_view_screen.dart';
 import 'price_setting_screen.dart';
+import 'admin_net_rate_screen.dart';
 import 'global_count_limit_screen.dart';
 import 'manage_prize_commission_screen.dart';
 import 'user_options_screen.dart';
@@ -877,6 +878,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icons.currency_rupee_rounded,
             Colors.indigo,
             () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PriceSettingScreen())),
+          ),
+        if (isAdmin)
+          _buildActionCard(
+            'Net Rate',
+            Icons.tune_rounded,
+            Colors.teal.shade800,
+            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminNetRateScreen())),
           ),
         if (isAdmin)
           _buildActionCard(
