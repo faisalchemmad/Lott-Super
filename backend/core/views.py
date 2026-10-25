@@ -544,9 +544,13 @@ class BetViewSet(viewsets.ModelViewSet):
                         label = p.username if p.role != 'SUPER_ADMIN' else "System"
                         raise drf_serializers.ValidationError(f"Total Limit Reached. {max(0, t_limit - (type_tot - type_clr))} Only")
 
-        # 1.8 System-wide Global Type Limit (from Game model)
-        # Only check if no system-wide GlobalNumberLimit exists for this number
-        system_gnl_exists = GlobalNumberLimit.objects.filter(admin__isnull=True, game=game, number=number, type=bet_type).exists()
+        # 1.8 System-wide / Admin Global Type Limit (from Game model)
+        # Only check if no system-wide or admin-specific GlobalNumberLimit exists for this number
+        is_sub_active, days_left, sub_status, root_admin = user.check_subscription_status()
+        system_gnl_exists = GlobalNumberLimit.objects.filter(
+            Q(admin=root_admin) | Q(admin__isnull=True),
+            game=game, number=number, type=bet_type
+        ).exists()
         
         if not system_gnl_exists:
             game_type_limit = get_game_global_type_count_limit(game, bet_type)
@@ -565,7 +569,7 @@ class BetViewSet(viewsets.ModelViewSet):
 
         # 3. Check Weekly Credit Limit Hierarchically
         for p in hierarchy:
-            if p.role == 'SUPER_ADMIN':
+            if p.role in ['SUPER_ADMIN', 'ADMIN']:
                 continue
                 
             p_net_loss = p.get_weekly_net_loss()
@@ -667,7 +671,7 @@ class BetViewSet(viewsets.ModelViewSet):
         hierarchy = [user] + user.get_ancestors()
         ancestor_credits = []
         for p in hierarchy:
-            if p.role == 'SUPER_ADMIN':
+            if p.role in ['SUPER_ADMIN', 'ADMIN']:
                 ancestor_credits.append((p, Decimal('999999999')))
             else:
                 p_net_loss = p.get_weekly_net_loss()
@@ -849,9 +853,12 @@ class BetViewSet(viewsets.ModelViewSet):
                 mark_failed(limit_error)
                 continue
 
-            # 5. System-wide Global Type Limit
-            # Only check if no system-wide GlobalNumberLimit exists for this number
-            system_gnl_exists = GlobalNumberLimit.objects.filter(admin__isnull=True, game=game, number=number, type=bet_type).exists()
+            # 5. System-wide / Admin Global Type Limit
+            # Only check if no system-wide or admin-specific GlobalNumberLimit exists for this number
+            system_gnl_exists = GlobalNumberLimit.objects.filter(
+                Q(admin=root_admin) | Q(admin__isnull=True),
+                game=game, number=number, type=bet_type
+            ).exists()
             
             if not system_gnl_exists:
                 game_type_limit = get_game_global_type_count_limit(game, bet_type)
