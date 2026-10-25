@@ -327,6 +327,7 @@ class ApiService {
       {String? startTime,
       String? endTime,
       String? color,
+      String? optionsBgColor,
       bool? canEditDelete,
       String? deadlineTime}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -335,6 +336,7 @@ class ApiService {
     if (startTime != null) data['start_time'] = startTime;
     if (endTime != null) data['end_time'] = endTime;
     if (color != null) data['color'] = color;
+    if (optionsBgColor != null) data['options_bg_color'] = optionsBgColor;
     if (canEditDelete != null) data['can_edit_delete'] = canEditDelete;
     if (deadlineTime != null) data['edit_delete_limit_time'] = deadlineTime;
 

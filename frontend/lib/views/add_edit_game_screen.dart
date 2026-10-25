@@ -64,6 +64,21 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
 
   final List<String> _bgColors = [
     '#FFFFFF', // Pure White
+    '#004D40', // Deep Dark Teal
+    '#00897B', // Teal
+    '#2E7D32', // Forest Green
+    '#1976D2', // Blue
+    '#0D47A1', // Deep Navy
+    '#2C3E50', // Midnight Navy
+    '#6A1B9A', // Deep Purple
+    '#880E4F', // Wine Burgundy
+    '#9C212C', // Crimson Maroon
+    '#D32F2F', // Deep Red
+    '#E64A19', // Deep Orange
+    '#F57C00', // Bright Orange
+    '#F9A825', // Amber Gold
+    '#212121', // Charcoal Black
+    '#37474F', // Slate Grey
     '#FAFAFA', // Snow White
     '#F5F5F5', // Light Grey
     '#EEEEEE', // Soft Platinum
@@ -150,6 +165,7 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
           startTime: _formatTime(_startTime),
           endTime: _formatTime(_endTime),
           color: _selectedColor,
+          optionsBgColor: _selectedBgColor,
           canEditDelete: _canEditDelete,
           deadlineTime: _formatTime(_deadlineTime),
         );
@@ -243,7 +259,74 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text('Betting Screen Color',
+                  // Live Preview Box
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(_selectedBgColor.replaceFirst('#', '0xFF'))),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade400),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Color(int.parse(_selectedColor.replaceFirst('#', '0xFF'))),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_nameController.text.trim().isEmpty ? 'GAME PREVIEW' : _nameController.text.trim(),
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                              const Text('02:30:00', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 28,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                alignment: Alignment.centerLeft,
+                                child: Text('Input Area (Body)',
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Color(int.parse(_selectedColor.replaceFirst('#', '0xFF'))),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('3D-10',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text('Header & Theme Color (ഹെഡർ / ബട്ടൺ കളർ)',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -278,7 +361,7 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 14),
-                  const Text('Options Background Color',
+                  const Text('Body Background Color (ബോഡി പശ്ചാത്തല നിറം)',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -305,8 +388,9 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                                   ),
                                 ),
                                 child: _selectedBgColor == c
-                                    ? const Icon(Icons.check,
-                                        color: Colors.black, size: 20)
+                                    ? Icon(Icons.check,
+                                        color: Color(int.parse(c.replaceFirst('#', '0xFF'))).computeLuminance() < 0.5 ? Colors.white : Colors.black,
+                                        size: 20)
                                     : null,
                               ),
                             ))

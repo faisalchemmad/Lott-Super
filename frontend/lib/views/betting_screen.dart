@@ -1577,6 +1577,10 @@ class _BettingScreenState extends State<BettingScreen>
   Widget _buildInputSection() {
     final themeColor =
         Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
+    final bodyBgColor =
+        Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF')));
+    final isDarkBg = bodyBgColor.computeLuminance() < 0.5;
+    final bodyTextColor = isDarkBg ? Colors.white : Colors.black87;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1744,8 +1748,8 @@ class _BettingScreenState extends State<BettingScreen>
                                     _tabController.index == 3)
                                 ? '1000'
                                 : '100',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w900)),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w900, color: bodyTextColor)),
                         const SizedBox(width: 12),
                         Transform.scale(
                           scale: 0.9,
@@ -1776,8 +1780,8 @@ class _BettingScreenState extends State<BettingScreen>
                                     _tabController.index == 3)
                                 ? '1111'
                                 : '111',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w900)),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w900, color: bodyTextColor)),
                         const SizedBox(width: 12),
                         Transform.scale(
                           scale: 0.9,
@@ -1803,9 +1807,9 @@ class _BettingScreenState extends State<BettingScreen>
                             },
                           ),
                         ),
-                        const Text('R',
+                        Text('R',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w900)),
+                                fontSize: 16, fontWeight: FontWeight.w900, color: bodyTextColor)),
                         if (_selectedStateCode == 'TN' &&
                             _tabController.index >= 2) ...[
                           const SizedBox(width: 12),
@@ -2307,7 +2311,9 @@ class _BettingScreenState extends State<BettingScreen>
       builder: (context, child) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF'))).computeLuminance() < 0.5
+                ? Colors.white.withOpacity(0.2)
+                : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(

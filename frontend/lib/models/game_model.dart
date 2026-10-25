@@ -111,6 +111,7 @@ class GameModel {
       'start_time': startTime,
       'end_time': endTime,
       'color': color,
+      'options_bg_color': optionsBgColor,
       'global_count_a': globalCountA,
       'global_count_b': globalCountB,
       'global_count_c': globalCountC,
