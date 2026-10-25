@@ -1725,6 +1725,9 @@ class _BettingScreenState extends State<BettingScreen>
                           child: Checkbox(
                             value: _is100Enabled,
                             activeColor: themeColor,
+                            side: BorderSide(
+                                color: isDarkBg ? Colors.white70 : Colors.grey.shade600,
+                                width: 1.5),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
@@ -1757,6 +1760,9 @@ class _BettingScreenState extends State<BettingScreen>
                           child: Checkbox(
                             value: _is111Enabled,
                             activeColor: themeColor,
+                            side: BorderSide(
+                                color: isDarkBg ? Colors.white70 : Colors.grey.shade600,
+                                width: 1.5),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
@@ -1789,6 +1795,9 @@ class _BettingScreenState extends State<BettingScreen>
                           child: Checkbox(
                             value: _isRangeEnabled,
                             activeColor: themeColor,
+                            side: BorderSide(
+                                color: isDarkBg ? Colors.white70 : Colors.grey.shade600,
+                                width: 1.5),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             visualDensity: VisualDensity.compact,
@@ -1819,6 +1828,9 @@ class _BettingScreenState extends State<BettingScreen>
                             child: Checkbox(
                               value: _isTnSetChecked,
                               activeColor: themeColor,
+                              side: BorderSide(
+                                  color: isDarkBg ? Colors.white70 : Colors.grey.shade600,
+                                  width: 1.5),
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
@@ -1838,9 +1850,11 @@ class _BettingScreenState extends State<BettingScreen>
                               },
                             ),
                           ),
-                          const Text('SET',
+                          Text('SET',
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w900)),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: bodyTextColor)),
                         ],
                       ],
                     ),
@@ -2339,7 +2353,11 @@ class _BettingScreenState extends State<BettingScreen>
                     child: Text(
                       '${index + 1}',
                       style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.grey.shade700,
+                        color: isSelected
+                            ? Colors.black
+                            : (Color(int.parse(widget.game.optionsBgColor.replaceFirst('#', '0xFF'))).computeLuminance() < 0.5
+                                ? Colors.white70
+                                : Colors.grey.shade700),
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
