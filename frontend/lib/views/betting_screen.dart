@@ -1411,7 +1411,7 @@ class _BettingScreenState extends State<BettingScreen>
     final gameColor =
         Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
     return Scaffold(
-      endDrawer: _buildEndDrawer(),
+      endDrawer: (_user != null && _user!.isBothEnabled) ? _buildEndDrawer() : null,
       appBar: AppBar(
         backgroundColor: gameColor,
         title: Row(
@@ -1517,10 +1517,11 @@ class _BettingScreenState extends State<BettingScreen>
                     ],
                   ),
                 ),
-                Builder(builder: (context) {
-                  return Positioned(
-                    right: 0,
-                    top: MediaQuery.of(context).size.height / 3.5,
+                if (_user != null && _user!.isBothEnabled)
+                  Builder(builder: (context) {
+                    return Positioned(
+                      right: 0,
+                      top: MediaQuery.of(context).size.height / 3.5,
                     child: GestureDetector(
                       onTap: () => Scaffold.of(context).openEndDrawer(),
                       onHorizontalDragUpdate: (details) {
