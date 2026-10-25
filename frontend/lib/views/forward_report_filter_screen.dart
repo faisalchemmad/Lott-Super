@@ -245,27 +245,25 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 8, bottom: 20),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.grey[200]!),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                  if (_currentUser == null || _currentUser!.isBothEnabled)
+                    Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 20),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
                           _buildStateRadio('ALL'),
-                        if (_currentUser == null || _currentUser!.isKlEnabled)
                           _buildStateRadio('KL'),
-                        if (_currentUser == null || _currentUser!.isTnEnabled)
                           _buildStateRadio('TN'),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   Row(
                     children: [
                       Expanded(

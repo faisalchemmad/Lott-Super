@@ -635,32 +635,31 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
                       ],
                     ),
                   ),
-                Text('STATE FILTER',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.grey[600])),
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 24),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      if (_currentUser == null || _currentUser!.isBothEnabled)
+                if (_currentUser == null || _currentUser!.isBothEnabled) ...[
+                  Text('STATE FILTER',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.grey[600])),
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 24),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
                         _buildStateRadio('ALL', setSheetState),
-                      if (_currentUser == null || _currentUser!.isKlEnabled)
                         _buildStateRadio('KL', setSheetState),
-                      if (_currentUser == null || _currentUser!.isTnEnabled)
                         _buildStateRadio('TN', setSheetState),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

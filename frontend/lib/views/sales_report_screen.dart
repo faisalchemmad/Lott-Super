@@ -219,32 +219,30 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       icon: Icons.person_search_rounded,
                     ),
                   const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                  if (_currentUser == null || _currentUser!.isBothEnabled)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
                           _buildStateRadio('ALL'),
-                        if (_currentUser == null || _currentUser!.isKlEnabled)
                           _buildStateRadio('KL'),
-                        if (_currentUser == null || _currentUser!.isTnEnabled)
                           _buildStateRadio('TN'),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 16),
                   const SizedBox(height: 8),
                   _buildTextFieldTile(
