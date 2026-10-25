@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
+import '../models/user_model.dart';
 import '../utils/constants.dart';
 import 'global_count_limit_detail_screen.dart';
 
@@ -15,21 +16,27 @@ class GlobalCountLimitScreen extends StatefulWidget {
 class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
   List<GameModel> _games = [];
   bool _isLoading = true;
+  UserModel? _user;
 
   @override
   void initState() {
     super.initState();
-    _loadGames();
+    _loadData();
   }
 
-  Future<void> _loadGames() async {
+  Future<void> _loadData() async {
     final apiService = Provider.of<ApiService>(context, listen: false);
     final games = await apiService.getGames();
-    setState(() {
-      _games = games;
-      _isLoading = false;
-    });
+    final user = await apiService.getProfile();
+    if (mounted) {
+      setState(() {
+        _games = games;
+        _user = user;
+        _isLoading = false;
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -187,9 +194,11 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                   title: const Text('COUNT LIMIT',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  subtitle: const Text(
-                      'Manage global type caps (A, B, C, SUPER, etc.)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  subtitle: Text(
+                      (_user != null && _user!.isTnEnabled && !_user!.isKlEnabled)
+                          ? 'Manage global type caps (3D-10, 3D-25, etc.)'
+                          : 'Manage global type caps (A, B, C, SUPER, etc.)',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded,
                       size: 14, color: Colors.grey),
                   onTap: () async {
@@ -198,10 +207,10 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => GlobalCountLimitDetailScreen(
-                            game: game, initialTab: 0),
+                            game: game, initialTab: 0, user: _user),
                       ),
                     );
-                    _loadGames();
+                    _loadData();
                   },
                 ),
                 ListTile(
@@ -230,10 +239,10 @@ class _GlobalCountLimitScreenState extends State<GlobalCountLimitScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => GlobalCountLimitDetailScreen(
-                            game: game, initialTab: 1),
+                            game: game, initialTab: 1, user: _user),
                       ),
                     );
-                    _loadGames();
+                    _loadData();
                   },
                 ),
               ],

@@ -329,33 +329,45 @@ class _ManageUserNumberLimitsScreenState
                 fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: [
-            Tab(text: 'KL LIMITS (${klLimits.length})'),
-            Tab(text: 'TN LIMITS (${tnLimits.length})'),
-          ],
-        ),
+        bottom: widget.user.isBothEnabled
+            ? TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                tabs: [
+                  Tab(text: 'KL LIMITS (${klLimits.length})'),
+                  Tab(text: 'TN LIMITS (${tnLimits.length})'),
+                ],
+              )
+            : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildLimitsListTab(
-                    limits: klLimits,
-                    isTn: false,
-                    badgeColor: AppColors.primary),
-                _buildLimitsListTab(
-                    limits: tnLimits,
-                    isTn: true,
-                    badgeColor: Colors.deepOrange),
-              ],
-            ),
+          : widget.user.isBothEnabled
+              ? TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildLimitsListTab(
+                        limits: klLimits,
+                        isTn: false,
+                        badgeColor: AppColors.primary),
+                    _buildLimitsListTab(
+                        limits: tnLimits,
+                        isTn: true,
+                        badgeColor: Colors.deepOrange),
+                  ],
+                )
+              : (widget.user.effectiveGameMode == 'TN'
+                  ? _buildLimitsListTab(
+                      limits: tnLimits,
+                      isTn: true,
+                      badgeColor: Colors.deepOrange)
+                  : _buildLimitsListTab(
+                      limits: klLimits,
+                      isTn: false,
+                      badgeColor: AppColors.primary)),
     );
   }
 

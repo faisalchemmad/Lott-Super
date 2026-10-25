@@ -8,8 +8,9 @@ import '../utils/constants.dart';
 class GlobalCountLimitDetailScreen extends StatefulWidget {
   final GameModel game;
   final int initialTab;
+  final UserModel? user;
   const GlobalCountLimitDetailScreen(
-      {super.key, required this.game, this.initialTab = 0});
+      {super.key, required this.game, this.initialTab = 0, this.user});
 
   @override
   State<GlobalCountLimitDetailScreen> createState() =>
@@ -101,6 +102,11 @@ class _GlobalCountLimitDetailScreenState
     _globalTnCount4d20 =
         TextEditingController(text: widget.game.globalTnCount4d20.toString());
 
+    _user = widget.user;
+    if (_user != null && _user!.effectiveGameMode == 'TN') {
+      _selectedNumberLimitTab = 1;
+    }
+
     _loadGlobalNumberLimits();
   }
 
@@ -109,15 +115,20 @@ class _GlobalCountLimitDetailScreenState
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final limits = await apiService.getGlobalNumberLimits(widget.game.id);
-      final user = await apiService.getProfile();
-      setState(() {
-        _user = user;
-        if (user != null && user.effectiveGameMode == 'TN') {
-          _selectedNumberLimitTab = 1;
-        }
-        _globalNumberLimits = limits;
-        _isLoadingNumbers = false;
-      });
+      UserModel? user = _user;
+      if (user == null) {
+        user = await apiService.getProfile();
+      }
+      if (mounted) {
+        setState(() {
+          _user = user;
+          if (user != null && user.effectiveGameMode == 'TN') {
+            _selectedNumberLimitTab = 1;
+          }
+          _globalNumberLimits = limits;
+          _isLoadingNumbers = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,6 +240,15 @@ class _GlobalCountLimitDetailScreenState
   }
 
   Widget _buildTypeLimitsTab() {
+    if (_user == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -237,11 +257,11 @@ class _GlobalCountLimitDetailScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_user == null || _user!.isKlEnabled) ...[
+              if (_user!.isKlEnabled) ...[
                 _buildKlSection(),
                 const SizedBox(height: 16),
               ],
-              if (_user == null || _user!.isTnEnabled) ...[
+              if (_user!.isTnEnabled) ...[
                 _buildTnSection(),
                 const SizedBox(height: 16),
               ],
@@ -525,10 +545,16 @@ class _GlobalCountLimitDetailScreenState
     final currentLimits = isTn ? tnLimits : klLimits;
     final activeColor = isTn ? Colors.deepOrange : AppColors.primary;
 
+    if (_user != null && _user!.effectiveGameMode == 'TN') {
+      _selectedNumberLimitTab = 1;
+    } else if (_user != null && _user!.effectiveGameMode == 'KL') {
+      _selectedNumberLimitTab = 0;
+    }
+
     return Column(
       children: [
-        // Sub-tabs for KL and TN
-        if (_user == null || _user!.isBothEnabled)
+        // Sub-tabs for KL and TN only if subscribed to both
+        if (_user != null && _user!.isBothEnabled)
         Container(
           margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           padding: const EdgeInsets.all(4),

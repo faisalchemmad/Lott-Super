@@ -218,10 +218,15 @@ class _ManageUserCountLimitsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildKlSection(),
+                if (widget.user.isKlEnabled) ...[
+                  _buildKlSection(),
+                  const SizedBox(height: 16),
+                ],
+                if (widget.user.isTnEnabled) ...[
+                  _buildTnSection(),
+                  const SizedBox(height: 16),
+                ],
                 const SizedBox(height: 16),
-                _buildTnSection(),
-                const SizedBox(height: 24),
                 if (!widget.isReadOnly) _buildUpdateButton(),
                 const SizedBox(height: 20),
               ],

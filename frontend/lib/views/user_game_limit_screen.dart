@@ -210,9 +210,11 @@ class _UserGameLimitScreenState extends State<UserGameLimitScreen> {
                   title: const Text('COUNT LIMIT',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  subtitle: const Text(
-                      'Manage type caps (A, B, C, SUPER, etc.)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  subtitle: Text(
+                      (widget.user.isTnEnabled && !widget.user.isKlEnabled)
+                          ? 'Manage type caps (3D-10, 3D-25, etc.)'
+                          : 'Manage type caps (A, B, C, SUPER, etc.)',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   trailing: const Icon(Icons.arrow_forward_ios_rounded,
                       size: 14, color: Colors.grey),
                   onTap: () async {
