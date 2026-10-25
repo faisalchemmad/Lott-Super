@@ -318,9 +318,9 @@ class _ResultViewScreenState extends State<ResultViewScreen>
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: (_user != null && !_user!.isBothEnabled)
-            ? Text(
-                _user!.effectiveGameMode == 'TN' ? 'RESULTS (TN)' : 'RESULTS (KL)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ? const Text(
+                'RESULTS',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               )
             : Container(
                 height: 36,
@@ -501,7 +501,10 @@ class _ResultViewScreenState extends State<ResultViewScreen>
         children: [
           Icon(Icons.event_busy_rounded, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text('No ${isTN ? 'TN' : 'KL'} results found for this date',
+          Text(
+              (_user != null && !_user!.isBothEnabled)
+                  ? 'No results found for this date'
+                  : 'No ${isTN ? 'TN' : 'KL'} results found for this date',
               style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         ],
       ),

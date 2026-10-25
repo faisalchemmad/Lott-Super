@@ -269,9 +269,14 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
         children: [
           Row(
             children: [
-              Expanded(flex: 5, child: _buildGameDropdown()),
-              const SizedBox(width: 8),
-              Expanded(flex: 3, child: _buildDigitToggle()),
+              Expanded(
+                flex: (_user == null || _user!.isBothEnabled) ? 5 : 8,
+                child: _buildGameDropdown(),
+              ),
+              if (_user == null || _user!.isBothEnabled) ...[
+                const SizedBox(width: 8),
+                Expanded(flex: 3, child: _buildDigitToggle()),
+              ],
             ],
           ),
           const SizedBox(height: 8),
