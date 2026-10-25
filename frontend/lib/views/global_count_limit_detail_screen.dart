@@ -83,6 +83,21 @@ class _GlobalCountLimitDetailScreenState
   bool _isLoadingNumbers = true;
   UserModel? _user;
 
+  // Betting-Screen style Quick Number Limit Add
+  int _selectedDigitTab = 2; // 0: 1-Digit, 1: 2-Digit, 2: 3-Digit, 3: 4-Digit
+  final TextEditingController _quickNumberController = TextEditingController();
+  final TextEditingController _quickCountController = TextEditingController();
+  final FocusNode _quickNumberFocusNode = FocusNode();
+  final FocusNode _quickCountFocusNode = FocusNode();
+  bool _isQuickSubmitting = false;
+
+  void _autoJumpQuickNumber() {
+    int reqDigits = _selectedDigitTab + 1;
+    if (_quickNumberController.text.length == reqDigits) {
+      _quickCountFocusNode.requestFocus();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -168,6 +183,8 @@ class _GlobalCountLimitDetailScreenState
       _selectedNumberLimitTab = 1;
     }
 
+    _quickNumberController.addListener(_autoJumpQuickNumber);
+
     _loadGlobalNumberLimits();
   }
 
@@ -248,6 +265,10 @@ class _GlobalCountLimitDetailScreenState
     _rushTnCount4d110.dispose();
     _rushTnCount4d55.dispose();
     _rushTnCount4d20.dispose();
+    _quickNumberController.dispose();
+    _quickCountController.dispose();
+    _quickNumberFocusNode.dispose();
+    _quickCountFocusNode.dispose();
     super.dispose();
   }
 
@@ -1022,29 +1043,20 @@ class _GlobalCountLimitDetailScreenState
           ),
         ),
 
+        // Betting-Screen-style quick input bar
+        _buildQuickInputSection(isTn, activeColor),
+
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isTn ? 'Tamil Nadu Number Limits' : 'Kerala Number Limits',
+                isTn ? 'Active Tamil Nadu Number Limits (${currentLimits.length})' : 'Active Kerala Number Limits (${currentLimits.length})',
                 style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: activeColor),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showAddNumberLimitDialog(isTn: isTn),
-                icon: const Icon(Icons.add, size: 16),
-                label: Text('ADD ${isTn ? "TN" : "KL"} LIMIT'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: activeColor,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6)),
-                ),
               ),
             ],
           ),
@@ -1068,6 +1080,257 @@ class _GlobalCountLimitDetailScreenState
         ),
       ],
     );
+  }
+
+  List<String> _getQuickButtonsForTab(int tabIndex, bool isTn) {
+    if (tabIndex == 0) {
+      return ['A', 'B', 'C', 'ALL'];
+    } else if (tabIndex == 1) {
+      return ['AB', 'BC', 'AC', 'ALL'];
+    } else if (tabIndex == 2) {
+      return isTn ? ['3D-10', '3D-25', '3D-30', '3D-60'] : ['SUPER', 'BOX'];
+    } else {
+      return ['4D-110', '4D-55', '4D-20'];
+    }
+  }
+
+  Widget _buildQuickInputSection(bool isTn, Color activeColor) {
+    int maxTabs = isTn ? 4 : 3;
+    if (_selectedDigitTab >= maxTabs) {
+      _selectedDigitTab = maxTabs - 1;
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: activeColor.withValues(alpha: 0.35), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Digit Selector Tabs
+          Row(
+            children: List.generate(maxTabs, (index) {
+              final isSelected = _selectedDigitTab == index;
+              final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index < maxTabs - 1 ? 6.0 : 0.0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () {
+                      setState(() {
+                        _selectedDigitTab = index;
+                        _quickNumberController.clear();
+                      });
+                      _quickNumberFocusNode.requestFocus();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      decoration: BoxDecoration(
+                        color: isSelected ? activeColor : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isSelected ? activeColor : Colors.grey.shade300,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        labels[index],
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w900,
+                          color: isSelected ? Colors.white : Colors.grey.shade700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 10),
+
+          // 2. Number & Count Inputs Row
+          Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: TextField(
+                  controller: _quickNumberController,
+                  focusNode: _quickNumberFocusNode,
+                  keyboardType: TextInputType.number,
+                  maxLength: _selectedDigitTab + 1,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2),
+                  decoration: InputDecoration(
+                    labelText: 'NUMBER',
+                    labelStyle: TextStyle(color: activeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    counterText: '',
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(color: activeColor, width: 1.5),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 5,
+                child: TextField(
+                  controller: _quickCountController,
+                  focusNode: _quickCountFocusNode,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: activeColor),
+                  decoration: InputDecoration(
+                    labelText: 'LIMIT COUNT',
+                    labelStyle: TextStyle(color: activeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(color: activeColor, width: 1.5),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // 3. Quick Action / Type Buttons Row
+          if (_isQuickSubmitting)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            )
+          else
+            Row(
+              children: _getQuickButtonsForTab(_selectedDigitTab, isTn).map((btn) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                    child: ElevatedButton(
+                      onPressed: () => _handleQuickAdd(btn, isTn),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: btn == 'ALL' ? Colors.black87 : activeColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: Text(
+                        btn,
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleQuickAdd(String btn, bool isTn) async {
+    final number = _quickNumberController.text.trim();
+    final countStr = _quickCountController.text.trim();
+    final reqDigits = _selectedDigitTab + 1;
+
+    if (number.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter number'), duration: Duration(milliseconds: 1000)),
+      );
+      _quickNumberFocusNode.requestFocus();
+      return;
+    }
+
+    if (number.length != reqDigits || int.tryParse(number) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Number must be $reqDigits digits'), duration: const Duration(milliseconds: 1000)),
+      );
+      _quickNumberFocusNode.requestFocus();
+      return;
+    }
+
+    if (countStr.isEmpty || int.tryParse(countStr) == null || int.parse(countStr) <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter valid count'), duration: Duration(milliseconds: 1000)),
+      );
+      _quickCountFocusNode.requestFocus();
+      return;
+    }
+
+    final count = int.parse(countStr);
+    setState(() => _isQuickSubmitting = true);
+
+    final apiService = Provider.of<ApiService>(context, listen: false);
+
+    try {
+      List<String> targetTypes = [];
+      if (btn == 'ALL') {
+        if (reqDigits == 1) {
+          targetTypes = isTn ? ['TN-A', 'TN-B', 'TN-C'] : ['A', 'B', 'C'];
+        } else if (reqDigits == 2) {
+          targetTypes = isTn ? ['TN-AB', 'TN-BC', 'TN-AC'] : ['AB', 'BC', 'AC'];
+        }
+      } else {
+        String realType = btn;
+        if (isTn && ['A', 'B', 'C', 'AB', 'BC', 'AC'].contains(btn)) {
+          realType = 'TN-$btn';
+        }
+        targetTypes = [realType];
+      }
+
+      for (var t in targetTypes) {
+        await apiService.createGlobalNumberLimit(widget.game.id, number, t, count);
+      }
+
+      await _loadGlobalNumberLimits();
+      _quickNumberController.clear();
+      _quickNumberFocusNode.requestFocus();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Limit added: $number [$btn] -> $count'),
+            backgroundColor: Colors.green,
+            duration: const Duration(milliseconds: 1000),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding limit: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isQuickSubmitting = false);
+    }
   }
 
   Widget _buildTableHeader(Color color) {

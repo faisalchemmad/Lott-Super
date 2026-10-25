@@ -2895,6 +2895,25 @@ class NumberLimitViewSet(viewsets.ModelViewSet):
             qs = qs.filter(user_id=user_id)
         return qs
 
+    def create(self, request, *args, **kwargs):
+        game_id = request.data.get('game')
+        user_id = request.data.get('user')
+        number = str(request.data.get('number', '')).strip()
+        bet_type = str(request.data.get('type', '')).strip()
+        max_count = request.data.get('max_count')
+        if game_id and user_id and number and bet_type and max_count is not None:
+            obj, created = NumberLimit.objects.update_or_create(
+                game_id=game_id,
+                user_id=user_id,
+                number=number,
+                type=bet_type,
+                defaults={'max_count': int(max_count)}
+            )
+            serializer = self.get_serializer(obj)
+            status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            return Response(serializer.data, status=status_code)
+        return super().create(request, *args, **kwargs)
+
 class GlobalNumberLimitViewSet(viewsets.ModelViewSet):
     queryset = GlobalNumberLimit.objects.all()
     serializer_class = GlobalNumberLimitSerializer
@@ -2913,6 +2932,26 @@ class GlobalNumberLimitViewSet(viewsets.ModelViewSet):
         if game_id:
             qs = qs.filter(game_id=game_id)
         return qs
+
+    def create(self, request, *args, **kwargs):
+        user = self.request.user
+        admin = None if user.role == 'SUPER_ADMIN' else user
+        game_id = request.data.get('game')
+        number = str(request.data.get('number', '')).strip()
+        bet_type = str(request.data.get('type', '')).strip()
+        max_count = request.data.get('max_count')
+        if game_id and number and bet_type and max_count is not None:
+            obj, created = GlobalNumberLimit.objects.update_or_create(
+                admin=admin,
+                game_id=game_id,
+                number=number,
+                type=bet_type,
+                defaults={'max_count': int(max_count)}
+            )
+            serializer = self.get_serializer(obj)
+            status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            return Response(serializer.data, status=status_code)
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         # Assign current user as owner of the limit they are creating
