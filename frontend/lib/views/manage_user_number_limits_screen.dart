@@ -55,6 +55,7 @@ class _ManageUserNumberLimitsScreenState
   // Betting-Screen style Quick Number Limit Add
   int _selectedDigitTab = 2; // 0: 1-Digit, 1: 2-Digit, 2: 3-Digit, 3: 4-Digit
   bool _is111Checked = false;
+  bool _isSetChecked = false;
   final TextEditingController _quickNumberController = TextEditingController();
   final TextEditingController _quickCountController = TextEditingController();
   final FocusNode _quickNumberFocusNode = FocusNode();
@@ -62,6 +63,19 @@ class _ManageUserNumberLimitsScreenState
   bool _isQuickSubmitting = false;
   bool _quickAllGames = false;
   int? _quickSelectedGameId;
+
+  List<String> _getPermutations(String s) {
+    if (s.length <= 1) return [s];
+    List<String> perms = [];
+    for (int i = 0; i < s.length; i++) {
+      String char = s[i];
+      String remaining = s.substring(0, i) + s.substring(i + 1);
+      for (String p in _getPermutations(remaining)) {
+        perms.add(char + p);
+      }
+    }
+    return perms.toSet().toList();
+  }
 
   void _autoJumpQuickNumber() {
     if (_is111Checked) return;
@@ -455,6 +469,58 @@ class _ManageUserNumberLimitsScreenState
     }
   }
 
+  Widget _buildToggleChip({
+    required String label,
+    required bool isActive,
+    required Color activeColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor.withValues(alpha: 0.15) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isActive ? activeColor : Colors.grey.shade300,
+            width: isActive ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive ? activeColor : Colors.transparent,
+                border: Border.all(
+                  color: isActive ? activeColor : Colors.grey.shade500,
+                  width: 1.5,
+                ),
+              ),
+              child: isActive
+                  ? const Icon(Icons.check, size: 8, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w900,
+                color: isActive ? activeColor : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuickInputSection(bool isTn, Color activeColor) {
     int maxTabs = isTn ? 4 : 3;
     if (_selectedDigitTab >= maxTabs) {
@@ -479,60 +545,41 @@ class _ManageUserNumberLimitsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Optional Game Selector if not pre-locked
-          if (widget.game == null && _games.isNotEmpty) ...[
-            Row(
-              children: [
-                SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: Checkbox(
-                    value: _quickAllGames,
-                    activeColor: activeColor,
-                    onChanged: (val) => setState(() => _quickAllGames = val ?? false),
-                  ),
+          // Optional Game Selector if screen was opened without a specific game and ALL GAMES is not toggled
+          if (widget.game == null && _games.isNotEmpty && !_quickAllGames) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _quickSelectedGameId ?? (_games.isNotEmpty ? _games.first.id : null),
+                  isDense: true,
+                  isExpanded: true,
+                  items: _games
+                      .map((g) => DropdownMenuItem(
+                            value: g.id,
+                            child: Text(g.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          ))
+                      .toList(),
+                  onChanged: (val) => setState(() => _quickSelectedGameId = val),
                 ),
-                const SizedBox(width: 6),
-                const Text('ALL GAMES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                if (!_quickAllGames) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: _quickSelectedGameId ?? (_games.isNotEmpty ? _games.first.id : null),
-                          isDense: true,
-                          items: _games
-                              .map((g) => DropdownMenuItem(
-                                    value: g.id,
-                                    child: Text(g.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ))
-                              .toList(),
-                          onChanged: (val) => setState(() => _quickSelectedGameId = val),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
-            const SizedBox(height: 10),
           ],
 
-          // 1. Digit Selector Tabs & 111 Checkbox
+          // 1. Digit Selector Tabs & Toggles (SET, 111, ALL GAME)
           Row(
             children: [
               Expanded(
                 child: Row(
                   children: List.generate(maxTabs, (index) {
                     final isSelected = _selectedDigitTab == index;
-                    final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
+                    final labels = ['1D', '2D', '3D', '4D'];
                     return Expanded(
                       child: Padding(
                         padding: EdgeInsets.only(right: index < maxTabs - 1 ? 4.0 : 0.0),
@@ -580,14 +627,36 @@ class _ManageUserNumberLimitsScreenState
                   }),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
+              // SET Checkbox (only for 2D, 3D, 4D where permutations exist)
+              if (_selectedDigitTab >= 1) ...[
+                _buildToggleChip(
+                  label: 'SET',
+                  isActive: _isSetChecked,
+                  activeColor: Colors.teal.shade700,
+                  onTap: () {
+                    setState(() {
+                      _isSetChecked = !_isSetChecked;
+                      if (_isSetChecked) {
+                        _is111Checked = false;
+                        _quickNumberController.clear();
+                        _quickNumberFocusNode.requestFocus();
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(width: 4),
+              ],
               // 111 Checkbox
-              InkWell(
-                borderRadius: BorderRadius.circular(6),
+              _buildToggleChip(
+                label: _selectedDigitTab == 3 ? '1111' : (_selectedDigitTab == 1 ? '11' : '111'),
+                isActive: _is111Checked,
+                activeColor: activeColor,
                 onTap: () {
                   setState(() {
                     _is111Checked = !_is111Checked;
                     if (_is111Checked) {
+                      _isSetChecked = false;
                       String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
                       _quickNumberController.text = label;
                       _quickCountFocusNode.requestFocus();
@@ -597,54 +666,16 @@ class _ManageUserNumberLimitsScreenState
                     }
                   });
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _is111Checked ? activeColor.withValues(alpha: 0.15) : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: _is111Checked ? activeColor : Colors.grey.shade300,
-                      width: _is111Checked ? 1.5 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: Checkbox(
-                          value: _is111Checked,
-                          activeColor: activeColor,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          onChanged: (val) {
-                            setState(() {
-                              _is111Checked = val ?? false;
-                              if (_is111Checked) {
-                                String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
-                                _quickNumberController.text = label;
-                                _quickCountFocusNode.requestFocus();
-                              } else {
-                                _quickNumberController.clear();
-                                _quickNumberFocusNode.requestFocus();
-                              }
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        _selectedDigitTab == 3 ? '1111' : (_selectedDigitTab == 1 ? '11' : '111'),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: _is111Checked ? activeColor : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              ),
+              const SizedBox(width: 4),
+              // ALL GAME Checkbox
+              _buildToggleChip(
+                label: 'ALL GAME',
+                isActive: _quickAllGames,
+                activeColor: Colors.purple.shade700,
+                onTap: () {
+                  setState(() => _quickAllGames = !_quickAllGames);
+                },
               ),
             ],
           ),
@@ -765,6 +796,7 @@ class _ManageUserNumberLimitsScreenState
 
     final count = int.parse(countStr);
     List<String> numbersToProcess = [];
+    final inputNumber = _quickNumberController.text.trim();
 
     if (_is111Checked) {
       int digits = _selectedDigitTab + 1;
@@ -772,10 +804,9 @@ class _ManageUserNumberLimitsScreenState
         numbersToProcess.add(i.toString() * digits);
       }
     } else {
-      final number = _quickNumberController.text.trim();
       final reqDigits = _selectedDigitTab + 1;
 
-      if (number.isEmpty) {
+      if (inputNumber.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please enter number'), duration: Duration(milliseconds: 1000)),
         );
@@ -783,14 +814,19 @@ class _ManageUserNumberLimitsScreenState
         return;
       }
 
-      if (number.length != reqDigits || int.tryParse(number) == null) {
+      if (inputNumber.length != reqDigits || int.tryParse(inputNumber) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Number must be $reqDigits digits'), duration: const Duration(milliseconds: 1000)),
         );
         _quickNumberFocusNode.requestFocus();
         return;
       }
-      numbersToProcess = [number];
+
+      if (_isSetChecked && reqDigits > 1) {
+        numbersToProcess = _getPermutations(inputNumber);
+      } else {
+        numbersToProcess = [inputNumber];
+      }
     }
 
     setState(() => _isQuickSubmitting = true);
@@ -818,10 +854,10 @@ class _ManageUserNumberLimitsScreenState
       }
 
       List<GameModel> targetGames;
-      if (widget.game != null) {
-        targetGames = [widget.game!];
-      } else if (_quickAllGames) {
+      if (_quickAllGames && _games.isNotEmpty) {
         targetGames = _games;
+      } else if (widget.game != null) {
+        targetGames = [widget.game!];
       } else {
         targetGames = [_games.firstWhere((g) => g.id == _quickSelectedGameId, orElse: () => _games.first)];
       }
@@ -843,14 +879,18 @@ class _ManageUserNumberLimitsScreenState
       }
 
       if (mounted) {
-        String label = _is111Checked
-            ? '111 (${numbersToProcess.length} numbers) [$btn] limit: $count'
-            : 'User limit added: ${numbersToProcess.first} [$btn] -> $count';
+        String scopeText = _quickAllGames ? 'ALL GAMES (${targetGames.length})' : (widget.game?.name ?? targetGames.first.name);
+        String numLabel = _is111Checked
+            ? '111 (${numbersToProcess.length} numbers)'
+            : (_isSetChecked && numbersToProcess.length > 1
+                ? 'SET $inputNumber (${numbersToProcess.length} perms)'
+                : numbersToProcess.first);
+        String label = 'User limit added [$scopeText]: $numLabel [$btn] -> $count';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(label),
             backgroundColor: count == 0 ? Colors.red.shade700 : Colors.green,
-            duration: const Duration(milliseconds: 1200),
+            duration: const Duration(milliseconds: 1500),
           ),
         );
       }
