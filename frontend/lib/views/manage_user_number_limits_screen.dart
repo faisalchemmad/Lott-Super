@@ -54,6 +54,7 @@ class _ManageUserNumberLimitsScreenState
 
   // Betting-Screen style Quick Number Limit Add
   int _selectedDigitTab = 2; // 0: 1-Digit, 1: 2-Digit, 2: 3-Digit, 3: 4-Digit
+  bool _is111Checked = false;
   final TextEditingController _quickNumberController = TextEditingController();
   final TextEditingController _quickCountController = TextEditingController();
   final FocusNode _quickNumberFocusNode = FocusNode();
@@ -63,6 +64,7 @@ class _ManageUserNumberLimitsScreenState
   int? _quickSelectedGameId;
 
   void _autoJumpQuickNumber() {
+    if (_is111Checked) return;
     int reqDigits = _selectedDigitTab + 1;
     if (_quickNumberController.text.length == reqDigits) {
       _quickCountFocusNode.requestFocus();
@@ -523,47 +525,128 @@ class _ManageUserNumberLimitsScreenState
             const SizedBox(height: 10),
           ],
 
-          // 1. Digit Selector Tabs
+          // 1. Digit Selector Tabs & 111 Checkbox
           Row(
-            children: List.generate(maxTabs, (index) {
-              final isSelected = _selectedDigitTab == index;
-              final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: index < maxTabs - 1 ? 6.0 : 0.0),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () {
-                      setState(() {
-                        _selectedDigitTab = index;
-                        _quickNumberController.clear();
-                      });
+            children: [
+              Expanded(
+                child: Row(
+                  children: List.generate(maxTabs, (index) {
+                    final isSelected = _selectedDigitTab == index;
+                    final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: index < maxTabs - 1 ? 4.0 : 0.0),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () {
+                            setState(() {
+                              _selectedDigitTab = index;
+                              if (_is111Checked) {
+                                String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                                _quickNumberController.text = label;
+                              } else {
+                                _quickNumberController.clear();
+                              }
+                            });
+                            if (!_is111Checked) {
+                              _quickNumberFocusNode.requestFocus();
+                            } else {
+                              _quickCountFocusNode.requestFocus();
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isSelected ? activeColor : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: isSelected ? activeColor : Colors.grey.shade300,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              labels[index],
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: isSelected ? Colors.white : Colors.grey.shade700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 111 Checkbox
+              InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: () {
+                  setState(() {
+                    _is111Checked = !_is111Checked;
+                    if (_is111Checked) {
+                      String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                      _quickNumberController.text = label;
+                      _quickCountFocusNode.requestFocus();
+                    } else {
+                      _quickNumberController.clear();
                       _quickNumberFocusNode.requestFocus();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 7),
-                      decoration: BoxDecoration(
-                        color: isSelected ? activeColor : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: isSelected ? activeColor : Colors.grey.shade300,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        labels[index],
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w900,
-                          color: isSelected ? Colors.white : Colors.grey.shade700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _is111Checked ? activeColor.withValues(alpha: 0.15) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: _is111Checked ? activeColor : Colors.grey.shade300,
+                      width: _is111Checked ? 1.5 : 1.0,
                     ),
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: Checkbox(
+                          value: _is111Checked,
+                          activeColor: activeColor,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          onChanged: (val) {
+                            setState(() {
+                              _is111Checked = val ?? false;
+                              if (_is111Checked) {
+                                String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                                _quickNumberController.text = label;
+                                _quickCountFocusNode.requestFocus();
+                              } else {
+                                _quickNumberController.clear();
+                                _quickNumberFocusNode.requestFocus();
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        _selectedDigitTab == 3 ? '1111' : (_selectedDigitTab == 1 ? '11' : '111'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: _is111Checked ? activeColor : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            }),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
 
@@ -575,16 +658,22 @@ class _ManageUserNumberLimitsScreenState
                 child: TextField(
                   controller: _quickNumberController,
                   focusNode: _quickNumberFocusNode,
+                  enabled: !_is111Checked,
                   keyboardType: TextInputType.number,
                   maxLength: _selectedDigitTab + 1,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2),
+                  style: TextStyle(
+                    fontSize: _is111Checked ? 13 : 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: _is111Checked ? 0 : 2,
+                    color: _is111Checked ? activeColor : Colors.black87,
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'NUMBER',
+                    labelText: _is111Checked ? 'PATTERNS' : 'NUMBER',
                     labelStyle: TextStyle(color: activeColor, fontSize: 11, fontWeight: FontWeight.bold),
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                     counterText: '',
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: _is111Checked ? activeColor.withValues(alpha: 0.08) : Colors.grey.shade50,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -664,41 +753,52 @@ class _ManageUserNumberLimitsScreenState
   }
 
   Future<void> _handleQuickAdd(String btn, bool isTn) async {
-    final number = _quickNumberController.text.trim();
     final countStr = _quickCountController.text.trim();
-    final reqDigits = _selectedDigitTab + 1;
 
-    if (number.isEmpty) {
+    if (countStr.isEmpty || int.tryParse(countStr) == null || int.parse(countStr) < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter number'), duration: Duration(milliseconds: 1000)),
-      );
-      _quickNumberFocusNode.requestFocus();
-      return;
-    }
-
-    if (number.length != reqDigits || int.tryParse(number) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Number must be $reqDigits digits'), duration: const Duration(milliseconds: 1000)),
-      );
-      _quickNumberFocusNode.requestFocus();
-      return;
-    }
-
-    if (countStr.isEmpty || int.tryParse(countStr) == null || int.parse(countStr) <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid count'), duration: Duration(milliseconds: 1000)),
+        const SnackBar(content: Text('Please enter valid count (0 or more)'), duration: Duration(milliseconds: 1000)),
       );
       _quickCountFocusNode.requestFocus();
       return;
     }
 
     final count = int.parse(countStr);
-    setState(() => _isQuickSubmitting = true);
+    List<String> numbersToProcess = [];
 
+    if (_is111Checked) {
+      int digits = _selectedDigitTab + 1;
+      for (int i = 0; i <= 9; i++) {
+        numbersToProcess.add(i.toString() * digits);
+      }
+    } else {
+      final number = _quickNumberController.text.trim();
+      final reqDigits = _selectedDigitTab + 1;
+
+      if (number.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter number'), duration: Duration(milliseconds: 1000)),
+        );
+        _quickNumberFocusNode.requestFocus();
+        return;
+      }
+
+      if (number.length != reqDigits || int.tryParse(number) == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Number must be $reqDigits digits'), duration: const Duration(milliseconds: 1000)),
+        );
+        _quickNumberFocusNode.requestFocus();
+        return;
+      }
+      numbersToProcess = [number];
+    }
+
+    setState(() => _isQuickSubmitting = true);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
     try {
       List<String> targetTypes = [];
+      int reqDigits = _selectedDigitTab + 1;
       if (btn == 'ALL') {
         if (reqDigits == 1) {
           targetTypes = isTn ? ['TN-A', 'TN-B', 'TN-C'] : ['A', 'B', 'C'];
@@ -726,22 +826,31 @@ class _ManageUserNumberLimitsScreenState
         targetGames = [_games.firstWhere((g) => g.id == _quickSelectedGameId, orElse: () => _games.first)];
       }
 
+      List<Future> calls = [];
       for (var g in targetGames) {
-        for (var t in targetTypes) {
-          await apiService.createNumberLimit(g.id, widget.user.id, number, t, count);
+        for (var num in numbersToProcess) {
+          for (var t in targetTypes) {
+            calls.add(apiService.createNumberLimit(g.id, widget.user.id, num, t, count));
+          }
         }
       }
+      await Future.wait(calls);
 
       await _loadData();
-      _quickNumberController.clear();
-      _quickNumberFocusNode.requestFocus();
+      if (!_is111Checked) {
+        _quickNumberController.clear();
+        _quickNumberFocusNode.requestFocus();
+      }
 
       if (mounted) {
+        String label = _is111Checked
+            ? '111 (${numbersToProcess.length} numbers) [$btn] limit: $count'
+            : 'User limit added: ${numbersToProcess.first} [$btn] -> $count';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('User limit added: $number [$btn] -> $count'),
-            backgroundColor: Colors.green,
-            duration: const Duration(milliseconds: 1000),
+            content: Text(label),
+            backgroundColor: count == 0 ? Colors.red.shade700 : Colors.green,
+            duration: const Duration(milliseconds: 1200),
           ),
         );
       }
