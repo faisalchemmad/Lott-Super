@@ -982,7 +982,6 @@ class _GlobalCountLimitDetailScreenState
 
   Widget _buildFilterTabItem({
     required String title,
-    required int count,
     required int index,
     required Color activeColor,
   }) {
@@ -1007,7 +1006,7 @@ class _GlobalCountLimitDetailScreenState
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
@@ -1022,27 +1021,14 @@ class _GlobalCountLimitDetailScreenState
                 : null,
           ),
           alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-                  color: isSelected ? activeColor : Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '($count)',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? activeColor : Colors.grey.shade600,
-                ),
-              ),
-            ],
+          child: Text(
+            title,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+              color: isSelected ? activeColor : Colors.grey.shade700,
+            ),
           ),
         ),
       ),
@@ -1160,21 +1146,7 @@ class _GlobalCountLimitDetailScreenState
         // Betting-Screen-style quick input bar
         _buildQuickInputSection(isTn, activeColor),
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                isTn ? 'Active Tamil Nadu Number Limits (${currentLimits.length})' : 'Active Kerala Number Limits (${currentLimits.length})',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: activeColor),
-              ),
-            ],
-          ),
-        ),
+
         if (_selectedLimitIds.isNotEmpty) ...[
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1232,7 +1204,7 @@ class _GlobalCountLimitDetailScreenState
         ],
         // 1, 2, 3, 4 Digit Filter Tabs
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(8),
@@ -1240,12 +1212,12 @@ class _GlobalCountLimitDetailScreenState
           padding: const EdgeInsets.all(3),
           child: Row(
             children: [
-              _buildFilterTabItem(title: 'ALL', count: currentLimits.length, index: 0, activeColor: activeColor),
-              _buildFilterTabItem(title: '1 DIGIT', count: limits1D.length, index: 1, activeColor: activeColor),
-              _buildFilterTabItem(title: '2 DIGIT', count: limits2D.length, index: 2, activeColor: activeColor),
-              _buildFilterTabItem(title: '3 DIGIT', count: limits3D.length, index: 3, activeColor: activeColor),
+              _buildFilterTabItem(title: 'ALL', index: 0, activeColor: activeColor),
+              _buildFilterTabItem(title: '1 DIGIT', index: 1, activeColor: activeColor),
+              _buildFilterTabItem(title: '2 DIGIT', index: 2, activeColor: activeColor),
+              _buildFilterTabItem(title: '3 DIGIT', index: 3, activeColor: activeColor),
               if (isTn)
-                _buildFilterTabItem(title: '4 DIGIT', count: limits4D.length, index: 4, activeColor: activeColor),
+                _buildFilterTabItem(title: '4 DIGIT', index: 4, activeColor: activeColor),
             ],
           ),
         ),

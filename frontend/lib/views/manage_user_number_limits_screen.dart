@@ -551,7 +551,6 @@ class _ManageUserNumberLimitsScreenState
 
   Widget _buildFilterTabItem({
     required String title,
-    required int count,
     required int index,
     required Color activeColor,
   }) {
@@ -576,7 +575,7 @@ class _ManageUserNumberLimitsScreenState
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
@@ -591,27 +590,14 @@ class _ManageUserNumberLimitsScreenState
                 : null,
           ),
           alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-                  color: isSelected ? activeColor : Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '($count)',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? activeColor : Colors.grey.shade600,
-                ),
-              ),
-            ],
+          child: Text(
+            title,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+              color: isSelected ? activeColor : Colors.grey.shade700,
+            ),
           ),
         ),
       ),
@@ -648,21 +634,7 @@ class _ManageUserNumberLimitsScreenState
       children: [
         if (!widget.isReadOnly) ...[
           _buildQuickInputSection(isTn, badgeColor),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isTn ? 'Active Tamil Nadu Number Limits (${limits.length})' : 'Active Kerala Number Limits (${limits.length})',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: badgeColor),
-                ),
-              ],
-            ),
-          ),
+
         ],
         if (!widget.isReadOnly && _selectedLimitIds.isNotEmpty) ...[
           Container(
@@ -721,7 +693,7 @@ class _ManageUserNumberLimitsScreenState
         ],
         // 1, 2, 3, 4 Digit Filter Tabs
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(8),
@@ -729,12 +701,12 @@ class _ManageUserNumberLimitsScreenState
           padding: const EdgeInsets.all(3),
           child: Row(
             children: [
-              _buildFilterTabItem(title: 'ALL', count: limits.length, index: 0, activeColor: badgeColor),
-              _buildFilterTabItem(title: '1 DIGIT', count: limits1D.length, index: 1, activeColor: badgeColor),
-              _buildFilterTabItem(title: '2 DIGIT', count: limits2D.length, index: 2, activeColor: badgeColor),
-              _buildFilterTabItem(title: '3 DIGIT', count: limits3D.length, index: 3, activeColor: badgeColor),
+              _buildFilterTabItem(title: 'ALL', index: 0, activeColor: badgeColor),
+              _buildFilterTabItem(title: '1 DIGIT', index: 1, activeColor: badgeColor),
+              _buildFilterTabItem(title: '2 DIGIT', index: 2, activeColor: badgeColor),
+              _buildFilterTabItem(title: '3 DIGIT', index: 3, activeColor: badgeColor),
               if (isTn)
-                _buildFilterTabItem(title: '4 DIGIT', count: limits4D.length, index: 4, activeColor: badgeColor),
+                _buildFilterTabItem(title: '4 DIGIT', index: 4, activeColor: badgeColor),
             ],
           ),
         ),
