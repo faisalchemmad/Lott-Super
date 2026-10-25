@@ -1302,7 +1302,9 @@ class _GlobalCountLimitDetailScreenState
             width: isActive ? 1.5 : 1.0,
           ),
         ),
+        alignment: Alignment.center,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
@@ -1316,13 +1318,17 @@ class _GlobalCountLimitDetailScreenState
                 onChanged: (_) => onTap(),
               ),
             ),
-            const SizedBox(width: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: isActive ? activeColor : Colors.black87,
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: isActive ? activeColor : Colors.black87,
+                ),
               ),
             ),
           ],
@@ -1338,8 +1344,8 @@ class _GlobalCountLimitDetailScreenState
     }
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -1355,117 +1361,124 @@ class _GlobalCountLimitDetailScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Digit Selector Tabs & Toggles Row
+          // 1. Digit Selector Tabs (Full Width - Step 1)
           Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: List.generate(maxTabs, (index) {
-                    final isSelected = _selectedDigitTab == index;
-                    final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: index < maxTabs - 1 ? 4.0 : 0.0),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(6),
-                          onTap: () {
-                            setState(() {
-                              _selectedDigitTab = index;
-                              _selectedFilterTab = index + 1;
-                              if (_is111Checked) {
-                                String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
-                                _quickNumberController.text = label;
-                              } else {
-                                _quickNumberController.clear();
-                              }
-                            });
-                            if (!_is111Checked) {
-                              _quickNumberFocusNode.requestFocus();
-                            } else {
-                              _quickCountFocusNode.requestFocus();
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 7),
-                            decoration: BoxDecoration(
-                              color: isSelected ? activeColor : Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: isSelected ? activeColor : Colors.grey.shade300,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              labels[index],
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                color: isSelected ? Colors.white : Colors.grey.shade700,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
+            children: List.generate(maxTabs, (index) {
+              final isSelected = _selectedDigitTab == index;
+              final labels = ['1 DIGIT', '2 DIGIT', '3 DIGIT', '4 DIGIT'];
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index < maxTabs - 1 ? 5.0 : 0.0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () {
+                      setState(() {
+                        _selectedDigitTab = index;
+                        _selectedFilterTab = index + 1;
+                        if (_is111Checked) {
+                          String label = _selectedDigitTab == 3
+                              ? '1111 (0000-9999)'
+                              : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                          _quickNumberController.text = label;
+                        } else {
+                          _quickNumberController.clear();
+                        }
+                      });
+                      if (!_is111Checked) {
+                        _quickNumberFocusNode.requestFocus();
+                      } else {
+                        _quickCountFocusNode.requestFocus();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? activeColor : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isSelected ? activeColor : Colors.grey.shade300,
                         ),
                       ),
-                    );
-                  }),
+                      alignment: Alignment.center,
+                      child: Text(
+                        labels[index],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: isSelected ? Colors.white : Colors.grey.shade700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              // SET Checkbox (only for 2D, 3D, 4D where permutations exist)
+              );
+            }),
+          ),
+          const SizedBox(height: 7),
+
+          // 2. Options Row (SET, 111, ALL GAME - Step 2)
+          Row(
+            children: [
               if (_selectedDigitTab >= 1) ...[
-                _buildToggleChip(
-                  label: 'SET',
-                  isActive: _isSetChecked,
-                  activeColor: Colors.teal.shade700,
+                Expanded(
+                  child: _buildToggleChip(
+                    label: 'SET',
+                    isActive: _isSetChecked,
+                    activeColor: Colors.teal.shade700,
+                    onTap: () {
+                      setState(() {
+                        _isSetChecked = !_isSetChecked;
+                        if (_isSetChecked) {
+                          _is111Checked = false;
+                          _quickNumberController.clear();
+                          _quickNumberFocusNode.requestFocus();
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: _buildToggleChip(
+                  label: _selectedDigitTab == 3 ? '1111' : (_selectedDigitTab == 1 ? '11' : '111'),
+                  isActive: _is111Checked,
+                  activeColor: activeColor,
                   onTap: () {
                     setState(() {
-                      _isSetChecked = !_isSetChecked;
-                      if (_isSetChecked) {
-                        _is111Checked = false;
+                      _is111Checked = !_is111Checked;
+                      if (_is111Checked) {
+                        _isSetChecked = false;
+                        String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
+                        _quickNumberController.text = label;
+                        _quickCountFocusNode.requestFocus();
+                      } else {
                         _quickNumberController.clear();
                         _quickNumberFocusNode.requestFocus();
                       }
                     });
                   },
                 ),
-                const SizedBox(width: 4),
-              ],
-              // 111 Checkbox
-              _buildToggleChip(
-                label: _selectedDigitTab == 3 ? '1111' : (_selectedDigitTab == 1 ? '11' : '111'),
-                isActive: _is111Checked,
-                activeColor: activeColor,
-                onTap: () {
-                  setState(() {
-                    _is111Checked = !_is111Checked;
-                    if (_is111Checked) {
-                      _isSetChecked = false;
-                      String label = _selectedDigitTab == 3 ? '1111 (0000-9999)' : (_selectedDigitTab == 1 ? '11 (00-99)' : '111 (000-999)');
-                      _quickNumberController.text = label;
-                      _quickCountFocusNode.requestFocus();
-                    } else {
-                      _quickNumberController.clear();
-                      _quickNumberFocusNode.requestFocus();
-                    }
-                  });
-                },
               ),
-              const SizedBox(width: 4),
-              // ALL GAMES Checkbox
-              _buildToggleChip(
-                label: 'ALL GAME',
-                isActive: _quickAllGames,
-                activeColor: Colors.purple.shade700,
-                onTap: () {
-                  setState(() => _quickAllGames = !_quickAllGames);
-                },
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildToggleChip(
+                  label: 'ALL GAME',
+                  isActive: _quickAllGames,
+                  activeColor: Colors.purple.shade700,
+                  onTap: () {
+                    setState(() => _quickAllGames = !_quickAllGames);
+                  },
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 7),
 
-          // 2. Number & Count Inputs Row
+          // 3. Number & Count Inputs Row (Step 3)
           Row(
             children: [
               Expanded(
@@ -1477,20 +1490,20 @@ class _GlobalCountLimitDetailScreenState
                   keyboardType: TextInputType.number,
                   maxLength: _selectedDigitTab + 1,
                   style: TextStyle(
-                    fontSize: _is111Checked ? 13 : 18,
+                    fontSize: _is111Checked ? 12 : 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: _is111Checked ? 0 : 2,
                     color: _is111Checked ? activeColor : Colors.black87,
                   ),
                   decoration: InputDecoration(
                     labelText: _is111Checked ? 'PATTERNS' : 'NUMBER',
-                    labelStyle: TextStyle(color: activeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                    labelStyle: TextStyle(color: activeColor, fontSize: 10.5, fontWeight: FontWeight.bold),
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                     counterText: '',
                     filled: true,
                     fillColor: _is111Checked ? activeColor.withValues(alpha: 0.08) : Colors.grey.shade50,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -1506,15 +1519,15 @@ class _GlobalCountLimitDetailScreenState
                   controller: _quickCountController,
                   focusNode: _quickCountFocusNode,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: activeColor),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: activeColor),
                   decoration: InputDecoration(
                     labelText: 'LIMIT COUNT',
-                    labelStyle: TextStyle(color: activeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                    labelStyle: TextStyle(color: activeColor, fontSize: 10.5, fontWeight: FontWeight.bold),
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -1525,14 +1538,14 @@ class _GlobalCountLimitDetailScreenState
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 7),
 
-          // 3. Quick Action / Type Buttons Row
+          // 4. Quick Action / Type Buttons Row (Step 4)
           if (_isQuickSubmitting)
             const Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
               ),
             )
           else
@@ -1546,7 +1559,7 @@ class _GlobalCountLimitDetailScreenState
                       style: ElevatedButton.styleFrom(
                         backgroundColor: btn == 'ALL' ? Colors.black87 : activeColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                       ),
@@ -1554,7 +1567,7 @@ class _GlobalCountLimitDetailScreenState
                         fit: BoxFit.scaleDown,
                         child: Text(
                           btn,
-                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
                         ),
                       ),
                     ),
