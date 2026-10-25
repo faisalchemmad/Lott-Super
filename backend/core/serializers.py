@@ -37,13 +37,18 @@ class UserSerializer(serializers.ModelSerializer):
             'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
             'is_blocked', 'is_default', 'can_forward', 'date_joined', 'allowed_games', 'cut_enabled', 'cut_type', 'cut_value', 'cut_category_values',
             'subscription_plan', 'subscription_start_date', 'subscription_end_date', 'is_subscription_active', 'max_allowed_games',
-            'subscription_status', 'subscription_days_left', 'created_games_count'
+            'subscription_status', 'subscription_days_left', 'created_games_count',
+            'game_mode', 'effective_game_mode'
         ]
 
     remaining_credit = serializers.SerializerMethodField()
     subscription_status = serializers.SerializerMethodField()
     subscription_days_left = serializers.SerializerMethodField()
     created_games_count = serializers.SerializerMethodField()
+    effective_game_mode = serializers.SerializerMethodField()
+
+    def get_effective_game_mode(self, obj):
+        return obj.get_effective_game_mode()
 
     def get_subscription_status(self, obj):
         is_active, days, status_str, _ = obj.check_subscription_status()

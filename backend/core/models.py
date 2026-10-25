@@ -32,6 +32,23 @@ class User(AbstractUser):
     is_subscription_active = models.BooleanField(default=True)
     max_allowed_games = models.IntegerField(default=4)
 
+    GAME_MODE_CHOICES = (
+        ('KL', 'KL (Kerala Only)'),
+        ('TN', 'TN (Tamil Nadu Only)'),
+        ('BOTH', 'Both (KL & TN)'),
+    )
+    game_mode = models.CharField(max_length=10, choices=GAME_MODE_CHOICES, default='BOTH')
+
+    def get_effective_game_mode(self):
+        """Returns the game mode for this user or their root admin: 'KL', 'TN', or 'BOTH'."""
+        if self.role == 'SUPER_ADMIN':
+            return 'BOTH'
+        root_admin = self.get_root_admin()
+        if root_admin and root_admin.game_mode:
+            return root_admin.game_mode
+        return self.game_mode or 'BOTH'
+
+
     def get_root_admin(self):
         """Returns the top-level ADMIN user in this user's ancestor chain, or self if self.role == 'ADMIN'."""
         curr = self

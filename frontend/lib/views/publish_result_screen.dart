@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
+import '../models/user_model.dart';
 import '../utils/constants.dart';
 import 'package:flutter/services.dart';
 
@@ -17,6 +18,7 @@ class PublishResultScreen extends StatefulWidget {
 class _PublishResultScreenState extends State<PublishResultScreen> {
   int? _selectedGameId;
   String _resultType = 'KL';
+  UserModel? _user;
   List<GameModel> _games = [];
   bool _isLoadingGames = true;
   bool _isSubmitting = false;
@@ -93,7 +95,16 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   Future<void> _fetchGames() async {
     final apiService = Provider.of<ApiService>(context, listen: false);
     final games = await apiService.getGames();
+    final profile = await apiService.getProfile();
     setState(() {
+      _user = profile;
+      if (widget.resultData == null && profile != null) {
+        if (profile.effectiveGameMode == 'TN') {
+          _resultType = 'TN';
+        } else if (profile.effectiveGameMode == 'KL') {
+          _resultType = 'KL';
+        }
+      }
       _games = games;
       _isLoadingGames = false;
     });
@@ -271,6 +282,23 @@ class _PublishResultScreenState extends State<PublishResultScreen> {
   }
 
   Widget _buildDigitToggle() {
+    if (_user != null && !_user!.isBothEnabled) {
+      final mode = _user!.effectiveGameMode;
+      return Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Center(
+          child: Text(
+            mode,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ),
+      );
+    }
     return InputDecorator(
       decoration: InputDecoration(
         labelText: 'TYPE',

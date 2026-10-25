@@ -43,6 +43,7 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
   List<UserModel> _admins = [];
   bool _isLoadingFilters = true;
   bool _isGenerating = false;
+  UserModel? _currentUser;
 
   List<GameFilterOption> get _availableGameFilterOptions {
     if (_selectedState == 'KL') {
@@ -98,6 +99,14 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
         _admins =
             users.where((u) => u.role == 'ADMIN' && u.canForward).toList();
         _userRole = role;
+        _currentUser = users.cast<UserModel?>().firstWhere((u) => u?.username == prefs.getString('username'), orElse: () => null);
+        if (_currentUser != null) {
+          if (_currentUser!.effectiveGameMode == 'TN') {
+            _selectedState = 'TN';
+          } else if (_currentUser!.effectiveGameMode == 'KL') {
+            _selectedState = 'KL';
+          }
+        }
         _isLoadingFilters = false;
       });
     } catch (e) {
@@ -210,9 +219,12 @@ class _ForwardNetReportScreenState extends State<ForwardNetReportScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStateRadio('ALL'),
-                        _buildStateRadio('KL'),
-                        _buildStateRadio('TN'),
+                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                          _buildStateRadio('ALL'),
+                        if (_currentUser == null || _currentUser!.isKlEnabled)
+                          _buildStateRadio('KL'),
+                        if (_currentUser == null || _currentUser!.isTnEnabled)
+                          _buildStateRadio('TN'),
                       ],
                     ),
                   ),

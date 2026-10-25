@@ -23,6 +23,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
   bool _isDefault = false;
   String _subscriptionPlan = '30_days';
   int _maxAllowedGames = 4;
+  String _gameMode = 'KL';
   bool _cutEnabled = false;
   String _cutType = 'percent';
   final TextEditingController _cutValueController = TextEditingController(text: '0');
@@ -47,6 +48,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
       _isDefault = widget.user!.isDefault;
       _subscriptionPlan = widget.user!.subscriptionPlan;
       _maxAllowedGames = widget.user!.maxAllowedGames;
+      _gameMode = widget.user!.gameMode;
       _cutEnabled = widget.user!.cutEnabled;
       _cutType = widget.user!.cutType;
       _cutValueController.text = widget.user!.cutValue.toString();
@@ -99,6 +101,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
       'can_forward': false,
       'subscription_plan': _subscriptionPlan,
       'max_allowed_games': _maxAllowedGames,
+      'game_mode': _gameMode,
       'cut_enabled': _cutEnabled,
       'cut_type': _cutType,
       'cut_value': double.tryParse(_cutValueController.text.trim()) ?? 0.0,
@@ -239,6 +242,28 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                         ],
                         onChanged: (val) {
                           if (val != null) setState(() => _maxAllowedGames = val);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Game Model (ഏത് മോഡൽ വേണം?)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _gameMode,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(Icons.category_rounded, color: Colors.teal),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'KL', child: Text('KL (Kerala Only)')),
+                          DropdownMenuItem(value: 'TN', child: Text('TN (Tamil Nadu Only)')),
+                          DropdownMenuItem(value: 'BOTH', child: Text('Both (KL & TN)')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _gameMode = val);
                         },
                       ),
                     ],

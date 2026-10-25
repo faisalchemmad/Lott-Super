@@ -330,21 +330,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: badgeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  badgeText,
-                  style: TextStyle(
-                    color: badgeColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (admin['game_mode'] == 'TN' ? Colors.deepOrange : (admin['game_mode'] == 'KL' ? Colors.teal : Colors.indigo)).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      admin['game_mode'] == 'TN' ? 'TN ONLY' : (admin['game_mode'] == 'KL' ? 'KL ONLY' : 'KL & TN'),
+                      style: TextStyle(
+                        color: admin['game_mode'] == 'TN' ? Colors.deepOrange : (admin['game_mode'] == 'KL' ? Colors.teal : Colors.indigo),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -395,6 +416,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showRenewSubscriptionDialog(Map<String, dynamic> admin) {
     String selectedPlan = admin['subscription_plan'] ?? '30_days';
     int maxGames = admin['max_allowed_games'] ?? 4;
+    String selectedMode = admin['game_mode'] ?? 'BOTH';
     bool isSubmitting = false;
 
     final planDaysMap = {
@@ -468,6 +490,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (val != null) setDialogState(() => maxGames = val);
                   },
                 ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Game Model (ഏത് മോഡൽ വേണം?):',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedMode,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'KL', child: Text('KL (Kerala Only)')),
+                    DropdownMenuItem(value: 'TN', child: Text('TN (Tamil Nadu Only)')),
+                    DropdownMenuItem(value: 'BOTH', child: Text('Both (KL & TN)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedMode = val);
+                  },
+                ),
               ],
             ),
           ),
@@ -489,6 +532,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         plan: selectedPlan,
                         days: days,
                         maxAllowedGames: maxGames,
+                        gameMode: selectedMode,
                       );
                       if (context.mounted) {
                         Navigator.pop(context);

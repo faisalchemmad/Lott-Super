@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
+import '../models/user_model.dart';
 import '../utils/constants.dart';
 
 class GlobalCountLimitDetailScreen extends StatefulWidget {
@@ -50,6 +51,7 @@ class _GlobalCountLimitDetailScreenState
   // Global Number Limits Tab Data
   List<dynamic> _globalNumberLimits = [];
   bool _isLoadingNumbers = true;
+  UserModel? _user;
 
   @override
   void initState() {
@@ -107,7 +109,12 @@ class _GlobalCountLimitDetailScreenState
     final apiService = Provider.of<ApiService>(context, listen: false);
     try {
       final limits = await apiService.getGlobalNumberLimits(widget.game.id);
+      final user = await apiService.getProfile();
       setState(() {
+        _user = user;
+        if (user != null && user.effectiveGameMode == 'TN') {
+          _selectedNumberLimitTab = 1;
+        }
         _globalNumberLimits = limits;
         _isLoadingNumbers = false;
       });
@@ -230,10 +237,15 @@ class _GlobalCountLimitDetailScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildKlSection(),
+              if (_user == null || _user!.isKlEnabled) ...[
+                _buildKlSection(),
+                const SizedBox(height: 16),
+              ],
+              if (_user == null || _user!.isTnEnabled) ...[
+                _buildTnSection(),
+                const SizedBox(height: 16),
+              ],
               const SizedBox(height: 16),
-              _buildTnSection(),
-              const SizedBox(height: 24),
               _buildUpdateButton(),
               const SizedBox(height: 20),
             ],
@@ -516,6 +528,7 @@ class _GlobalCountLimitDetailScreenState
     return Column(
       children: [
         // Sub-tabs for KL and TN
+        if (_user == null || _user!.isBothEnabled)
         Container(
           margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           padding: const EdgeInsets.all(4),

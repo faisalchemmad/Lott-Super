@@ -63,6 +63,13 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
         _agents = users;
         _currentUser = profile;
         _userRole = role;
+        if (profile != null) {
+          if (profile.effectiveGameMode == 'TN') {
+            _selectedState = 'TN';
+          } else if (profile.effectiveGameMode == 'KL') {
+            _selectedState = 'KL';
+          }
+        }
 
         if (role == 'SUB_DEALER' && profile != null) {
           _selectedAgentId = profile.id;
@@ -199,9 +206,12 @@ class _NumberReportScreenState extends State<NumberReportScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStateRadio('ALL'),
-                        _buildStateRadio('KL'),
-                        _buildStateRadio('TN'),
+                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                          _buildStateRadio('ALL'),
+                        if (_currentUser == null || _currentUser!.isKlEnabled)
+                          _buildStateRadio('KL'),
+                        if (_currentUser == null || _currentUser!.isTnEnabled)
+                          _buildStateRadio('TN'),
                       ],
                     ),
                   ),

@@ -248,6 +248,17 @@ class _BettingScreenState extends State<BettingScreen>
       }
       if (user != null) {
         _userController.text = user.username;
+        if (user.effectiveGameMode == 'TN') {
+          _selectedStateCode = 'TN';
+          _selectedType = '3D-10';
+          _tabController.removeListener(_tabListener);
+          _tabController.dispose();
+          _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
+          _tabController.addListener(_tabListener);
+        } else if (user.effectiveGameMode == 'KL') {
+          _selectedStateCode = 'KL';
+          _selectedType = 'SUPER';
+        }
       }
       _recentBets = bets;
       _selectedType = 'SUPER';
@@ -1121,7 +1132,7 @@ class _BettingScreenState extends State<BettingScreen>
         text.toUpperCase().contains('BC') ||
         text.toUpperCase().contains('AC');
 
-    if (_selectedStateCode == 'TN' || looksLikeTN) {
+    if ((_selectedStateCode == 'TN' || looksLikeTN) && (_user == null || _user!.isTnEnabled)) {
       if (_selectedStateCode != 'TN') {
         setState(() {
           _selectedStateCode = 'TN';
@@ -2347,6 +2358,7 @@ class _BettingScreenState extends State<BettingScreen>
   }
 
   void _changeState(String stateCode) {
+    if (_user != null && !_user!.isBothEnabled && _user!.effectiveGameMode != stateCode) return;
     if (_selectedStateCode == stateCode) return;
     setState(() {
       _selectedStateCode = stateCode;
@@ -2452,29 +2464,31 @@ class _BettingScreenState extends State<BettingScreen>
                 ],
               ),
             ),
-            ListTile(
-              title: const Text('KL (Kerala)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: _selectedStateCode == 'KL'
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: () {
-                _changeState('KL');
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('TN (Tamil Nadu)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: _selectedStateCode == 'TN'
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: () {
-                _changeState('TN');
-                Navigator.pop(context);
-              },
-            ),
+            if (_user == null || _user!.isKlEnabled)
+              ListTile(
+                title: const Text('KL (Kerala)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                trailing: _selectedStateCode == 'KL'
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+                onTap: () {
+                  _changeState('KL');
+                  Navigator.pop(context);
+                },
+              ),
+            if (_user == null || _user!.isBothEnabled) const Divider(),
+            if (_user == null || _user!.isTnEnabled)
+              ListTile(
+                title: const Text('TN (Tamil Nadu)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                trailing: _selectedStateCode == 'TN'
+                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+                onTap: () {
+                  _changeState('TN');
+                  Navigator.pop(context);
+                },
+              ),
           ],
         ),
       ),
@@ -2482,10 +2496,29 @@ class _BettingScreenState extends State<BettingScreen>
   }
 
   Widget _buildStateSelector() {
+    if (_user != null && !_user!.isBothEnabled) {
+      final allowedState = _user!.effectiveGameMode;
+      return Container(
+        margin: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          allowedState,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
     return Container(
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

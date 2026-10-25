@@ -43,6 +43,9 @@ class ApiService {
         await prefs.setString('username', data['user']['username']);
         await prefs.setBool(
             'can_forward', data['user']['can_forward'] ?? false);
+        await prefs.setString(
+            'effective_game_mode',
+            data['user']['effective_game_mode'] ?? data['user']['game_mode'] ?? 'BOTH');
         return data;
       } else {
         String errorMsg = 'Login failed';
@@ -1155,12 +1158,18 @@ class ApiService {
     return {};
   }
 
-  Future<bool> renewSubscription(int adminId, {required String plan, int? days, int? maxAllowedGames}) async {
+  Future<String> getEffectiveGameMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('effective_game_mode') ?? 'BOTH';
+  }
+
+  Future<bool> renewSubscription(int adminId, {required String plan, int? days, int? maxAllowedGames, String? gameMode}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final Map<String, dynamic> body = {'subscription_plan': plan};
     if (days != null) body['days'] = days;
     if (maxAllowedGames != null) body['max_allowed_games'] = maxAllowedGames;
+    if (gameMode != null) body['game_mode'] = gameMode;
 
     final response = await http.post(
       Uri.parse('$baseUrl/users/$adminId/renew-subscription/'),

@@ -318,13 +318,14 @@ class _ManagePrizeCommissionScreenState
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Center(
-                        child: Text('KL',
-                            style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.primary))),
+                    if (widget.user.isKlEnabled) ...[
+                      const SizedBox(height: 16),
+                      const Center(
+                          child: Text('KL',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary))),
                     const SizedBox(height: 16),
                     const SizedBox(height: 24),
                     _buildSectionCard(
@@ -402,13 +403,15 @@ class _ManagePrizeCommissionScreenState
                             '1ST PRIZE', _box3SP1, 'Commission', _box3SC1),
                       ],
                     ),
-                    const SizedBox(height: 32),
-                    const Center(
-                        child: Text('TN',
-                            style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.primary))),
+                    ],
+                    if (widget.user.isTnEnabled) ...[
+                      const SizedBox(height: 32),
+                      const Center(
+                          child: Text('TN',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary))),
                     const SizedBox(height: 16),
                     _buildSectionCard(
                       title: 'A / B / C',
@@ -478,6 +481,7 @@ class _ManagePrizeCommissionScreenState
                         _buildSingleRow('1ST PRIZE', _tnPrize4d20_1),
                       ],
                     ),
+                    ],
                     const SizedBox(height: 40),
                   ],
                 ),

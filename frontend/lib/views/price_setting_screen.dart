@@ -174,32 +174,35 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionCard(
-                      stateLabel: 'KL',
-                      title: 'KL GAME PRICES',
-                      children: [
-                        _buildDoubleField(
-                          'SUPER',
-                          _superController,
-                          'Default: 10',
-                          'BOX',
-                          _boxController,
-                          'Default: 10',
-                        ),
-                        _buildDoubleField(
-                          'A/B/C',
-                          _abcController,
-                          'Default: 12',
-                          'AB/BC/AC',
-                          _abBcAcController,
-                          'Default: 10',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSectionCard(
-                      stateLabel: 'TN',
-                      title: 'TN GAME PRICES',
+                    if (_user == null || _user!.isKlEnabled) ...[
+                      _buildSectionCard(
+                        stateLabel: 'KL',
+                        title: 'KL GAME PRICES',
+                        children: [
+                          _buildDoubleField(
+                            'SUPER',
+                            _superController,
+                            'Default: 10',
+                            'BOX',
+                            _boxController,
+                            'Default: 10',
+                          ),
+                          _buildDoubleField(
+                            'A/B/C',
+                            _abcController,
+                            'Default: 12',
+                            'AB/BC/AC',
+                            _abBcAcController,
+                            'Default: 10',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_user == null || _user!.isTnEnabled) ...[
+                      _buildSectionCard(
+                        stateLabel: 'TN',
+                        title: 'TN GAME PRICES',
                       children: [
                         _buildDoubleField(
                           'A/B/C',
@@ -240,6 +243,7 @@ class _PriceSettingScreenState extends State<PriceSettingScreen> {
                         ),
                       ],
                     ),
+                    ],
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,

@@ -51,6 +51,13 @@ class _CountReportScreenState extends State<CountReportScreen> {
         _agents = users;
         _currentUser = profile;
         _userRole = role;
+        if (profile != null) {
+          if (profile.effectiveGameMode == 'TN') {
+            _selectedState = 'TN';
+          } else if (profile.effectiveGameMode == 'KL') {
+            _selectedState = 'KL';
+          }
+        }
 
         // New logic for _agentRate based on role
         if (role == 'SUPER_ADMIN' ||
@@ -178,9 +185,12 @@ class _CountReportScreenState extends State<CountReportScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStateRadio('ALL'),
-                        _buildStateRadio('KL'),
-                        _buildStateRadio('TN'),
+                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                          _buildStateRadio('ALL'),
+                        if (_currentUser == null || _currentUser!.isKlEnabled)
+                          _buildStateRadio('KL'),
+                        if (_currentUser == null || _currentUser!.isTnEnabled)
+                          _buildStateRadio('TN'),
                       ],
                     ),
                   ),

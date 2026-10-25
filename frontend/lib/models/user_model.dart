@@ -21,6 +21,12 @@ class UserModel {
   final String subscriptionStatus;
   final int subscriptionDaysLeft;
   final int createdGamesCount;
+  final String gameMode;
+  final String effectiveGameMode;
+
+  bool get isKlEnabled => effectiveGameMode == 'KL' || effectiveGameMode == 'BOTH';
+  bool get isTnEnabled => effectiveGameMode == 'TN' || effectiveGameMode == 'BOTH';
+  bool get isBothEnabled => effectiveGameMode == 'BOTH';
 
   // Count Limits
   final int countA;
@@ -256,6 +262,8 @@ class UserModel {
     this.subscriptionStatus = 'ACTIVE',
     this.subscriptionDaysLeft = 9999,
     this.createdGamesCount = 0,
+    this.gameMode = 'BOTH',
+    this.effectiveGameMode = 'BOTH',
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -412,6 +420,8 @@ class UserModel {
       subscriptionStatus: json['subscription_status'] ?? 'ACTIVE',
       subscriptionDaysLeft: json['subscription_days_left'] ?? 9999,
       createdGamesCount: json['created_games_count'] ?? 0,
+      gameMode: json['game_mode'] ?? 'BOTH',
+      effectiveGameMode: json['effective_game_mode'] ?? json['game_mode'] ?? 'BOTH',
     );
   }
 
@@ -431,6 +441,7 @@ class UserModel {
       'subscription_end_date': subscriptionEndDate,
       'is_subscription_active': isSubscriptionActive,
       'max_allowed_games': maxAllowedGames,
+      'game_mode': gameMode,
       'weekly_credit_limit': weeklyCreditLimit,
       'remaining_credit': remainingCredit,
       'date_joined': dateJoined,

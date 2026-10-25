@@ -54,6 +54,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         _agents = users;
         _currentUser = profile;
         _userRole = role;
+        if (profile != null) {
+          if (profile.effectiveGameMode == 'TN') {
+            _selectedState = 'TN';
+          } else if (profile.effectiveGameMode == 'KL') {
+            _selectedState = 'KL';
+          }
+        }
 
         if (role == 'SUPER_ADMIN' ||
             role == 'ADMIN' ||
@@ -229,9 +236,12 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStateRadio('ALL'),
-                        _buildStateRadio('KL'),
-                        _buildStateRadio('TN'),
+                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                          _buildStateRadio('ALL'),
+                        if (_currentUser == null || _currentUser!.isKlEnabled)
+                          _buildStateRadio('KL'),
+                        if (_currentUser == null || _currentUser!.isTnEnabled)
+                          _buildStateRadio('TN'),
                       ],
                     ),
                   ),

@@ -45,6 +45,7 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
   List<UserModel> _admins = [];
   bool _isLoadingFilters = true;
   bool _isGenerating = false;
+  UserModel? _currentUser;
   final TextEditingController _numberController = TextEditingController();
 
   List<GameTypeOption> get _availableGameTypeOptions {
@@ -134,6 +135,14 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
         _games = games;
         _admins = users.where((u) => u.role == 'ADMIN' && u.canForward).toList();
         _userRole = role;
+        _currentUser = users.cast<UserModel?>().firstWhere((u) => u?.username == prefs.getString('username'), orElse: () => null);
+        if (_currentUser != null) {
+          if (_currentUser!.effectiveGameMode == 'TN') {
+            _selectedState = 'TN';
+          } else if (_currentUser!.effectiveGameMode == 'KL') {
+            _selectedState = 'KL';
+          }
+        }
         _isLoadingFilters = false;
       });
     } catch (e) {
@@ -248,9 +257,12 @@ class _ForwardReportFilterScreenState extends State<ForwardReportFilterScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStateRadio('ALL'),
-                        _buildStateRadio('KL'),
-                        _buildStateRadio('TN'),
+                        if (_currentUser == null || _currentUser!.isBothEnabled)
+                          _buildStateRadio('ALL'),
+                        if (_currentUser == null || _currentUser!.isKlEnabled)
+                          _buildStateRadio('KL'),
+                        if (_currentUser == null || _currentUser!.isTnEnabled)
+                          _buildStateRadio('TN'),
                       ],
                     ),
                   ),

@@ -148,6 +148,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 'subscription_days_left': days_left,
                 'max_allowed_games': a.max_allowed_games,
                 'created_games_count': a.games.filter(is_active=True).count(),
+                'game_mode': a.game_mode,
+                'effective_game_mode': a.get_effective_game_mode(),
                 'is_blocked': a.is_blocked
             })
         return Response({
@@ -199,6 +201,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 target_admin.max_allowed_games = int(request.data['max_allowed_games'])
             except:
                 pass
+        if 'game_mode' in request.data:
+            target_admin.game_mode = request.data['game_mode']
 
         target_admin.save()
         return Response({
@@ -254,13 +258,15 @@ class UserViewSet(viewsets.ModelViewSet):
                 max_games = int(self.request.data.get('max_allowed_games', 4))
             except:
                 max_games = 4
+            game_mode = self.request.data.get('game_mode', 'BOTH')
             instance = serializer.save(
                 parent=creator,
                 subscription_plan=plan,
                 subscription_start_date=start_date,
                 subscription_end_date=end_date,
                 is_subscription_active=True,
-                max_allowed_games=max_games
+                max_allowed_games=max_games,
+                game_mode=game_mode
             )
         else:
             instance = serializer.save(parent=creator)
@@ -429,6 +435,14 @@ class BetViewSet(viewsets.ModelViewSet):
         is_sub_active, days_left, sub_status, root_admin = user.check_subscription_status()
         if not is_sub_active:
             raise drf_serializers.ValidationError("Subscription expired. Betting is currently disabled.")
+        
+        eff_mode = user.get_effective_game_mode()
+        bet_state = (serializer.validated_data.get('state') or 'KL').upper()
+        if eff_mode == 'KL' and bet_state == 'TN':
+            raise drf_serializers.ValidationError("Tamil Nadu (TN) bets are not enabled for this account.")
+        elif eff_mode == 'TN' and bet_state == 'KL':
+            raise drf_serializers.ValidationError("Kerala (KL) bets are not enabled for this account.")
+
         game = serializer.validated_data['game']
         bet_type = serializer.validated_data['type']
         
@@ -633,6 +647,7 @@ class BetViewSet(viewsets.ModelViewSet):
         if not is_sub_active:
             return Response({'error': 'Subscription expired. Betting is currently disabled.'}, status=status.HTTP_403_FORBIDDEN)
 
+        eff_mode = user.get_effective_game_mode()
         bets_data = request.data.get('bets', [])
         customer_name = (request.data.get('customer_name') or '').strip()
         if not bets_data:
@@ -693,6 +708,13 @@ class BetViewSet(viewsets.ModelViewSet):
             if bet_type in ['3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20']:
                 state = 'TN'
             # For SUPER/BOX/A/B/C/AB/BC/AC, we trust the state provided by frontend.
+
+            if eff_mode == 'KL' and state == 'TN':
+                mark_failed("Tamil Nadu (TN) bets are not enabled for this account.")
+                continue
+            elif eff_mode == 'TN' and state == 'KL':
+                mark_failed("Kerala (KL) bets are not enabled for this account.")
+                continue
 
             
             p_price_map = {
@@ -2851,6 +2873,12 @@ class GameResultViewSet(viewsets.ModelViewSet):
             date = timezone.now().date()
             
         root_admin = request.user.get_root_admin()
+        eff_mode = request.user.get_effective_game_mode()
+        if eff_mode == 'KL' and state == 'TN':
+            return Response({'error': 'Tamil Nadu (TN) results are not allowed for your game mode.'}, status=status.HTTP_400_BAD_REQUEST)
+        if eff_mode == 'TN' and state == 'KL':
+            return Response({'error': 'Kerala (KL) results are not allowed for your game mode.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Check if result already exists for this game/date/state/admin
         existing = GameResult.objects.filter(game_id=game_id, date=date, state=state, admin=root_admin).first()
         if existing:

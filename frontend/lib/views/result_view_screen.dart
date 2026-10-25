@@ -7,6 +7,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
 import '../services/api_service.dart';
 import '../models/game_model.dart';
+import '../models/user_model.dart';
 import '../utils/constants.dart';
 import 'publish_result_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,7 @@ class _ResultViewScreenState extends State<ResultViewScreen>
   List<dynamic> _results = [];
   bool _isLoading = true;
   bool _isAdmin = false;
+  UserModel? _user;
   final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
@@ -50,8 +52,14 @@ class _ResultViewScreenState extends State<ResultViewScreen>
   Future<void> _checkAdmin() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('role');
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    final user = await apiService.getProfile();
     setState(() {
+      _user = user;
       _isAdmin = role == 'ADMIN' || role == 'SUPER_ADMIN';
+      if (user != null && user.effectiveGameMode == 'TN') {
+        _tabController.index = 1;
+      }
     });
   }
 
@@ -309,33 +317,38 @@ class _ResultViewScreenState extends State<ResultViewScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Container(
-          height: 36,
-          width: 170,
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.18),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicator: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Colors.transparent,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: Colors.white,
-            labelStyle:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            unselectedLabelStyle:
-                const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-            tabs: const [
-              Tab(text: 'KL'),
-              Tab(text: 'TN'),
-            ],
-          ),
-        ),
+        title: (_user != null && !_user!.isBothEnabled)
+            ? Text(
+                _user!.effectiveGameMode == 'TN' ? 'RESULTS (TN)' : 'RESULTS (KL)',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              )
+            : Container(
+                height: 36,
+                width: 170,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: Colors.white,
+                  labelStyle:
+                      const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  unselectedLabelStyle:
+                      const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  tabs: const [
+                    Tab(text: 'KL'),
+                    Tab(text: 'TN'),
+                  ],
+                ),
+              ),
         backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
@@ -363,13 +376,17 @@ class _ResultViewScreenState extends State<ResultViewScreen>
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildResultList(_klResults, isTN: false),
-                      _buildResultList(_tnResults, isTN: true),
-                    ],
-                  ),
+                : (_user != null && !_user!.isBothEnabled)
+                    ? (_user!.effectiveGameMode == 'TN'
+                        ? _buildResultList(_tnResults, isTN: true)
+                        : _buildResultList(_klResults, isTN: false))
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildResultList(_klResults, isTN: false),
+                          _buildResultList(_tnResults, isTN: true),
+                        ],
+                      ),
           ),
         ],
       ),

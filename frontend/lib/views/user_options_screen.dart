@@ -677,6 +677,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
   void _showRenewDialog(BuildContext context, UserModel userToShow) {
     String selectedPlan = userToShow.subscriptionPlan.isNotEmpty ? userToShow.subscriptionPlan : '30_days';
     int maxGames = userToShow.maxAllowedGames;
+    String selectedMode = userToShow.gameMode;
     bool isSubmitting = false;
 
     final planDaysMap = {
@@ -744,6 +745,24 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                     if (val != null) setDialogState(() => maxGames = val);
                   },
                 ),
+                const SizedBox(height: 16),
+                const Text('Game Model (ഏത് മോഡൽ വേണം?):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedMode,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'KL', child: Text('KL (Kerala Only)')),
+                    DropdownMenuItem(value: 'TN', child: Text('TN (Tamil Nadu Only)')),
+                    DropdownMenuItem(value: 'BOTH', child: Text('Both (KL & TN)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedMode = val);
+                  },
+                ),
               ],
             ),
           ),
@@ -765,6 +784,7 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                         plan: selectedPlan,
                         days: days,
                         maxAllowedGames: maxGames,
+                        gameMode: selectedMode,
                       );
                       if (context.mounted) {
                         Navigator.pop(context);

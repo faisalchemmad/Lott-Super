@@ -156,30 +156,33 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // KL SECTION
-              _buildSectionCard(
-                stateLabel: 'KL',
-                title: 'KL COMMISSION RATES',
-                children: [
-                  _buildDoubleField(
-                    'LSK SUPER',
-                    _superController,
-                    'A/B/C',
-                    _abcController,
-                  ),
-                  _buildDoubleField(
-                    'AB/BC/AC',
-                    _abBcAcController,
-                    'BOX',
-                    _boxController,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // TN SECTION
-              _buildSectionCard(
-                stateLabel: 'TN',
-                title: 'TN COMMISSION RATES',
+              if (widget.user.isKlEnabled) ...[
+                // KL SECTION
+                _buildSectionCard(
+                  stateLabel: 'KL',
+                  title: 'KL COMMISSION RATES',
+                  children: [
+                    _buildDoubleField(
+                      'LSK SUPER',
+                      _superController,
+                      'A/B/C',
+                      _abcController,
+                    ),
+                    _buildDoubleField(
+                      'AB/BC/AC',
+                      _abBcAcController,
+                      'BOX',
+                      _boxController,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (widget.user.isTnEnabled) ...[
+                // TN SECTION
+                _buildSectionCard(
+                  stateLabel: 'TN',
+                  title: 'TN COMMISSION RATES',
                 children: [
                   _buildDoubleField(
                     'A/B/C',
@@ -211,6 +214,7 @@ class _SalesCommissionScreenState extends State<SalesCommissionScreen> {
                   ),
                 ],
               ),
+              ],
               const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,

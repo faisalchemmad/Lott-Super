@@ -92,6 +92,13 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
       _agents = users;
       _currentUser = profile;
       _userRole = role;
+      if (profile != null) {
+        if (profile.effectiveGameMode == 'TN') {
+          _selectedState = 'TN';
+        } else if (profile.effectiveGameMode == 'KL') {
+          _selectedState = 'KL';
+        }
+      }
 
       if (role == 'SUB_DEALER' && profile != null) {
         _selectedAgent = profile;
@@ -645,9 +652,12 @@ class _WinningReportScreenState extends State<WinningReportScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStateRadio('ALL', setSheetState),
-                      _buildStateRadio('KL', setSheetState),
-                      _buildStateRadio('TN', setSheetState),
+                      if (_currentUser == null || _currentUser!.isBothEnabled)
+                        _buildStateRadio('ALL', setSheetState),
+                      if (_currentUser == null || _currentUser!.isKlEnabled)
+                        _buildStateRadio('KL', setSheetState),
+                      if (_currentUser == null || _currentUser!.isTnEnabled)
+                        _buildStateRadio('TN', setSheetState),
                     ],
                   ),
                 ),
