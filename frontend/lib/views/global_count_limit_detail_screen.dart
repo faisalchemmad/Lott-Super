@@ -97,6 +97,7 @@ class _GlobalCountLimitDetailScreenState
   final Set<int> _selectedLimitIds = {};
   bool _isBulkDeleting = false;
   int _selectedFilterTab = 3; // 0: ALL, 1: 1D, 2: 2D, 3: 3D, 4: 4D
+  String _selectedFilterType = 'ALL';
 
   List<String> _getPermutations(String s) {
     if (s.length <= 1) return [s];
@@ -992,6 +993,7 @@ class _GlobalCountLimitDetailScreenState
         onTap: () {
           setState(() {
             _selectedFilterTab = index;
+            _selectedFilterType = 'ALL';
             if (index >= 1) {
               _selectedDigitTab = index - 1;
               if (_is111Checked) {
@@ -1054,18 +1056,35 @@ class _GlobalCountLimitDetailScreenState
       _selectedFilterTab = 3;
     }
 
-    List<dynamic> displayedLimits;
+    List<dynamic> digitLimits;
     if (_selectedFilterTab == 1) {
-      displayedLimits = limits1D;
+      digitLimits = limits1D;
     } else if (_selectedFilterTab == 2) {
-      displayedLimits = limits2D;
+      digitLimits = limits2D;
     } else if (_selectedFilterTab == 3) {
-      displayedLimits = limits3D;
+      digitLimits = limits3D;
     } else if (_selectedFilterTab == 4) {
-      displayedLimits = limits4D;
+      digitLimits = limits4D;
     } else {
-      displayedLimits = currentLimits;
+      digitLimits = currentLimits;
     }
+
+    List<dynamic> displayedLimits = digitLimits;
+    if (_selectedFilterTab >= 1 && _selectedFilterType != 'ALL') {
+      displayedLimits = digitLimits.where((l) {
+        String itemType = l['type'].toString();
+        if (itemType == _selectedFilterType) return true;
+        if (isTn) {
+          if (itemType == 'TN-$_selectedFilterType') return true;
+          if (_selectedFilterType == 'TN-$itemType') return true;
+        }
+        return false;
+      }).toList();
+    }
+
+    final subTypes = _selectedFilterTab >= 1
+        ? ['ALL', ..._getQuickButtonsForTab(_selectedFilterTab - 1, isTn).where((b) => b != 'ALL')]
+        : <String>[];
 
     if (_user != null && _user!.effectiveGameMode == 'TN') {
       _selectedNumberLimitTab = 1;
@@ -1222,6 +1241,48 @@ class _GlobalCountLimitDetailScreenState
           ),
         ),
 
+        // Sub-Type Filter Chips when a specific digit (1, 2, 3, 4) is selected
+        if (_selectedFilterTab >= 1 && subTypes.length > 1) ...[
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            child: Row(
+              children: subTypes.map((t) {
+                final isSelected = _selectedFilterType == t;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => setState(() => _selectedFilterType = t),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: isSelected ? activeColor : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: isSelected ? activeColor : Colors.grey.shade300,
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          t,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                            color: isSelected ? Colors.white : Colors.grey.shade800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+
         if (displayedLimits.isNotEmpty) _buildTableHeader(activeColor, displayedLimits),
         Expanded(
           child: _isLoadingNumbers
@@ -1347,6 +1408,7 @@ class _GlobalCountLimitDetailScreenState
                       setState(() {
                         _selectedDigitTab = index;
                         _selectedFilterTab = index + 1;
+                        _selectedFilterType = 'ALL';
                         if (_is111Checked) {
                           String label = _selectedDigitTab == 3
                               ? '1111 (0000-9999)'
