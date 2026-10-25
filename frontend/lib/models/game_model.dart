@@ -34,6 +34,8 @@ class GameModel {
 
   final bool canEditDelete;
   final String editDeleteLimitTime;
+  final int rushTimeMinutes;
+  final int rushTimeMaxCount;
 
   GameModel({
     required this.id,
@@ -66,6 +68,8 @@ class GameModel {
     this.globalTnCount4d20 = 0,
     this.canEditDelete = true,
     this.editDeleteLimitTime = '23:59:59',
+    this.rushTimeMinutes = 0,
+    this.rushTimeMaxCount = 0,
   });
 
   factory GameModel.fromJson(Map<String, dynamic> json) {
@@ -100,6 +104,8 @@ class GameModel {
       globalTnCount4d20: json['global_tn_count_4d_20'] ?? 0,
       canEditDelete: json['can_edit_delete'] ?? true,
       editDeleteLimitTime: json['edit_delete_limit_time'] ?? '23:59:59',
+      rushTimeMinutes: json['rush_time_minutes'] ?? 0,
+      rushTimeMaxCount: json['rush_time_max_count'] ?? 0,
     );
   }
 
@@ -135,6 +141,8 @@ class GameModel {
       'global_tn_count_4d_20': globalTnCount4d20,
       'can_edit_delete': canEditDelete,
       'edit_delete_limit_time': editDeleteLimitTime,
+      'rush_time_minutes': rushTimeMinutes,
+      'rush_time_max_count': rushTimeMaxCount,
     };
   }
 }

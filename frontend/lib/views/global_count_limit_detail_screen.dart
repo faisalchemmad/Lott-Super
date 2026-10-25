@@ -32,6 +32,10 @@ class _GlobalCountLimitDetailScreenState
   late TextEditingController _countSuper;
   late TextEditingController _countBox;
 
+  // Rush Time Controllers
+  late TextEditingController _rushTimeMinutes;
+  late TextEditingController _rushTimeMaxCount;
+
   // TN Controllers
   late TextEditingController _globalTnCountA;
   late TextEditingController _globalTnCountB;
@@ -102,6 +106,13 @@ class _GlobalCountLimitDetailScreenState
     _globalTnCount4d20 =
         TextEditingController(text: widget.game.globalTnCount4d20.toString());
 
+    _rushTimeMinutes = TextEditingController(
+        text: widget.game.rushTimeMinutes > 0 ? widget.game.rushTimeMinutes.toString() : '0');
+    _rushTimeMaxCount = TextEditingController(
+        text: widget.game.rushTimeMaxCount > 0 ? widget.game.rushTimeMaxCount.toString() : '0');
+    _rushTimeMinutes.addListener(() => setState(() {}));
+    _rushTimeMaxCount.addListener(() => setState(() {}));
+
     _user = widget.user;
     if (_user != null && _user!.effectiveGameMode == 'TN') {
       _selectedNumberLimitTab = 1;
@@ -164,6 +175,8 @@ class _GlobalCountLimitDetailScreenState
     _globalTnCount4d110.dispose();
     _globalTnCount4d55.dispose();
     _globalTnCount4d20.dispose();
+    _rushTimeMinutes.dispose();
+    _rushTimeMaxCount.dispose();
     super.dispose();
   }
 
@@ -198,6 +211,8 @@ class _GlobalCountLimitDetailScreenState
         'global_tn_count_4d_110': int.parse(_globalTnCount4d110.text),
         'global_tn_count_4d_55': int.parse(_globalTnCount4d55.text),
         'global_tn_count_4d_20': int.parse(_globalTnCount4d20.text),
+        'rush_time_minutes': int.tryParse(_rushTimeMinutes.text.trim()) ?? 0,
+        'rush_time_max_count': int.tryParse(_rushTimeMaxCount.text.trim()) ?? 0,
       };
 
       await apiService.updateGame(widget.game.id, updatedData);
@@ -257,6 +272,8 @@ class _GlobalCountLimitDetailScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildRushTimeCard(),
+              const SizedBox(height: 16),
               if (_user!.isKlEnabled) ...[
                 _buildKlSection(),
                 const SizedBox(height: 16),
@@ -271,6 +288,186 @@ class _GlobalCountLimitDetailScreenState
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRushTimeCard() {
+    int minutes = int.tryParse(_rushTimeMinutes.text.trim()) ?? 0;
+    int maxCount = int.tryParse(_rushTimeMaxCount.text.trim()) ?? 0;
+    bool isActive = minutes > 0 && maxCount > 0;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isActive ? Colors.amber.shade700 : Colors.grey.shade300,
+          width: isActive ? 1.5 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.amber.shade700 : Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.timer_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RUSH TIME LIMIT (LAST MINUTES)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        color: isActive ? Colors.amber.shade900 : Colors.black87,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      'End Time: ${widget.game.endTime}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.green.shade50 : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: isActive ? Colors.green.shade300 : Colors.grey.shade300,
+                  ),
+                ),
+                child: Text(
+                  isActive ? 'ACTIVE' : 'OFF',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: isActive ? Colors.green.shade800 : Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'അവസാന സമയത്ത് ഏതൊരു നമ്പറിനും പരമാവധി കയറാവുന്ന കൗണ്ട് നിയന്ത്രിക്കുക (0 നൽകിയാൽ ഈ ലിമിറ്റ് ഉണ്ടാവില്ല).',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Last Minutes (സമയം)',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _rushTimeMinutes,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. 10',
+                        suffixText: 'Min',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Max Count/Number (കൗണ്ട്)',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _rushTimeMaxCount,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. 5',
+                        suffixText: 'Qty',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (isActive) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline, color: Colors.amber.shade900, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'അവസാനത്തെ $minutes മിനിറ്റിൽ ഒരു നമ്പറിന് പരമാവധി $maxCount കൗണ്ട് മാത്രം.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

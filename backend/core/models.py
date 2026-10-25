@@ -288,6 +288,10 @@ class Game(models.Model):
     global_tn_count_4d_55 = models.IntegerField(default=0)
     global_tn_count_4d_20 = models.IntegerField(default=0)
 
+    # Rush Time Limit (Last X Minutes Limit per number)
+    rush_time_minutes = models.IntegerField(default=0)
+    rush_time_max_count = models.IntegerField(default=0)
+
     def __str__(self):
         return f"{self.name} - {self.time}"
 

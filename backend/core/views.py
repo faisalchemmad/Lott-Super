@@ -483,6 +483,28 @@ class BetViewSet(viewsets.ModelViewSet):
                  f"{start_t.strftime('%I:%M %p')} and {end_t.strftime('%I:%M %p')}."
              )
 
+        # 1.2 Rush Time Limit (Last X Minutes Limit per number)
+        if getattr(game, 'rush_time_minutes', 0) > 0 and getattr(game, 'rush_time_max_count', 0) > 0:
+            today = timezone.localtime().date()
+            from datetime import datetime, timedelta
+            end_dt = datetime.combine(today, end_t)
+            rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
+            rush_start_t = rush_start_dt.time()
+            if rush_start_t <= current_time <= end_t:
+                rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
+                root_admin = user.get_root_admin()
+                admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
+                rush_tot = Bet.objects.filter(
+                    user__id__in=admin_desc_ids,
+                    game=game,
+                    number=number,
+                    type=bet_type,
+                    created_at__gte=rush_start_aware
+                ).aggregate(t=Sum('count'))['t'] or 0
+                if (rush_tot + count) > game.rush_time_max_count:
+                    avail_rush = max(0, game.rush_time_max_count - rush_tot)
+                    raise drf_serializers.ValidationError(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
+
         # 1.5 Individual User-Specific Limits are now handled in the hierarchy check
 
         # 1.7 Hierarchical Branch Limits (Individual -> Dealer -> Agent -> Admin -> System)
@@ -684,6 +706,7 @@ class BetViewSet(viewsets.ModelViewSet):
         # Track counts within THIS bulk request per LEVEL (User & Branches)
         session_branch_nos = {}
         session_branch_types = {}
+        session_rush_counts = {}
         
         # Pre-fetch hierarchy info and descendant IDs once
         hierarchy_info = []
@@ -786,6 +809,29 @@ class BetViewSet(viewsets.ModelViewSet):
             if current_time < start_t or current_time > end_t:
                  mark_failed(f"Time: {start_t.strftime('%I:%M %p')} - {end_t.strftime('%I:%M %p')}")
                  continue
+
+            # 2.5 Rush Time Limit (Last X Minutes Limit per number)
+            if getattr(game, 'rush_time_minutes', 0) > 0 and getattr(game, 'rush_time_max_count', 0) > 0:
+                from datetime import datetime, timedelta
+                end_dt = datetime.combine(today, end_t)
+                rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
+                rush_start_t = rush_start_dt.time()
+                if rush_start_t <= current_time <= end_t:
+                    rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
+                    admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
+                    rush_tot = Bet.objects.filter(
+                        user__id__in=admin_desc_ids,
+                        game=game,
+                        number=number,
+                        type=bet_type,
+                        created_at__gte=rush_start_aware
+                    ).aggregate(t=Sum('count'))['t'] or 0
+
+                    current_session_rush = session_rush_counts.get((number, bet_type, game.id), 0)
+                    if (rush_tot + current_session_rush + count) > game.rush_time_max_count:
+                        avail_rush = max(0, game.rush_time_max_count - (rush_tot + current_session_rush))
+                        mark_failed(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
+                        continue
             
             # 3. Individual User-Specific Limit checks are now integrated into hierarchical Branch checks
 
@@ -939,6 +985,8 @@ class BetViewSet(viewsets.ModelViewSet):
                 key_t_global = (None, bet_type, game.id)
                 session_branch_nos[key_n_global] = session_branch_nos.get(key_n_global, 0) + count
                 session_branch_types[key_t_global] = session_branch_types.get(key_t_global, 0) + count
+            
+            session_rush_counts[(number, bet_type, game.id)] = session_rush_counts.get((number, bet_type, game.id), 0) + count
             
         return Response({
             'invoice_id': invoice_id if created_bets_count > 0 else None,
