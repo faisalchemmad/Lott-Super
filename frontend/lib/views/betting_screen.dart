@@ -250,18 +250,26 @@ class _BettingScreenState extends State<BettingScreen>
         _userController.text = user.username;
         if (user.effectiveGameMode == 'TN') {
           _selectedStateCode = 'TN';
-          _selectedType = '3D-10';
           _tabController.removeListener(_tabListener);
           _tabController.dispose();
-          _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
+          _tabController = TabController(length: 4, vsync: this, initialIndex: 2);
           _tabController.addListener(_tabListener);
+          _selectedType = '3D-10';
         } else if (user.effectiveGameMode == 'KL') {
           _selectedStateCode = 'KL';
+          _tabController.removeListener(_tabListener);
+          _tabController.dispose();
+          _tabController = TabController(length: 3, vsync: this, initialIndex: 2);
+          _tabController.addListener(_tabListener);
           _selectedType = 'SUPER';
         }
       }
       _recentBets = bets;
-      _selectedType = 'SUPER';
+      if (_selectedStateCode == 'TN') {
+        _selectedType = '3D-10';
+      } else {
+        _selectedType = 'SUPER';
+      }
       _isLoading = false;
       // Focus number field after UI is ready
       _numberFocusNode.requestFocus();
@@ -1139,7 +1147,7 @@ class _BettingScreenState extends State<BettingScreen>
           _tabController.removeListener(_tabListener);
           _tabController.dispose();
           _tabController =
-              TabController(length: 4, vsync: this, initialIndex: 0);
+              TabController(length: 4, vsync: this, initialIndex: 2);
           _tabController.addListener(_tabListener);
         });
       }
@@ -2371,11 +2379,7 @@ class _BettingScreenState extends State<BettingScreen>
       _tabController =
           TabController(length: length, vsync: this, initialIndex: newIndex);
       _tabController.addListener(_tabListener);
-      if (stateCode == 'TN') {
-        _selectedType = ['3D-10', '3D-25', '3D-30', '3D-60'][newIndex];
-      } else {
-        _selectedType = ['SUPER', 'BOX', 'ABC'][newIndex];
-      }
+      _selectedType = _getButtonsForTab(newIndex)[0];
     });
   }
 
