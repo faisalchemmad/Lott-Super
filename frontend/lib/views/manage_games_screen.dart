@@ -30,7 +30,7 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
     setState(() => _userRole = prefs.getString('role'));
   }
 
-  bool get _canManageGames => _userRole == 'SUPER_ADMIN';
+  bool get _canManageGames => _userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN';
 
   Future<void> _loadGames() async {
     setState(() => _isLoading = true);
@@ -103,10 +103,47 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          if (_canManageGames)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.add_circle, color: Colors.white, size: 28),
+                tooltip: 'Add New Game',
+                onPressed: () => _openAddEditGame(),
+              ),
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          : _games.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.sports_esports_outlined, size: 72, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      const Text('No Games Added Yet', style: TextStyle(fontSize: 18, color: Colors.black54, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text('Create games for users to start placing bets', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                      if (_canManageGames) ...[
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () => _openAddEditGame(),
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          label: const Text('CREATE NEW GAME', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _games.length,
               itemBuilder: (context, index) {
@@ -187,12 +224,15 @@ class _ManageGamesScreenState extends State<ManageGamesScreen> {
               },
             ),
       floatingActionButton: _canManageGames
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: () => _openAddEditGame(),
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6)),
-              child: const Icon(Icons.add, color: Colors.white),
+                  borderRadius: BorderRadius.circular(8)),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text('ADD GAME',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             )
           : null,
     );

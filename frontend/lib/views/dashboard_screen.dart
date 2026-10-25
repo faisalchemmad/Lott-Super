@@ -837,7 +837,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Colors.purple,
             () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ManageAdminsScreen())),
           ),
-        if (_stats?['role'] != 'SUB_DEALER')
+        if (isAdmin)
+          _buildActionCard(
+            'Manage Games',
+            Icons.sports_esports_rounded,
+            Colors.green.shade700,
+            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ManageGamesScreen())),
+          )
+        else if (_stats?['role'] != 'SUB_DEALER')
           _buildActionCard(
             'Game Times',
             Icons.timer,
