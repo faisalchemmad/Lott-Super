@@ -143,15 +143,25 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
 
     bool success = false;
     if (widget.game == null) {
-      success = await apiService.createGame(
-        _nameController.text.trim(),
-        _formatTime(_drawTime),
-        startTime: _formatTime(_startTime),
-        endTime: _formatTime(_endTime),
-        color: _selectedColor,
-        canEditDelete: _canEditDelete,
-        deadlineTime: _formatTime(_deadlineTime),
-      );
+      try {
+        success = await apiService.createGame(
+          _nameController.text.trim(),
+          _formatTime(_drawTime),
+          startTime: _formatTime(_startTime),
+          endTime: _formatTime(_endTime),
+          color: _selectedColor,
+          canEditDelete: _canEditDelete,
+          deadlineTime: _formatTime(_deadlineTime),
+        );
+      } catch (e) {
+        success = false;
+        if (mounted) {
+          final cleanErr = e.toString().replaceAll('Exception: ', '');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(cleanErr), backgroundColor: Colors.red),
+          );
+        }
+      }
     } else {
       try {
         await apiService.updateGame(widget.game!.id, {

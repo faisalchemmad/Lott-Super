@@ -117,6 +117,96 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='subscription-summary')
+    def subscription_summary(self, request):
+        if request.user.role != 'SUPER_ADMIN':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        today = timezone.localdate()
+        admins = User.objects.filter(role='ADMIN').order_by('-date_joined')
+        total_admins = admins.count()
+        active_admins = 0
+        expired_admins = 0
+        expiring_soon = 0
+        admin_list = []
+        for a in admins:
+            days_left = (a.subscription_end_date - today).days if a.subscription_end_date else 9999
+            is_active = a.is_subscription_active and days_left >= 0
+            if is_active:
+                active_admins += 1
+                if 0 <= days_left <= 3:
+                    expiring_soon += 1
+            else:
+                expired_admins += 1
+            admin_list.append({
+                'id': a.id,
+                'username': a.username,
+                'subscription_plan': a.subscription_plan,
+                'subscription_start_date': a.subscription_start_date.isoformat() if a.subscription_start_date else None,
+                'subscription_end_date': a.subscription_end_date.isoformat() if a.subscription_end_date else None,
+                'is_subscription_active': a.is_subscription_active,
+                'subscription_status': 'ACTIVE' if is_active else 'EXPIRED',
+                'subscription_days_left': days_left,
+                'max_allowed_games': a.max_allowed_games,
+                'created_games_count': a.games.filter(is_active=True).count(),
+                'is_blocked': a.is_blocked
+            })
+        return Response({
+            'total_admins': total_admins,
+            'active_admins': active_admins,
+            'expired_admins': expired_admins,
+            'expiring_soon': expiring_soon,
+            'admins': admin_list
+        })
+
+    @action(detail=True, methods=['post'], url_path='renew-subscription')
+    def renew_subscription(self, request, pk=None):
+        if request.user.role != 'SUPER_ADMIN':
+            return Response({'error': 'Only Super Admin can renew subscriptions.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        target_admin = self.get_object()
+        if target_admin.role != 'ADMIN':
+            return Response({'error': 'Subscription can only be renewed for Admins.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        plan = request.data.get('subscription_plan', target_admin.subscription_plan or '30_days')
+        plan_days_map = {
+            '7_days': 7,
+            '30_days': 30,
+            '90_days': 90,
+            '180_days': 180,
+            '365_days': 365,
+        }
+        days = request.data.get('days')
+        if days is not None:
+            try:
+                days = int(days)
+            except:
+                days = plan_days_map.get(plan, 30)
+        else:
+            days = plan_days_map.get(plan, 30)
+
+        today = timezone.localdate()
+        base_date = today
+        if target_admin.subscription_end_date and target_admin.subscription_end_date > today:
+            base_date = target_admin.subscription_end_date
+
+        target_admin.subscription_start_date = today if not target_admin.subscription_start_date else target_admin.subscription_start_date
+        target_admin.subscription_end_date = base_date + timezone.timedelta(days=days)
+        target_admin.subscription_plan = plan
+        target_admin.is_subscription_active = True
+        
+        if 'max_allowed_games' in request.data:
+            try:
+                target_admin.max_allowed_games = int(request.data['max_allowed_games'])
+            except:
+                pass
+
+        target_admin.save()
+        return Response({
+            'success': True,
+            'message': f'Subscription renewed successfully for {days} days.',
+            'user': UserSerializer(target_admin).data
+        })
+
     @action(detail=False, methods=['post'], url_path='change-password')
     def change_password(self, request):
         user = request.user
@@ -147,7 +237,33 @@ class UserViewSet(viewsets.ModelViewSet):
                 if target_role != 'SUB_DEALER':
                      raise drf_serializers.ValidationError("You can only create users with the SUB_DEALER role.")
 
-        instance = serializer.save(parent=creator)
+        if target_role == 'ADMIN':
+            plan = self.request.data.get('subscription_plan', '30_days')
+            plan_days_map = {
+                '7_days': 7,
+                '30_days': 30,
+                '90_days': 90,
+                '180_days': 180,
+                '365_days': 365,
+            }
+            days = plan_days_map.get(plan, 30)
+            today = timezone.localdate()
+            start_date = today
+            end_date = today + timezone.timedelta(days=days)
+            try:
+                max_games = int(self.request.data.get('max_allowed_games', 4))
+            except:
+                max_games = 4
+            instance = serializer.save(
+                parent=creator,
+                subscription_plan=plan,
+                subscription_start_date=start_date,
+                subscription_end_date=end_date,
+                is_subscription_active=True,
+                max_allowed_games=max_games
+            )
+        else:
+            instance = serializer.save(parent=creator)
         if instance.is_default:
             # Reset others under same parent
             User.objects.filter(parent=creator, is_default=True).exclude(id=instance.id).update(is_default=False)
@@ -175,10 +291,22 @@ class LoginView(views.APIView):
             if user.is_blocked or any(p.is_blocked for p in user.get_ancestors()):
                 return Response({'error': 'Account Blocked'}, status=status.HTTP_403_FORBIDDEN)
                 
+            # Check Subscription Status
+            is_sub_active, days_left, sub_status, root_admin = user.check_subscription_status()
+            if not is_sub_active:
+                if user.role == 'ADMIN':
+                    end_str = root_admin.subscription_end_date.strftime('%d-%m-%Y') if root_admin and root_admin.subscription_end_date else 'Expired'
+                    err_msg = f"Your subscription expired on {end_str}. Please contact Super Admin to renew."
+                else:
+                    err_msg = "Your Admin's subscription has expired. Please contact your Admin or Super Admin."
+                return Response({'error': err_msg, 'subscription_expired': True}, status=status.HTTP_403_FORBIDDEN)
+
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
-                'user': UserSerializer(user).data
+                'user': UserSerializer(user).data,
+                'subscription_days_left': days_left,
+                'subscription_status': sub_status
             })
         
         # Check if user exists but password matches (for better error msg)
@@ -193,23 +321,27 @@ class SystemSettingsViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Ensure at least one settings object exists
-        if not SystemSettings.objects.exists():
+        user = self.request.user
+        root_admin = user.get_root_admin() if user.is_authenticated else None
+        if root_admin:
+            settings, _ = SystemSettings.objects.get_or_create(admin=root_admin)
+            return SystemSettings.objects.filter(admin=root_admin)
+        if not SystemSettings.objects.filter(admin__isnull=True).exists():
             SystemSettings.objects.create()
-        return SystemSettings.objects.all()
+        return SystemSettings.objects.filter(admin__isnull=True)
     
     def list(self, request, *args, **kwargs):
-        # Return only the single settings object
         settings = self.get_queryset().first()
         serializer = self.get_serializer(settings)
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='update-settings')
     def update_settings(self, request):
-        if request.user.role != 'SUPER_ADMIN':
-            return Response({'error': 'Only Super Admin can update system settings'}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.role not in ['SUPER_ADMIN', 'ADMIN']:
+            return Response({'error': 'Only Admin can update system settings'}, status=status.HTTP_403_FORBIDDEN)
         
-        settings = self.get_queryset().first()
+        root_admin = request.user.get_root_admin()
+        settings, _ = SystemSettings.objects.get_or_create(admin=root_admin)
         serializer = self.get_serializer(settings, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -220,18 +352,43 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
 
     def get_queryset(self):
-        qs = Game.objects.filter(is_active=True).order_by('time')
         user = self.request.user
+        if not user.is_authenticated:
+            return Game.objects.none()
+
+        qs = Game.objects.all().order_by('time')
         
-        # Super Admins always see all active games
         if getattr(user, 'role', None) == 'SUPER_ADMIN':
+            admin_id = self.request.query_params.get('admin')
+            if admin_id and str(admin_id).upper() != 'ALL':
+                qs = qs.filter(admin_id=admin_id)
             return qs
-            
-        # Other authenticated users see only games they have explicitly been allowed
-        # (Default new users have all games assigned via creation script/logic)
-        if user.is_authenticated:
-            return qs.filter(id__in=user.allowed_games.values_list('id', flat=True))
+
+        root_admin = user.get_root_admin()
+        if root_admin:
+            qs = qs.filter(admin=root_admin)
+            if user.role != 'ADMIN':
+                allowed = user.allowed_games.values_list('id', flat=True)
+                if allowed.exists():
+                    qs = qs.filter(id__in=allowed)
+            return qs
         return Game.objects.none()
+
+    def perform_create(self, serializer):
+        from rest_framework import serializers as drf_serializers
+        user = self.request.user
+        root_admin = user.get_root_admin()
+        if not root_admin:
+            raise drf_serializers.ValidationError("Only Admins can create games.")
+
+        max_games = root_admin.max_allowed_games or 4
+        existing_count = Game.objects.filter(admin=root_admin, is_active=True).count()
+        if existing_count >= max_games:
+            raise drf_serializers.ValidationError(
+                f"നിങ്ങൾക്ക് അനുവദിച്ച ഗെയിം പരിധി ({max_games} Games) പൂർത്തിയായി. കൂടുതൽ ഗെയിമുകൾ ചേർക്കാൻ സൂപ്പർ അഡ്മിനുമായി ബന്ധപ്പെടുക."
+            )
+
+        serializer.save(admin=root_admin)
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -267,6 +424,11 @@ class BetViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_blocked or any(p.is_blocked for p in user.get_ancestors()):
             raise drf_serializers.ValidationError("Account Blocked")
+
+        # Check Subscription Status
+        is_sub_active, days_left, sub_status, root_admin = user.check_subscription_status()
+        if not is_sub_active:
+            raise drf_serializers.ValidationError("Subscription expired. Betting is currently disabled.")
         game = serializer.validated_data['game']
         bet_type = serializer.validated_data['type']
         
@@ -465,6 +627,11 @@ class BetViewSet(viewsets.ModelViewSet):
 
         if user.is_blocked or any(p.is_blocked for p in user.get_ancestors()):
             return Response({'error': 'Account Blocked'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Check Subscription Status
+        is_sub_active, days_left, sub_status, root_admin = user.check_subscription_status()
+        if not is_sub_active:
+            return Response({'error': 'Subscription expired. Betting is currently disabled.'}, status=status.HTTP_403_FORBIDDEN)
 
         bets_data = request.data.get('bets', [])
         customer_name = (request.data.get('customer_name') or '').strip()
@@ -2515,25 +2682,43 @@ class DashboardView(views.APIView):
         week_start = timezone.localtime().date() - timezone.timedelta(days=timezone.localtime().weekday())
         
         if user.role == 'SUPER_ADMIN':
-            # Global daily stats for Super Admin cards
-            today = timezone.localtime().date()
-            global_daily_bets = Bet.objects.filter(created_at__date=today)
-            excluded_ids = get_excluded_forwarding_user_ids()
-            if excluded_ids:
-                global_daily_bets = global_daily_bets.exclude(user_id__in=excluded_ids)
-            stats = global_daily_bets.aggregate(
-                sales=Sum(F('amount') * F('count')),
-                wins=Sum('winning_amount')
-            )
-            sales = stats['sales'] or 0
-            wins = stats['wins'] or 0
+            today = timezone.localdate()
+            admins = User.objects.filter(role='ADMIN').order_by('-date_joined')
+            total_admins = admins.count()
+            active_admins = 0
+            expired_admins = 0
+            expiring_soon = 0
+            admin_list = []
+            for a in admins:
+                days_left = (a.subscription_end_date - today).days if a.subscription_end_date else 9999
+                is_active = a.is_subscription_active and days_left >= 0
+                if is_active:
+                    active_admins += 1
+                    if 0 <= days_left <= 3:
+                        expiring_soon += 1
+                else:
+                    expired_admins += 1
+                admin_list.append({
+                    'id': a.id,
+                    'username': a.username,
+                    'subscription_plan': a.subscription_plan,
+                    'subscription_start_date': a.subscription_start_date.isoformat() if a.subscription_start_date else None,
+                    'subscription_end_date': a.subscription_end_date.isoformat() if a.subscription_end_date else None,
+                    'is_subscription_active': a.is_subscription_active,
+                    'subscription_status': 'ACTIVE' if is_active else 'EXPIRED',
+                    'subscription_days_left': days_left,
+                    'max_allowed_games': a.max_allowed_games,
+                    'created_games_count': a.games.filter(is_active=True).count(),
+                    'is_blocked': a.is_blocked
+                })
             data = {
                 'username': user.username,
                 'role': user.role,
-                'global_daily_sales': sales,
-                'global_daily_wins': wins,
-                'global_daily_profit': float(sales) - float(wins),
-                'active_games': Game.objects.filter(is_active=True).count()
+                'total_admins': total_admins,
+                'active_admins': active_admins,
+                'expired_admins': expired_admins,
+                'expiring_soon': expiring_soon,
+                'admins': admin_list
             }
         else:
             # Stats for others (Branch-wide)
@@ -2630,10 +2815,23 @@ class GameResultViewSet(viewsets.ModelViewSet):
     serializer_class = GameResultSerializer
 
     def get_queryset(self):
+        user = self.request.user
         queryset = GameResult.objects.all()
         date = self.request.query_params.get('date')
         game_id = self.request.query_params.get('game')
         state = self.request.query_params.get('state')
+        
+        if getattr(user, 'role', None) == 'SUPER_ADMIN':
+            admin_id = self.request.query_params.get('admin')
+            if admin_id and str(admin_id).upper() != 'ALL':
+                queryset = queryset.filter(admin_id=admin_id)
+        else:
+            root_admin = user.get_root_admin() if user.is_authenticated else None
+            if root_admin:
+                queryset = queryset.filter(admin=root_admin)
+            else:
+                return GameResult.objects.none()
+
         if date:
             queryset = queryset.filter(date=date)
         if game_id:
@@ -2652,13 +2850,12 @@ class GameResultViewSet(viewsets.ModelViewSet):
         else:
             date = timezone.now().date()
             
-        # Check if result already exists for this game/date/state
-        existing = GameResult.objects.filter(game_id=game_id, date=date, state=state).first()
+        root_admin = request.user.get_root_admin()
+        # Check if result already exists for this game/date/state/admin
+        existing = GameResult.objects.filter(game_id=game_id, date=date, state=state, admin=root_admin).first()
         if existing:
-            # Re-route to update
             serializer = self.get_serializer(existing, data=request.data, partial=True)
         else:
-            # Standard create
             serializer = self.get_serializer(data=request.data)
             
         serializer.is_valid(raise_exception=True)
@@ -2667,7 +2864,8 @@ class GameResultViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED if not existing else status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        game_result = serializer.save()
+        root_admin = self.request.user.get_root_admin()
+        game_result = serializer.save(admin=root_admin)
         self._calculate_winners(game_result)
 
     def perform_destroy(self, instance):
@@ -2715,6 +2913,9 @@ class GameResultViewSet(viewsets.ModelViewSet):
         from datetime import timedelta
         date_from = date - timedelta(days=1)
         all_bets_qs = Bet.objects.filter(game=game, state=res_state, created_at__date__gte=date_from, created_at__date__lte=date)
+        if game_result.admin:
+            descendant_ids = game_result.admin.get_descendant_ids()
+            all_bets_qs = all_bets_qs.filter(user_id__in=descendant_ids)
         all_bets_qs.update(is_winner=False, winning_amount=0, winning_commission=0, winning_prize_type=None)
 
         # 3. Define win evaluation logic for both Bets and ForwardedBets

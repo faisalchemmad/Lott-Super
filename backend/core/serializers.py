@@ -35,10 +35,28 @@ class UserSerializer(serializers.ModelSerializer):
             'tn_sales_comm_abc', 'tn_sales_comm_ab_bc_ac',
             'tn_sales_comm_3d_10', 'tn_sales_comm_3d_25', 'tn_sales_comm_3d_30', 'tn_sales_comm_3d_60',
             'tn_sales_comm_4d_110', 'tn_sales_comm_4d_55', 'tn_sales_comm_4d_20',
-            'is_blocked', 'is_default', 'can_forward', 'date_joined', 'allowed_games', 'cut_enabled', 'cut_type', 'cut_value', 'cut_category_values'
+            'is_blocked', 'is_default', 'can_forward', 'date_joined', 'allowed_games', 'cut_enabled', 'cut_type', 'cut_value', 'cut_category_values',
+            'subscription_plan', 'subscription_start_date', 'subscription_end_date', 'is_subscription_active', 'max_allowed_games',
+            'subscription_status', 'subscription_days_left', 'created_games_count'
         ]
 
     remaining_credit = serializers.SerializerMethodField()
+    subscription_status = serializers.SerializerMethodField()
+    subscription_days_left = serializers.SerializerMethodField()
+    created_games_count = serializers.SerializerMethodField()
+
+    def get_subscription_status(self, obj):
+        is_active, days, status_str, _ = obj.check_subscription_status()
+        return status_str
+
+    def get_subscription_days_left(self, obj):
+        is_active, days, status_str, _ = obj.check_subscription_status()
+        return days
+
+    def get_created_games_count(self, obj):
+        if obj.role == 'ADMIN':
+            return obj.games.filter(is_active=True).count()
+        return 0
 
     def get_remaining_credit(self, obj):
         return float(obj.weekly_credit_limit) - float(obj.get_weekly_net_loss())

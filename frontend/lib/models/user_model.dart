@@ -13,6 +13,14 @@ class UserModel {
   final double cutValue;
   final Map<String, dynamic> cutCategoryValues;
   final List<int> allowedGames;
+  final String subscriptionPlan;
+  final String? subscriptionStartDate;
+  final String? subscriptionEndDate;
+  final bool isSubscriptionActive;
+  final int maxAllowedGames;
+  final String subscriptionStatus;
+  final int subscriptionDaysLeft;
+  final int createdGamesCount;
 
   // Count Limits
   final int countA;
@@ -240,6 +248,14 @@ class UserModel {
     this.cutCategoryValues = const {},
     this.parent,
     this.allowedGames = const [],
+    this.subscriptionPlan = '30_days',
+    this.subscriptionStartDate,
+    this.subscriptionEndDate,
+    this.isSubscriptionActive = true,
+    this.maxAllowedGames = 4,
+    this.subscriptionStatus = 'ACTIVE',
+    this.subscriptionDaysLeft = 9999,
+    this.createdGamesCount = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -388,6 +404,14 @@ class UserModel {
       parent: json['parent'],
       allowedGames:
           (json['allowed_games'] as List?)?.map((e) => e as int).toList() ?? [],
+      subscriptionPlan: json['subscription_plan'] ?? '30_days',
+      subscriptionStartDate: json['subscription_start_date'],
+      subscriptionEndDate: json['subscription_end_date'],
+      isSubscriptionActive: json['is_subscription_active'] ?? true,
+      maxAllowedGames: json['max_allowed_games'] ?? 4,
+      subscriptionStatus: json['subscription_status'] ?? 'ACTIVE',
+      subscriptionDaysLeft: json['subscription_days_left'] ?? 9999,
+      createdGamesCount: json['created_games_count'] ?? 0,
     );
   }
 
@@ -402,6 +426,11 @@ class UserModel {
       'cut_type': cutType,
       'cut_value': cutValue,
       'cut_category_values': cutCategoryValues,
+      'subscription_plan': subscriptionPlan,
+      'subscription_start_date': subscriptionStartDate,
+      'subscription_end_date': subscriptionEndDate,
+      'is_subscription_active': isSubscriptionActive,
+      'max_allowed_games': maxAllowedGames,
       'weekly_credit_limit': weeklyCreditLimit,
       'remaining_credit': remainingCredit,
       'date_joined': dateJoined,

@@ -338,7 +338,19 @@ class ApiService {
       },
       body: jsonEncode(data),
     );
-    return response.statusCode == 201;
+    if (response.statusCode == 201) return true;
+    try {
+      final err = jsonDecode(response.body);
+      if (err is List && err.isNotEmpty) throw Exception(err[0].toString());
+      if (err is Map) {
+        final firstVal = err.values.first;
+        if (firstVal is List && firstVal.isNotEmpty) throw Exception(firstVal[0].toString());
+        throw Exception(firstVal.toString());
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+    }
+    return false;
   }
 
   Future<void> updateGame(int id, Map<String, dynamic> data) async {
@@ -1105,6 +1117,58 @@ class ApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(data),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<UserModel?> getUser(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/$userId/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+    if (response.statusCode == 200) {
+      return UserModel.fromJson(jsonDecode(response.body));
+    }
+    return null;
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
+  Future<Map<String, dynamic>> getSubscriptionSummary() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/subscription-summary/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return {};
+  }
+
+  Future<bool> renewSubscription(int adminId, {required String plan, int? days, int? maxAllowedGames}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final Map<String, dynamic> body = {'subscription_plan': plan};
+    if (days != null) body['days'] = days;
+    if (maxAllowedGames != null) body['max_allowed_games'] = maxAllowedGames;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/$adminId/renew-subscription/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
     );
     return response.statusCode == 200;
   }

@@ -120,6 +120,16 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
+                _buildOption(
+                  context,
+                  icon: Icons.card_membership_rounded,
+                  label:
+                      'Subscription: ${userToShow.subscriptionStatus} (${userToShow.subscriptionDaysLeft} days left)',
+                  onTap: () {
+                    _showRenewDialog(context, userToShow);
+                  },
+                ),
+                const SizedBox(height: 8),
               ],
             ],
             _buildOption(
@@ -663,4 +673,120 @@ class _UserOptionsScreenState extends State<UserOptionsScreen> {
     );
   }
 
+
+  void _showRenewDialog(BuildContext context, UserModel userToShow) {
+    String selectedPlan = userToShow.subscriptionPlan.isNotEmpty ? userToShow.subscriptionPlan : '30_days';
+    int maxGames = userToShow.maxAllowedGames;
+    bool isSubmitting = false;
+
+    final planDaysMap = {
+      '7_days': 7,
+      '30_days': 30,
+      '90_days': 90,
+      '180_days': 180,
+      '365_days': 365,
+    };
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.autorenew_rounded, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Renew Subscription: ${userToShow.username}', style: const TextStyle(fontSize: 16))),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Select Plan (കാലാവധി):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedPlan,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: '7_days', child: Text('7 Days (1 Week)')),
+                    DropdownMenuItem(value: '30_days', child: Text('30 Days (1 Month)')),
+                    DropdownMenuItem(value: '90_days', child: Text('90 Days (3 Months)')),
+                    DropdownMenuItem(value: '180_days', child: Text('180 Days (6 Months)')),
+                    DropdownMenuItem(value: '365_days', child: Text('365 Days (1 Year)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedPlan = val);
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text('Max Allowed Games (അനുവദിച്ച ഗെയിമുകൾ):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  value: maxGames,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 4, child: Text('4 Games')),
+                    DropdownMenuItem(value: 8, child: Text('8 Games')),
+                    DropdownMenuItem(value: 12, child: Text('12 Games')),
+                    DropdownMenuItem(value: 16, child: Text('16 Games')),
+                    DropdownMenuItem(value: 24, child: Text('24 Games')),
+                    DropdownMenuItem(value: 999, child: Text('Unlimited Games')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => maxGames = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      setDialogState(() => isSubmitting = true);
+                      final apiService = Provider.of<ApiService>(context, listen: false);
+                      final days = planDaysMap[selectedPlan] ?? 30;
+                      final ok = await apiService.renewSubscription(
+                        userToShow.id,
+                        plan: selectedPlan,
+                        days: days,
+                        maxAllowedGames: maxGames,
+                      );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        if (ok) {
+                          _loadUserData();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Subscription renewed successfully!'), backgroundColor: Colors.green),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to renew subscription'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('RENEW NOW'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

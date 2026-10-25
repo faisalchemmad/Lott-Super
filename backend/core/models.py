@@ -25,6 +25,44 @@ class User(AbstractUser):
     cut_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     cut_category_values = models.JSONField(default=dict)
 
+    # Subscription & Multi-tenant Settings
+    subscription_plan = models.CharField(max_length=30, default='30_days')
+    subscription_start_date = models.DateField(null=True, blank=True)
+    subscription_end_date = models.DateField(null=True, blank=True)
+    is_subscription_active = models.BooleanField(default=True)
+    max_allowed_games = models.IntegerField(default=4)
+
+    def get_root_admin(self):
+        """Returns the top-level ADMIN user in this user's ancestor chain, or self if self.role == 'ADMIN'."""
+        curr = self
+        visited = set()
+        while curr and curr.id not in visited:
+            visited.add(curr.id)
+            if curr.role == 'ADMIN':
+                return curr
+            curr = curr.parent
+        return None
+
+    def check_subscription_status(self):
+        """Returns (is_active: bool, days_left: int, status_str: str, root_admin: User)"""
+        if self.role == 'SUPER_ADMIN':
+            return True, 9999, 'ACTIVE', None
+        root_admin = self.get_root_admin()
+        if not root_admin:
+            return True, 9999, 'ACTIVE', None
+
+        if not root_admin.is_subscription_active:
+            return False, 0, 'DEACTIVATED', root_admin
+
+        if not root_admin.subscription_end_date:
+            return True, 9999, 'ACTIVE', root_admin
+
+        today = timezone.localdate()
+        diff = (root_admin.subscription_end_date - today).days
+        if diff < 0:
+            return False, diff, 'EXPIRED', root_admin
+        return True, diff, 'ACTIVE', root_admin
+
     def get_descendant_ids(self):
         """Returns a list of IDs for all descendants (children, grandchildren, etc.) including self."""
         descendants = [self.id]
@@ -196,6 +234,7 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
 class Game(models.Model):
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='games', null=True, blank=True)
     name = models.CharField(max_length=100)
     time = models.TimeField()
     start_time = models.TimeField(default='00:00:00')
@@ -284,6 +323,7 @@ class GameResult(models.Model):
         ('KL', 'Kerala'),
         ('TN', 'Tamil Nadu'),
     ]
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='game_results', null=True, blank=True)
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='results')
     state = models.CharField(max_length=10, choices=STATE_CHOICES, default='KL')
     date = models.DateField(default=timezone.now)
@@ -296,7 +336,7 @@ class GameResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('game', 'date', 'state')
+        unique_together = ('game', 'date', 'state', 'admin')
 
     def __str__(self):
         return f"{self.game.name} ({self.state}) - {self.date} - {self.winning_number}"
@@ -354,6 +394,7 @@ class UserGameTiming(models.Model):
     def __str__(self):
         return f"{self.user.username} | {self.game.name} | {self.start_time} - {self.end_time}"
 class SystemSettings(models.Model):
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='system_settings', null=True, blank=True)
     can_edit_delete_invoice = models.BooleanField(default=True)
     edit_delete_limit_time = models.TimeField(default='23:59:59')
     

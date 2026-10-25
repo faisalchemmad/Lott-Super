@@ -21,6 +21,8 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
 
   bool _isLoading = false;
   bool _isDefault = false;
+  String _subscriptionPlan = '30_days';
+  int _maxAllowedGames = 4;
   bool _cutEnabled = false;
   String _cutType = 'percent';
   final TextEditingController _cutValueController = TextEditingController(text: '0');
@@ -43,6 +45,8 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     if (widget.user != null) {
       _roleToSet = widget.user!.role;
       _isDefault = widget.user!.isDefault;
+      _subscriptionPlan = widget.user!.subscriptionPlan;
+      _maxAllowedGames = widget.user!.maxAllowedGames;
       _cutEnabled = widget.user!.cutEnabled;
       _cutType = widget.user!.cutType;
       _cutValueController.text = widget.user!.cutValue.toString();
@@ -93,6 +97,8 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
       'weekly_credit_limit': double.tryParse(_creditLimitController.text) ?? 0,
       'is_default': _isDefault,
       'can_forward': false,
+      'subscription_plan': _subscriptionPlan,
+      'max_allowed_games': _maxAllowedGames,
       'cut_enabled': _cutEnabled,
       'cut_type': _cutType,
       'cut_value': double.tryParse(_cutValueController.text.trim()) ?? 0.0,
@@ -176,6 +182,69 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                   isNumber: true),
               const SizedBox(height: 20),
               if (_roleToSet == 'ADMIN') ...[
+                _buildSectionTitle('Subscription & Game Package (സബ്സ്ക്രിപ്ഷൻ)'),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Subscription Plan (കാലാവധി)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _subscriptionPlan,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(Icons.card_membership_rounded, color: AppColors.primary),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: '7_days', child: Text('7 Days (1 Week)')),
+                          DropdownMenuItem(value: '30_days', child: Text('30 Days (1 Month)')),
+                          DropdownMenuItem(value: '90_days', child: Text('90 Days (3 Months)')),
+                          DropdownMenuItem(value: '180_days', child: Text('180 Days (6 Months)')),
+                          DropdownMenuItem(value: '365_days', child: Text('365 Days (1 Year)')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _subscriptionPlan = val);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Max Allowed Games (അനുവദിച്ച പരമാവധി ഗെയിമുകൾ)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int>(
+                        value: _maxAllowedGames,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(Icons.games_rounded, color: Colors.deepOrange),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 4, child: Text('4 Games Limit')),
+                          DropdownMenuItem(value: 8, child: Text('8 Games Limit')),
+                          DropdownMenuItem(value: 12, child: Text('12 Games Limit')),
+                          DropdownMenuItem(value: 16, child: Text('16 Games Limit')),
+                          DropdownMenuItem(value: 24, child: Text('24 Games Limit')),
+                          DropdownMenuItem(value: 999, child: Text('Unlimited Games')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _maxAllowedGames = val);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
                 _buildSectionTitle('Cut Settings (കട്ട് സെറ്റിംഗ്സ്)'),
                 Container(
                   decoration: BoxDecoration(
