@@ -350,21 +350,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (admin['game_mode'] == 'TN' ? Colors.deepOrange : (admin['game_mode'] == 'KL' ? Colors.teal : Colors.indigo)).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      admin['game_mode'] == 'TN' ? 'TN ONLY' : (admin['game_mode'] == 'KL' ? 'KL ONLY' : 'KL & TN'),
-                      style: TextStyle(
-                        color: admin['game_mode'] == 'TN' ? Colors.deepOrange : (admin['game_mode'] == 'KL' ? Colors.teal : Colors.indigo),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                  Builder(builder: (context) {
+                    final mode = (admin['game_mode'] ?? 'KL').toString().toUpperCase();
+                    final modeLabel = mode == 'TN' ? 'TN' : (mode == 'KL' ? 'KL' : 'KL & TN');
+                    final modeColor = mode == 'TN' ? Colors.deepOrange : (mode == 'KL' ? Colors.teal : Colors.indigo);
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: modeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: modeColor.withValues(alpha: 0.3)),
                       ),
-                    ),
-                  ),
+                      child: Text(
+                        modeLabel,
+                        style: TextStyle(
+                          color: modeColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ],
@@ -416,7 +422,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showRenewSubscriptionDialog(Map<String, dynamic> admin) {
     String selectedPlan = admin['subscription_plan'] ?? '30_days';
     int maxGames = admin['max_allowed_games'] ?? 4;
-    String selectedMode = admin['game_mode'] ?? 'BOTH';
+    String selectedMode = (admin['game_mode'] ?? 'KL').toString().toUpperCase();
+    if (!['KL', 'TN', 'BOTH'].contains(selectedMode)) selectedMode = 'KL';
     bool isSubmitting = false;
 
     final planDaysMap = {

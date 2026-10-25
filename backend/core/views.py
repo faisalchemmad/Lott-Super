@@ -2731,6 +2731,8 @@ class DashboardView(views.APIView):
                     'subscription_days_left': days_left,
                     'max_allowed_games': a.max_allowed_games,
                     'created_games_count': a.games.filter(is_active=True).count(),
+                    'game_mode': a.game_mode,
+                    'effective_game_mode': a.get_effective_game_mode(),
                     'is_blocked': a.is_blocked
                 })
             data = {
