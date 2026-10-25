@@ -447,9 +447,9 @@ class _ManageUserNumberLimitsScreenState
     } else if (tabIndex == 1) {
       return ['AB', 'BC', 'AC', 'ALL'];
     } else if (tabIndex == 2) {
-      return isTn ? ['3D-10', '3D-25', '3D-30', '3D-60'] : ['SUPER', 'BOX'];
+      return isTn ? ['3D-10', '3D-25', '3D-30', '3D-60', 'ALL'] : ['SUPER', 'BOX', 'ALL'];
     } else {
-      return ['4D-110', '4D-55', '4D-20'];
+      return ['4D-110', '4D-55', '4D-20', 'ALL'];
     }
   }
 
@@ -636,19 +636,22 @@ class _ManageUserNumberLimitsScreenState
               children: _getQuickButtonsForTab(_selectedDigitTab, isTn).map((btn) {
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
                     child: ElevatedButton(
                       onPressed: () => _handleQuickAdd(btn, isTn),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: btn == 'ALL' ? Colors.black87 : activeColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                       ),
-                      child: Text(
-                        btn,
-                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          btn,
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
+                        ),
                       ),
                     ),
                   ),
@@ -701,6 +704,10 @@ class _ManageUserNumberLimitsScreenState
           targetTypes = isTn ? ['TN-A', 'TN-B', 'TN-C'] : ['A', 'B', 'C'];
         } else if (reqDigits == 2) {
           targetTypes = isTn ? ['TN-AB', 'TN-BC', 'TN-AC'] : ['AB', 'BC', 'AC'];
+        } else if (reqDigits == 3) {
+          targetTypes = isTn ? ['3D-10', '3D-25', '3D-30', '3D-60'] : ['SUPER', 'BOX'];
+        } else if (reqDigits == 4) {
+          targetTypes = ['4D-110', '4D-55', '4D-20'];
         }
       } else {
         String realType = btn;
