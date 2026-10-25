@@ -11,6 +11,7 @@ import '../models/user_model.dart';
 import '../models/bet_model.dart';
 import '../utils/constants.dart';
 import 'failed_bets_screen.dart';
+import 'invoice_detail_screen.dart';
 
 class BettingScreen extends StatefulWidget {
   final GameModel game;
@@ -819,8 +820,11 @@ class _BettingScreenState extends State<BettingScreen>
                 ),
               ],
             ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
             actions: [
-              TextButton(
+              IconButton(
+                icon: const Icon(Icons.share_rounded, color: Colors.green, size: 24),
+                tooltip: 'Share',
                 onPressed: () {
                   final now = DateTime.now();
                   final dateStr = DateFormat('dd/MM/yyyy').format(now);
@@ -857,30 +861,42 @@ class _BettingScreenState extends State<BettingScreen>
 
                   Share.share(shareText);
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.green,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.share, size: 18),
-                    SizedBox(width: 8),
-                    Text('SHARE WHATSAPP',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: gameColor,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: const Text('DONE',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton.icon(
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
+                    label: const Text('VIEW',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: gameColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              InvoiceDetailScreen(invoiceId: invoiceId),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey.shade700,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                    ),
+                    child: const Text('DONE',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
             ],
           ),
