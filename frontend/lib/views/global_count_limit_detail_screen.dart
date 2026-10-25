@@ -36,6 +36,31 @@ class _GlobalCountLimitDetailScreenState
   late TextEditingController _rushTimeMinutes;
   late TextEditingController _rushTimeMaxCount;
 
+  // KL Rush Controllers
+  late TextEditingController _rushCountA;
+  late TextEditingController _rushCountB;
+  late TextEditingController _rushCountC;
+  late TextEditingController _rushCountAB;
+  late TextEditingController _rushCountBC;
+  late TextEditingController _rushCountAC;
+  late TextEditingController _rushCountSuper;
+  late TextEditingController _rushCountBox;
+
+  // TN Rush Controllers
+  late TextEditingController _rushTnCountA;
+  late TextEditingController _rushTnCountB;
+  late TextEditingController _rushTnCountC;
+  late TextEditingController _rushTnCountAB;
+  late TextEditingController _rushTnCountBC;
+  late TextEditingController _rushTnCountAC;
+  late TextEditingController _rushTnCount3d10;
+  late TextEditingController _rushTnCount3d25;
+  late TextEditingController _rushTnCount3d30;
+  late TextEditingController _rushTnCount3d60;
+  late TextEditingController _rushTnCount4d110;
+  late TextEditingController _rushTnCount4d55;
+  late TextEditingController _rushTnCount4d20;
+
   // TN Controllers
   late TextEditingController _globalTnCountA;
   late TextEditingController _globalTnCountB;
@@ -113,6 +138,31 @@ class _GlobalCountLimitDetailScreenState
     _rushTimeMinutes.addListener(() => setState(() {}));
     _rushTimeMaxCount.addListener(() => setState(() {}));
 
+    // Rush KL
+    _rushCountA = TextEditingController(text: widget.game.rushCountA.toString());
+    _rushCountB = TextEditingController(text: widget.game.rushCountB.toString());
+    _rushCountC = TextEditingController(text: widget.game.rushCountC.toString());
+    _rushCountAB = TextEditingController(text: widget.game.rushCountAb.toString());
+    _rushCountBC = TextEditingController(text: widget.game.rushCountBc.toString());
+    _rushCountAC = TextEditingController(text: widget.game.rushCountAc.toString());
+    _rushCountSuper = TextEditingController(text: widget.game.rushCountSuper.toString());
+    _rushCountBox = TextEditingController(text: widget.game.rushCountBox.toString());
+
+    // Rush TN
+    _rushTnCountA = TextEditingController(text: widget.game.rushTnCountA.toString());
+    _rushTnCountB = TextEditingController(text: widget.game.rushTnCountB.toString());
+    _rushTnCountC = TextEditingController(text: widget.game.rushTnCountC.toString());
+    _rushTnCountAB = TextEditingController(text: widget.game.rushTnCountAb.toString());
+    _rushTnCountBC = TextEditingController(text: widget.game.rushTnCountBc.toString());
+    _rushTnCountAC = TextEditingController(text: widget.game.rushTnCountAc.toString());
+    _rushTnCount3d10 = TextEditingController(text: widget.game.rushTnCount3d10.toString());
+    _rushTnCount3d25 = TextEditingController(text: widget.game.rushTnCount3d25.toString());
+    _rushTnCount3d30 = TextEditingController(text: widget.game.rushTnCount3d30.toString());
+    _rushTnCount3d60 = TextEditingController(text: widget.game.rushTnCount3d60.toString());
+    _rushTnCount4d110 = TextEditingController(text: widget.game.rushTnCount4d110.toString());
+    _rushTnCount4d55 = TextEditingController(text: widget.game.rushTnCount4d55.toString());
+    _rushTnCount4d20 = TextEditingController(text: widget.game.rushTnCount4d20.toString());
+
     _user = widget.user;
     if (_user != null && _user!.effectiveGameMode == 'TN') {
       _selectedNumberLimitTab = 1;
@@ -177,6 +227,27 @@ class _GlobalCountLimitDetailScreenState
     _globalTnCount4d20.dispose();
     _rushTimeMinutes.dispose();
     _rushTimeMaxCount.dispose();
+    _rushCountA.dispose();
+    _rushCountB.dispose();
+    _rushCountC.dispose();
+    _rushCountAB.dispose();
+    _rushCountBC.dispose();
+    _rushCountAC.dispose();
+    _rushCountSuper.dispose();
+    _rushCountBox.dispose();
+    _rushTnCountA.dispose();
+    _rushTnCountB.dispose();
+    _rushTnCountC.dispose();
+    _rushTnCountAB.dispose();
+    _rushTnCountBC.dispose();
+    _rushTnCountAC.dispose();
+    _rushTnCount3d10.dispose();
+    _rushTnCount3d25.dispose();
+    _rushTnCount3d30.dispose();
+    _rushTnCount3d60.dispose();
+    _rushTnCount4d110.dispose();
+    _rushTnCount4d55.dispose();
+    _rushTnCount4d20.dispose();
     super.dispose();
   }
 
@@ -213,6 +284,27 @@ class _GlobalCountLimitDetailScreenState
         'global_tn_count_4d_20': int.parse(_globalTnCount4d20.text),
         'rush_time_minutes': int.tryParse(_rushTimeMinutes.text.trim()) ?? 0,
         'rush_time_max_count': int.tryParse(_rushTimeMaxCount.text.trim()) ?? 0,
+        'rush_count_a': int.tryParse(_rushCountA.text.trim()) ?? 0,
+        'rush_count_b': int.tryParse(_rushCountB.text.trim()) ?? 0,
+        'rush_count_c': int.tryParse(_rushCountC.text.trim()) ?? 0,
+        'rush_count_ab': int.tryParse(_rushCountAB.text.trim()) ?? 0,
+        'rush_count_bc': int.tryParse(_rushCountBC.text.trim()) ?? 0,
+        'rush_count_ac': int.tryParse(_rushCountAC.text.trim()) ?? 0,
+        'rush_count_super': int.tryParse(_rushCountSuper.text.trim()) ?? 0,
+        'rush_count_box': int.tryParse(_rushCountBox.text.trim()) ?? 0,
+        'rush_tn_count_a': int.tryParse(_rushTnCountA.text.trim()) ?? 0,
+        'rush_tn_count_b': int.tryParse(_rushTnCountB.text.trim()) ?? 0,
+        'rush_tn_count_c': int.tryParse(_rushTnCountC.text.trim()) ?? 0,
+        'rush_tn_count_ab': int.tryParse(_rushTnCountAB.text.trim()) ?? 0,
+        'rush_tn_count_bc': int.tryParse(_rushTnCountBC.text.trim()) ?? 0,
+        'rush_tn_count_ac': int.tryParse(_rushTnCountAC.text.trim()) ?? 0,
+        'rush_tn_count_3d_10': int.tryParse(_rushTnCount3d10.text.trim()) ?? 0,
+        'rush_tn_count_3d_25': int.tryParse(_rushTnCount3d25.text.trim()) ?? 0,
+        'rush_tn_count_3d_30': int.tryParse(_rushTnCount3d30.text.trim()) ?? 0,
+        'rush_tn_count_3d_60': int.tryParse(_rushTnCount3d60.text.trim()) ?? 0,
+        'rush_tn_count_4d_110': int.tryParse(_rushTnCount4d110.text.trim()) ?? 0,
+        'rush_tn_count_4d_55': int.tryParse(_rushTnCount4d55.text.trim()) ?? 0,
+        'rush_tn_count_4d_20': int.tryParse(_rushTnCount4d20.text.trim()) ?? 0,
       };
 
       await apiService.updateGame(widget.game.id, updatedData);
@@ -294,8 +386,7 @@ class _GlobalCountLimitDetailScreenState
 
   Widget _buildRushTimeCard() {
     int minutes = int.tryParse(_rushTimeMinutes.text.trim()) ?? 0;
-    int maxCount = int.tryParse(_rushTimeMaxCount.text.trim()) ?? 0;
-    bool isActive = minutes > 0 && maxCount > 0;
+    bool isActive = minutes > 0;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -303,7 +394,7 @@ class _GlobalCountLimitDetailScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isActive ? Colors.amber.shade700 : Colors.grey.shade300,
+          color: isActive ? Colors.amber.shade800 : Colors.grey.shade300,
           width: isActive ? 1.5 : 1.0,
         ),
         boxShadow: [
@@ -322,7 +413,7 @@ class _GlobalCountLimitDetailScreenState
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: isActive ? Colors.amber.shade700 : Colors.grey.shade400,
+                  color: isActive ? Colors.amber.shade800 : Colors.grey.shade400,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Icon(Icons.timer_rounded, color: Colors.white, size: 18),
@@ -337,7 +428,7 @@ class _GlobalCountLimitDetailScreenState
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
-                        color: isActive ? Colors.amber.shade900 : Colors.black87,
+                        color: isActive ? Colors.brown.shade900 : Colors.black87,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -374,7 +465,7 @@ class _GlobalCountLimitDetailScreenState
           ),
           const SizedBox(height: 10),
           Text(
-            'അവസാന സമയത്ത് ഏതൊരു നമ്പറിനും പരമാവധി കയറാവുന്ന കൗണ്ട് നിയന്ത്രിക്കുക (0 നൽകിയാൽ ഈ ലിമിറ്റ് ഉണ്ടാവില്ല).',
+            'അവസാന മിനിറ്റുകളിൽ ഓരോ ടൈപ്പിനും പരമാവധി കയറാവുന്ന കൗണ്ട് ഇവിടെ സെറ്റ് ചെയ്യാം (0 നൽകിയാൽ ലിമിറ്റ് ഉണ്ടാവില്ല).',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
@@ -383,6 +474,7 @@ class _GlobalCountLimitDetailScreenState
             ),
           ),
           const SizedBox(height: 12),
+          // Last minutes input
           Row(
             children: [
               Expanded(
@@ -402,37 +494,14 @@ class _GlobalCountLimitDetailScreenState
                         hintText: 'e.g. 10',
                         suffixText: 'Min',
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.amber.shade50.withOpacity(0.4),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Max Count/Number (കൗണ്ട്)',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 4),
-                    TextFormField(
-                      controller: _rushTimeMaxCount,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. 5',
-                        suffixText: 'Qty',
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide(color: Colors.amber.shade800, width: 1.5),
+                        ),
                       ),
                     ),
                   ],
@@ -440,28 +509,163 @@ class _GlobalCountLimitDetailScreenState
               ),
             ],
           ),
-          if (isActive) ...[
-            const SizedBox(height: 10),
+
+          // KL Rush Limit Section
+          if (_user!.isKlEnabled) ...[
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.amber.shade200),
+                color: Colors.blue.shade50.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle_outline, color: Colors.amber.shade900, size: 16),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'അവസാനത്തെ $minutes മിനിറ്റിൽ ഒരു നമ്പറിന് പരമാവധി $maxCount കൗണ്ട് മാത്രം.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown.shade900,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: const Text('KL',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'KL RUSH LIMITS (LAST MINUTES)',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('KL 3 Digit Rush Limits', AppColors.primary),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('SUPER', _rushCountSuper, Icons.star_rounded, AppColors.primary)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('BOX', _rushCountBox, Icons.inventory_2_rounded, AppColors.primary)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('KL 2 Digit Rush Limits', AppColors.primary),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('AB', _rushCountAB, Icons.filter_2_rounded, AppColors.primary)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('BC', _rushCountBC, Icons.filter_2_rounded, AppColors.primary)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('AC', _rushCountAC, Icons.filter_2_rounded, AppColors.primary)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('KL Single Digit Rush Limits', AppColors.primary),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('A', _rushCountA, Icons.looks_one_rounded, AppColors.primary)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('B', _rushCountB, Icons.looks_two_rounded, AppColors.primary)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('C', _rushCountC, Icons.looks_3_rounded, AppColors.primary)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // TN Rush Limit Section
+          if (_user!.isTnEnabled) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange.shade50.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.deepOrange.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.deepOrange,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: const Text('TN',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'TN RUSH LIMITS (LAST MINUTES)',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12, color: Colors.deepOrange),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('TN 3 Digit Rush Limits', Colors.deepOrange),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('3D-10', _rushTnCount3d10, Icons.star_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('3D-25', _rushTnCount3d25, Icons.star_rounded, Colors.deepOrange)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('3D-30', _rushTnCount3d30, Icons.star_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('3D-60', _rushTnCount3d60, Icons.star_rounded, Colors.deepOrange)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('TN 4 Digit Rush Limits', Colors.deepOrange),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('4D-110', _rushTnCount4d110, Icons.inventory_2_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('4D-55', _rushTnCount4d55, Icons.inventory_2_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('4D-20', _rushTnCount4d20, Icons.inventory_2_rounded, Colors.deepOrange)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('TN 2 Digit Rush Limits', Colors.deepOrange),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('AB', _rushTnCountAB, Icons.filter_2_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('BC', _rushTnCountBC, Icons.filter_2_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('AC', _rushTnCountAC, Icons.filter_2_rounded, Colors.deepOrange)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildSectionTitle('TN Single Digit Rush Limits', Colors.deepOrange),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildLimitField('A', _rushTnCountA, Icons.looks_one_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('B', _rushTnCountB, Icons.looks_two_rounded, Colors.deepOrange)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildLimitField('C', _rushTnCountC, Icons.looks_3_rounded, Colors.deepOrange)),
+                    ],
                   ),
                 ],
               ),

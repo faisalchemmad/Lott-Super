@@ -78,6 +78,50 @@ def get_game_global_type_count_limit(game, bet_type):
     }
     return mapping.get(bt, 0)
 
+def get_game_rush_type_limit(game, bet_type, state='KL'):
+    if not game or getattr(game, 'rush_time_minutes', 0) <= 0:
+        return 0
+    bt = str(bet_type).upper().replace('_', '-')
+    if state == 'TN' or bt.startswith('TN-') or bt in ['3D-10', '3D-25', '3D-30', '3D-60', '4D-110', '4D-55', '4D-20']:
+        tn_map = {
+            'A': getattr(game, 'rush_tn_count_a', 0),
+            'B': getattr(game, 'rush_tn_count_b', 0),
+            'C': getattr(game, 'rush_tn_count_c', 0),
+            'TN-A': getattr(game, 'rush_tn_count_a', 0),
+            'TN-B': getattr(game, 'rush_tn_count_b', 0),
+            'TN-C': getattr(game, 'rush_tn_count_c', 0),
+            'AB': getattr(game, 'rush_tn_count_ab', 0),
+            'BC': getattr(game, 'rush_tn_count_bc', 0),
+            'AC': getattr(game, 'rush_tn_count_ac', 0),
+            'TN-AB': getattr(game, 'rush_tn_count_ab', 0),
+            'TN-BC': getattr(game, 'rush_tn_count_bc', 0),
+            'TN-AC': getattr(game, 'rush_tn_count_ac', 0),
+            '3D-10': getattr(game, 'rush_tn_count_3d_10', 0),
+            '3D-25': getattr(game, 'rush_tn_count_3d_25', 0),
+            '3D-30': getattr(game, 'rush_tn_count_3d_30', 0),
+            '3D-60': getattr(game, 'rush_tn_count_3d_60', 0),
+            '4D-110': getattr(game, 'rush_tn_count_4d_110', 0),
+            '4D-55': getattr(game, 'rush_tn_count_4d_55', 0),
+            '4D-20': getattr(game, 'rush_tn_count_4d_20', 0),
+            'SUPER': getattr(game, 'rush_count_super', 0),
+            'BOX': getattr(game, 'rush_count_box', 0),
+        }
+        val = tn_map.get(bt, 0)
+        return val if val > 0 else getattr(game, 'rush_time_max_count', 0)
+    else:
+        kl_map = {
+            'A': getattr(game, 'rush_count_a', 0),
+            'B': getattr(game, 'rush_count_b', 0),
+            'C': getattr(game, 'rush_count_c', 0),
+            'AB': getattr(game, 'rush_count_ab', 0),
+            'BC': getattr(game, 'rush_count_bc', 0),
+            'AC': getattr(game, 'rush_count_ac', 0),
+            'SUPER': getattr(game, 'rush_count_super', 0),
+            'BOX': getattr(game, 'rush_count_box', 0),
+        }
+        val = kl_map.get(bt, 0)
+        return val if val > 0 else getattr(game, 'rush_time_max_count', 0)
+
 def get_excluded_forwarding_user_ids():
     """Returns set of all descendant IDs for Admins where can_forward=True."""
     excluded = set()
@@ -483,27 +527,29 @@ class BetViewSet(viewsets.ModelViewSet):
                  f"{start_t.strftime('%I:%M %p')} and {end_t.strftime('%I:%M %p')}."
              )
 
-        # 1.2 Rush Time Limit (Last X Minutes Limit per number)
-        if getattr(game, 'rush_time_minutes', 0) > 0 and getattr(game, 'rush_time_max_count', 0) > 0:
-            today = timezone.localtime().date()
-            from datetime import datetime, timedelta
-            end_dt = datetime.combine(today, end_t)
-            rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
-            rush_start_t = rush_start_dt.time()
-            if rush_start_t <= current_time <= end_t:
-                rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
-                root_admin = user.get_root_admin()
-                admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
-                rush_tot = Bet.objects.filter(
-                    user__id__in=admin_desc_ids,
-                    game=game,
-                    number=number,
-                    type=bet_type,
-                    created_at__gte=rush_start_aware
-                ).aggregate(t=Sum('count'))['t'] or 0
-                if (rush_tot + count) > game.rush_time_max_count:
-                    avail_rush = max(0, game.rush_time_max_count - rush_tot)
-                    raise drf_serializers.ValidationError(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
+        # 1.2 Rush Time Limit (Last X Minutes Limit per type / number)
+        if getattr(game, 'rush_time_minutes', 0) > 0:
+            rush_cap = get_game_rush_type_limit(game, bet_type, bet_state)
+            if rush_cap > 0:
+                today = timezone.localtime().date()
+                from datetime import datetime, timedelta
+                end_dt = datetime.combine(today, end_t)
+                rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
+                rush_start_t = rush_start_dt.time()
+                if rush_start_t <= current_time <= end_t:
+                    rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
+                    root_admin = user.get_root_admin()
+                    admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
+                    rush_tot = Bet.objects.filter(
+                        user__id__in=admin_desc_ids,
+                        game=game,
+                        number=number,
+                        type=bet_type,
+                        created_at__gte=rush_start_aware
+                    ).aggregate(t=Sum('count'))['t'] or 0
+                    if (rush_tot + count) > rush_cap:
+                        avail_rush = max(0, rush_cap - rush_tot)
+                        raise drf_serializers.ValidationError(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
 
         # 1.5 Individual User-Specific Limits are now handled in the hierarchy check
 
@@ -810,28 +856,30 @@ class BetViewSet(viewsets.ModelViewSet):
                  mark_failed(f"Time: {start_t.strftime('%I:%M %p')} - {end_t.strftime('%I:%M %p')}")
                  continue
 
-            # 2.5 Rush Time Limit (Last X Minutes Limit per number)
-            if getattr(game, 'rush_time_minutes', 0) > 0 and getattr(game, 'rush_time_max_count', 0) > 0:
-                from datetime import datetime, timedelta
-                end_dt = datetime.combine(today, end_t)
-                rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
-                rush_start_t = rush_start_dt.time()
-                if rush_start_t <= current_time <= end_t:
-                    rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
-                    admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
-                    rush_tot = Bet.objects.filter(
-                        user__id__in=admin_desc_ids,
-                        game=game,
-                        number=number,
-                        type=bet_type,
-                        created_at__gte=rush_start_aware
-                    ).aggregate(t=Sum('count'))['t'] or 0
+            # 2.5 Rush Time Limit (Last X Minutes Limit per type / number)
+            if getattr(game, 'rush_time_minutes', 0) > 0:
+                rush_cap = get_game_rush_type_limit(game, bet_type, state)
+                if rush_cap > 0:
+                    from datetime import datetime, timedelta
+                    end_dt = datetime.combine(today, end_t)
+                    rush_start_dt = end_dt - timedelta(minutes=game.rush_time_minutes)
+                    rush_start_t = rush_start_dt.time()
+                    if rush_start_t <= current_time <= end_t:
+                        rush_start_aware = timezone.make_aware(datetime.combine(today, rush_start_t))
+                        admin_desc_ids = root_admin.get_descendant_ids() if root_admin else [user.id]
+                        rush_tot = Bet.objects.filter(
+                            user__id__in=admin_desc_ids,
+                            game=game,
+                            number=number,
+                            type=bet_type,
+                            created_at__gte=rush_start_aware
+                        ).aggregate(t=Sum('count'))['t'] or 0
 
-                    current_session_rush = session_rush_counts.get((number, bet_type, game.id), 0)
-                    if (rush_tot + current_session_rush + count) > game.rush_time_max_count:
-                        avail_rush = max(0, game.rush_time_max_count - (rush_tot + current_session_rush))
-                        mark_failed(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
-                        continue
+                        current_session_rush = session_rush_counts.get((number, bet_type, game.id), 0)
+                        if (rush_tot + current_session_rush + count) > rush_cap:
+                            avail_rush = max(0, rush_cap - (rush_tot + current_session_rush))
+                            mark_failed(f"Last {game.rush_time_minutes} min limit: {avail_rush} Count Only")
+                            continue
             
             # 3. Individual User-Specific Limit checks are now integrated into hierarchical Branch checks
 

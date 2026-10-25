@@ -37,6 +37,31 @@ class GameModel {
   final int rushTimeMinutes;
   final int rushTimeMaxCount;
 
+  // KL Rush Type Counts
+  final int rushCountA;
+  final int rushCountB;
+  final int rushCountC;
+  final int rushCountAb;
+  final int rushCountBc;
+  final int rushCountAc;
+  final int rushCountSuper;
+  final int rushCountBox;
+
+  // TN Rush Type Counts
+  final int rushTnCountA;
+  final int rushTnCountB;
+  final int rushTnCountC;
+  final int rushTnCountAb;
+  final int rushTnCountBc;
+  final int rushTnCountAc;
+  final int rushTnCount3d10;
+  final int rushTnCount3d25;
+  final int rushTnCount3d30;
+  final int rushTnCount3d60;
+  final int rushTnCount4d110;
+  final int rushTnCount4d55;
+  final int rushTnCount4d20;
+
   GameModel({
     required this.id,
     required this.name,
@@ -70,6 +95,27 @@ class GameModel {
     this.editDeleteLimitTime = '23:59:59',
     this.rushTimeMinutes = 0,
     this.rushTimeMaxCount = 0,
+    this.rushCountA = 0,
+    this.rushCountB = 0,
+    this.rushCountC = 0,
+    this.rushCountAb = 0,
+    this.rushCountBc = 0,
+    this.rushCountAc = 0,
+    this.rushCountSuper = 0,
+    this.rushCountBox = 0,
+    this.rushTnCountA = 0,
+    this.rushTnCountB = 0,
+    this.rushTnCountC = 0,
+    this.rushTnCountAb = 0,
+    this.rushTnCountBc = 0,
+    this.rushTnCountAc = 0,
+    this.rushTnCount3d10 = 0,
+    this.rushTnCount3d25 = 0,
+    this.rushTnCount3d30 = 0,
+    this.rushTnCount3d60 = 0,
+    this.rushTnCount4d110 = 0,
+    this.rushTnCount4d55 = 0,
+    this.rushTnCount4d20 = 0,
   });
 
   factory GameModel.fromJson(Map<String, dynamic> json) {
@@ -106,6 +152,27 @@ class GameModel {
       editDeleteLimitTime: json['edit_delete_limit_time'] ?? '23:59:59',
       rushTimeMinutes: json['rush_time_minutes'] ?? 0,
       rushTimeMaxCount: json['rush_time_max_count'] ?? 0,
+      rushCountA: json['rush_count_a'] ?? 0,
+      rushCountB: json['rush_count_b'] ?? 0,
+      rushCountC: json['rush_count_c'] ?? 0,
+      rushCountAb: json['rush_count_ab'] ?? 0,
+      rushCountBc: json['rush_count_bc'] ?? 0,
+      rushCountAc: json['rush_count_ac'] ?? 0,
+      rushCountSuper: json['rush_count_super'] ?? 0,
+      rushCountBox: json['rush_count_box'] ?? 0,
+      rushTnCountA: json['rush_tn_count_a'] ?? 0,
+      rushTnCountB: json['rush_tn_count_b'] ?? 0,
+      rushTnCountC: json['rush_tn_count_c'] ?? 0,
+      rushTnCountAb: json['rush_tn_count_ab'] ?? 0,
+      rushTnCountBc: json['rush_tn_count_bc'] ?? 0,
+      rushTnCountAc: json['rush_tn_count_ac'] ?? 0,
+      rushTnCount3d10: json['rush_tn_count_3d_10'] ?? 0,
+      rushTnCount3d25: json['rush_tn_count_3d_25'] ?? 0,
+      rushTnCount3d30: json['rush_tn_count_3d_30'] ?? 0,
+      rushTnCount3d60: json['rush_tn_count_3d_60'] ?? 0,
+      rushTnCount4d110: json['rush_tn_count_4d_110'] ?? 0,
+      rushTnCount4d55: json['rush_tn_count_4d_55'] ?? 0,
+      rushTnCount4d20: json['rush_tn_count_4d_20'] ?? 0,
     );
   }
 
@@ -143,6 +210,27 @@ class GameModel {
       'edit_delete_limit_time': editDeleteLimitTime,
       'rush_time_minutes': rushTimeMinutes,
       'rush_time_max_count': rushTimeMaxCount,
+      'rush_count_a': rushCountA,
+      'rush_count_b': rushCountB,
+      'rush_count_c': rushCountC,
+      'rush_count_ab': rushCountAb,
+      'rush_count_bc': rushCountBc,
+      'rush_count_ac': rushCountAc,
+      'rush_count_super': rushCountSuper,
+      'rush_count_box': rushCountBox,
+      'rush_tn_count_a': rushTnCountA,
+      'rush_tn_count_b': rushTnCountB,
+      'rush_tn_count_c': rushTnCountC,
+      'rush_tn_count_ab': rushTnCountAb,
+      'rush_tn_count_bc': rushTnCountBc,
+      'rush_tn_count_ac': rushTnCountAc,
+      'rush_tn_count_3d_10': rushTnCount3d10,
+      'rush_tn_count_3d_25': rushTnCount3d25,
+      'rush_tn_count_3d_30': rushTnCount3d30,
+      'rush_tn_count_3d_60': rushTnCount3d60,
+      'rush_tn_count_4d_110': rushTnCount4d110,
+      'rush_tn_count_4d_55': rushTnCount4d55,
+      'rush_tn_count_4d_20': rushTnCount4d20,
     };
   }
 }

@@ -288,9 +288,34 @@ class Game(models.Model):
     global_tn_count_4d_55 = models.IntegerField(default=0)
     global_tn_count_4d_20 = models.IntegerField(default=0)
 
-    # Rush Time Limit (Last X Minutes Limit per number)
+    # Rush Time Limit (Last X Minutes Settings)
     rush_time_minutes = models.IntegerField(default=0)
     rush_time_max_count = models.IntegerField(default=0)
+
+    # KL Rush Time Limits per type
+    rush_count_a = models.IntegerField(default=0)
+    rush_count_b = models.IntegerField(default=0)
+    rush_count_c = models.IntegerField(default=0)
+    rush_count_ab = models.IntegerField(default=0)
+    rush_count_bc = models.IntegerField(default=0)
+    rush_count_ac = models.IntegerField(default=0)
+    rush_count_super = models.IntegerField(default=0)
+    rush_count_box = models.IntegerField(default=0)
+
+    # TN Rush Time Limits per type
+    rush_tn_count_a = models.IntegerField(default=0)
+    rush_tn_count_b = models.IntegerField(default=0)
+    rush_tn_count_c = models.IntegerField(default=0)
+    rush_tn_count_ab = models.IntegerField(default=0)
+    rush_tn_count_bc = models.IntegerField(default=0)
+    rush_tn_count_ac = models.IntegerField(default=0)
+    rush_tn_count_3d_10 = models.IntegerField(default=0)
+    rush_tn_count_3d_25 = models.IntegerField(default=0)
+    rush_tn_count_3d_30 = models.IntegerField(default=0)
+    rush_tn_count_3d_60 = models.IntegerField(default=0)
+    rush_tn_count_4d_110 = models.IntegerField(default=0)
+    rush_tn_count_4d_55 = models.IntegerField(default=0)
+    rush_tn_count_4d_20 = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} - {self.time}"
