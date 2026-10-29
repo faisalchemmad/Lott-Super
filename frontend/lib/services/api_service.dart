@@ -15,13 +15,13 @@ class ApiService {
           !Uri.base.host.contains('127.0.0.1')) {
         return '/api';
       }
-      return 'http://13.233.196.135/api';
+      return 'https://fz.chemmad.com/api';
     }
     if (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.windows) {
-      return 'http://13.233.196.135/api';
+      return 'https://fz.chemmad.com/api';
     } else {
-      return 'http://13.233.196.135/api';
+      return 'https://fz.chemmad.com/api';
     }
   }
 
