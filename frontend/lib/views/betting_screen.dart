@@ -1475,6 +1475,7 @@ class _BettingScreenState extends State<BettingScreen>
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
+              fit: StackFit.expand,
               children: [
                 Container(
                   color: Colors.grey[50],
@@ -1495,7 +1496,6 @@ class _BettingScreenState extends State<BettingScreen>
                       Expanded(
                         child: _buildDraftContainer(borderRadius: 0),
                       ),
-                      _buildStickyBottomBar(),
                     ],
                   ),
                 ),
@@ -1554,6 +1554,7 @@ class _BettingScreenState extends State<BettingScreen>
                 }),
               ],
             ),
+      bottomNavigationBar: _buildStickyBottomBar(),
     );
   }
 
@@ -2110,21 +2111,22 @@ class _BettingScreenState extends State<BettingScreen>
           ),
 
           if (_draftBets.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(40),
-              width: double.infinity,
+            Expanded(
               child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.shopping_basket_outlined,
-                        size: 48, color: gameColor.withOpacity(0.2)),
-                    const SizedBox(height: 12),
-                    Text('No bets in draft',
-                        style: TextStyle(
-                            color: Colors.grey[400],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16)),
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.shopping_basket_outlined,
+                          size: 48, color: gameColor.withOpacity(0.2)),
+                      const SizedBox(height: 12),
+                      Text('No bets in draft',
+                          style: TextStyle(
+                              color: Colors.grey[400],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -2231,73 +2233,69 @@ class _BettingScreenState extends State<BettingScreen>
 
     final gameColor =
         Color(int.parse(widget.game.color.replaceFirst('#', '0xFF')));
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        color: gameColor,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: gameColor,
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Qty',
-                        style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    Text(
-                      '${_draftBets.fold<int>(0, (sum, item) => sum + (item['count'] as int))}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Total',
-                        style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    Text(
-                      '₹${_draftBets.fold<double>(0, (sum, item) => sum + item['price']).toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Net',
-                        style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    Text(
-                      '₹${_draftBets.fold<double>(0, (sum, item) => sum + (item['net_price'] ?? item['price'])).toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          color: Colors.yellowAccent,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                const Text('Qty',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  '${_draftBets.fold<int>(0, (sum, item) => sum + (item['count'] as int))}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-          ),
-        ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Total',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  '₹${_draftBets.fold<double>(0, (sum, item) => sum + item['price']).toStringAsFixed(0)}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Net',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  '₹${_draftBets.fold<double>(0, (sum, item) => sum + (item['net_price'] ?? item['price'])).toStringAsFixed(0)}',
+                  style: const TextStyle(
+                      color: Colors.yellowAccent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
